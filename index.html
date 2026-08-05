@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=7">
+    <link rel="stylesheet" href="styles.css?v=9">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -22,22 +22,22 @@
         <p class="eyebrow">The holy realm of Jenny presents</p>
         <h1>Guildstead</h1>
         <div class="title-rule" aria-hidden="true"><span></span></div>
-        <p class="title-copy">Raise a tiny guild, guide remarkable adventurers, and leave the realm with stories worth keeping.</p>
-        <button id="startGameButton" class="primary-button title-button" type="button">Open the Guildhall</button>
+        <p class="title-copy">Turn a quiet roadside tavern into the adventurers' guild the Western March desperately needs.</p>
+        <button id="startGameButton" class="primary-button title-button" type="button">Open the Tavern</button>
       </div>
     </section>
 
     <section id="introScene" class="story-screen hidden" aria-live="polite">
       <div class="story-stage">
         <div class="story-portrait" aria-hidden="true">
-          <span class="unit-sprite slot-0"></span>
+          <span id="introPortrait" class="unit-sprite slot-3"></span>
         </div>
         <div class="story-panel">
-          <p class="eyebrow">Royal guild charter</p>
-          <h2>Welcome to Guildstead</h2>
-          <p>Please create your hero, who will help you during your time as Guild Master.</p>
-          <p>You are here to look after the holy realm of Jenny. The roads need guarding, the halls need upgrading, and the adventurers need someone sensible holding the purse strings.</p>
-          <button id="continueIntroButton" class="primary-button" type="button">Create Your Hero</button>
+          <p id="introEyebrow" class="eyebrow">The Wayfarer's Rest</p>
+          <h2 id="introTitle">A Quiet Little Tavern</h2>
+          <div id="introCopy" class="intro-copy"></div>
+          <div class="story-progress" aria-hidden="true"><i></i><i></i><i></i></div>
+          <button id="continueIntroButton" class="primary-button" type="button">Continue</button>
         </div>
       </div>
     </section>
@@ -116,6 +116,7 @@
                 <button id="scoutEventButton" class="secondary-button" type="button">Scout Event</button>
               </div>
             </div>
+            <div id="chapterObjective" class="chapter-objective"></div>
             <div id="realmMap" class="map-canvas" aria-label="Interactive guild and realm map"></div>
             <div class="map-footer">
               <div class="map-legend" aria-label="Map legend">
@@ -143,7 +144,7 @@
                   <div>
                     <p class="eyebrow">Founding adventurer</p>
                     <h2>Create Your Hero</h2>
-                    <p class="card-meta">Your first guild member and the beginning of Guildstead's history.</p>
+                    <p class="card-meta">Mara needs someone brave enough to recover the tavern's stolen supplies.</p>
                   </div>
                 </div>
                 <div class="creator-fields">
@@ -162,7 +163,7 @@
                   </label>
                 </div>
                 <div class="creator-actions">
-                  <button id="createFounderButton" class="primary-button" type="button">Sign the Charter</button>
+                  <button id="createFounderButton" class="primary-button" type="button">Answer the Call</button>
                   <button id="randomFounderButton" class="secondary-button" type="button">Surprise Me</button>
                 </div>
               </section>
@@ -228,7 +229,24 @@
       </div>
     </section>
 
+    <section id="chapterDialog" class="event-dialog chapter-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="chapterDialogTitle">
+      <div class="event-panel chapter-panel">
+        <div class="event-art chapter-art" aria-hidden="true">
+          <span class="chapter-lantern"></span>
+          <span class="unit-sprite slot-3"></span>
+        </div>
+        <div class="event-copy">
+          <p id="chapterDialogEyebrow" class="eyebrow">Chapter One</p>
+          <h2 id="chapterDialogTitle">Mara Has An Idea</h2>
+          <p id="chapterDialogText"></p>
+          <div class="event-actions">
+            <button id="chapterDialogButton" class="primary-button" type="button">Continue</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
-    <script src="game.js?v=7"></script>
+    <script src="game.js?v=10"></script>
   </body>
 </html>

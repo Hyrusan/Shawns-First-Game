@@ -2,16 +2,19 @@
 
 Guildstead is a cosy fantasy guild-management game prototype inspired by classic management simulations.
 
-Create a founding hero, recruit persistent adventurers, improve guild facilities, respond to realm events, and choose parties for missions across the holy realm of Jenny.
+Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadside tavern into the first adventurers' guild in the Western March.
 
 ## Current Demo
 
 - Interactive world map and guildhall interior
+- Three-scene tavern prologue and guided Chapter One progression
+- Goblin quest chain culminating in the Barrow Hill chief
 - Hero creation and persistent adventurer profiles
 - Eight-character pixel-art sprite atlas
 - Three-person expedition parties
 - Mission odds, rewards, injuries, experience, and levelling
-- Facility upgrades and guild progression
+- Room construction, blueprint unlocks, and facility upgrades
+- Official guild charter milestone and evolving tavern presentation
 - Timed realm events and animated mission dispatch
 - Local browser save data
 - Responsive desktop and mobile layouts

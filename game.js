@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 6;
+const SAVE_VERSION = 7;
 
 const classes = {
   warden: { label: "Warden", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
@@ -9,70 +9,155 @@ const classes = {
   rookie: { label: "Rookie", stats: { str: 5, mag: 4, wit: 5, cha: 5 } }
 };
 
+const introScenes = [
+  {
+    eyebrow: "The Wayfarer's Rest",
+    title: "A Quiet Little Tavern",
+    portraitSlot: 3,
+    copy: [
+      "For years, the Wayfarer's Rest has offered warm soup, spare beds, and only the occasional chair thrown during an argument.",
+      "Mara, your tireless tavern assistant, keeps the place running while you decide whether the leaking roof is technically an emergency."
+    ],
+    button: "Begin the Day"
+  },
+  {
+    eyebrow: "Trouble on Greenbank Road",
+    title: "The Goblins Took Everything",
+    portraitSlot: 2,
+    copy: [
+      "A frightened merchant stumbles through the door. Goblins have raided his cart, stolen the tavern's weekly supplies, and driven travellers from the road.",
+      "The local guard is three villages away. Greenbank needs someone closer."
+    ],
+    button: "Speak to Mara"
+  },
+  {
+    eyebrow: "Mara's Rather Ambitious Idea",
+    title: "What If We Became A Guild?",
+    portraitSlot: 3,
+    copy: [
+      "Mara leans across the bar. Adventurers already pass through here, and the whole area needs help. We have beds, food, and a wall large enough for a noticeboard.",
+      "Find one dependable hero, recover the supplies, and perhaps this ordinary tavern can become something more."
+    ],
+    button: "Create Your Hero"
+  }
+];
+
+const chapterMoments = {
+  questBoard: {
+    eyebrow: "Chapter One: Goblin Trouble",
+    title: "A Noticeboard With Ambition",
+    text: "The supplies are back and Greenbank is talking about your little band. Mara has found an old board in the cellar. Build a proper Quest Board and the tavern can start taking local requests.",
+    button: "Build the Quest Board",
+    view: "facilities"
+  },
+  expansion: {
+    eyebrow: "Guildstead Is Growing",
+    title: "We Need More Than A Noticeboard",
+    text: "Three local problems solved, and the tavern is full of people asking for help. Choose your first major expansion: beds for a larger roster, a yard for training, or a kitchen for better provisions.",
+    button: "Choose an Expansion",
+    view: "facilities"
+  },
+  charter: {
+    eyebrow: "Royal Charter Awarded",
+    title: "Welcome To Guildstead",
+    text: "With the Barrow Hill goblins defeated, the Western March finally has a recognised adventurers' guild. The Wayfarer's Rest is now Guildstead Hall, and its next chapter is yours to build.",
+    button: "Raise the Guild Banner",
+    view: "guildhall"
+  }
+};
+
 const facilities = [
+  {
+    id: "tavern",
+    name: "Tavern",
+    icon: "A",
+    colour: "#d07b77",
+    gridColumn: "1 / span 3",
+    gridRow: "1 / span 2",
+    mapLeft: "18%",
+    mapTop: "70%",
+    buildCost: 0,
+    baseCost: 110,
+    effect: "Earns daily income and improves the quality of new recruits"
+  },
   {
     id: "questBoard",
     name: "Quest Board",
     icon: "Q",
     colour: "#efcf65",
-    gridColumn: "1 / span 2",
+    gridColumn: "4 / span 3",
     gridRow: "1 / span 1",
     mapLeft: "26%",
     mapTop: "37%",
+    buildCost: 55,
     baseCost: 90,
     effect: "Better mission scouting and fame rewards"
+  },
+  {
+    id: "dormitory",
+    name: "Dormitory",
+    icon: "D",
+    colour: "#e69bb0",
+    gridColumn: "4 / span 3",
+    gridRow: "2 / span 1",
+    mapLeft: "46%",
+    mapTop: "67%",
+    buildCost: 80,
+    baseCost: 110,
+    effect: "Adds roster space and shortens injury recovery"
   },
   {
     id: "trainingYard",
     name: "Training Yard",
     icon: "T",
     colour: "#80b56d",
-    gridColumn: "3 / span 2",
-    gridRow: "1 / span 2",
-    mapLeft: "33%",
-    mapTop: "62%",
+    gridColumn: "1 / span 2",
+    gridRow: "3 / span 1",
+    mapLeft: "34%",
+    mapTop: "61%",
+    buildCost: 95,
     baseCost: 120,
-    effect: "Adds strength to every mission party"
+    effect: "Adds strength and experience to every expedition"
   },
   {
-    id: "tavern",
-    name: "Tavern",
-    icon: "A",
-    colour: "#d07b77",
-    gridColumn: "5 / span 2",
-    gridRow: "1 / span 1",
-    mapLeft: "18%",
-    mapTop: "73%",
+    id: "kitchen",
+    name: "Kitchen",
+    icon: "K",
+    colour: "#d9a45b",
+    gridColumn: "3 / span 2",
+    gridRow: "3 / span 1",
+    mapLeft: "39%",
+    mapTop: "43%",
+    buildCost: 85,
     baseCost: 110,
-    effect: "Improves recruit quality and charm checks"
+    effect: "Provides expedition supplies and improves daily income"
   },
   {
     id: "workshop",
     name: "Workshop",
     icon: "W",
     colour: "#7aa7be",
-    gridColumn: "1 / span 2",
-    gridRow: "2 / span 2",
-    mapLeft: "39%",
-    mapTop: "42%",
-    baseCost: 135,
-    effect: "Adds gear power to risky missions"
-  },
-  {
-    id: "infirmary",
-    name: "Infirmary",
-    icon: "I",
-    colour: "#e69bb0",
     gridColumn: "5 / span 2",
-    gridRow: "2 / span 2",
-    mapLeft: "47%",
-    mapTop: "68%",
-    baseCost: 125,
-    effect: "Shortens injury recovery time"
+    gridRow: "3 / span 1",
+    mapLeft: "49%",
+    mapTop: "55%",
+    buildCost: 130,
+    baseCost: 140,
+    effect: "Adds equipment power to dangerous missions"
   }
 ];
 
 const guildRooms = [
+  {
+    id: "tavernRoom",
+    name: "Tavern",
+    label: "Tavern",
+    facilityId: "tavern",
+    targetView: "adventurers",
+    action: "Manage Regulars",
+    description: "The warm heart of the Wayfarer's Rest, where rumours, recruits, and bowls of stew all arrive eventually.",
+    occupant: "minstrel"
+  },
   {
     id: "questBoard",
     name: "Quest Board",
@@ -84,23 +169,33 @@ const guildRooms = [
     occupant: "warden"
   },
   {
+    id: "dormitoryRoom",
+    name: "Dormitory",
+    label: "Dormitory",
+    facilityId: "dormitory",
+    targetView: "adventurers",
+    action: "View Roster",
+    description: "Simple bunks give more adventurers somewhere to sleep and injured heroes somewhere to recover.",
+    occupant: "rookie"
+  },
+  {
     id: "trainingHall",
-    name: "Training Hall",
+    name: "Training Yard",
     label: "Training",
     facilityId: "trainingYard",
     targetView: "adventurers",
     action: "Manage Adventurers",
-    description: "Adventurers train, spar, and quietly compare scars here.",
+    description: "A practical yard for drills, sparring, and learning which end of the spear points away from you.",
     occupant: "ranger"
   },
   {
-    id: "tavernRoom",
-    name: "Tavern",
-    label: "Tavern",
-    facilityId: "tavern",
-    targetView: "adventurers",
-    action: "Recruit Adventurers",
-    description: "The social heart of Guildstead, useful for rumours, recruitment, and future relationship systems.",
+    id: "kitchenRoom",
+    name: "Kitchen",
+    label: "Kitchen",
+    facilityId: "kitchen",
+    targetView: "facilities",
+    action: "Prepare Provisions",
+    description: "Hot meals improve income and keep expedition packs stocked with something better than dry oats.",
     occupant: "minstrel"
   },
   {
@@ -109,80 +204,97 @@ const guildRooms = [
     label: "Workshop",
     facilityId: "workshop",
     targetView: "facilities",
-    action: "Upgrade Facilities",
-    description: "Tools, plans, and half-finished inventions that make risky missions a little less foolish.",
+    action: "Improve Equipment",
+    description: "Tools, plans, and half-finished inventions that make dangerous missions a little less foolish.",
     occupant: "rookie"
-  },
-  {
-    id: "libraryRoom",
-    name: "Library",
-    label: "Library",
-    facilityId: "questBoard",
-    targetView: "facilities",
-    action: "View Progression",
-    description: "Research, lore, and future progression trees will live here.",
-    occupant: "spellwright"
-  },
-  {
-    id: "vaultRoom",
-    name: "Vault",
-    label: "Vault",
-    facilityId: "infirmary",
-    targetView: "log",
-    action: "Open Guild Notes",
-    description: "Records, trophies, ledgers, and the beginnings of the guild's long memory.",
-    occupant: "warden"
   }
 ];
 
 const missionDeck = [
   {
-    id: "mushroomwood",
-    name: "Mushroomwood Patrol",
-    location: "Mushroomwood",
-    difficulty: 24,
-    duration: 10,
-    gold: 54,
-    fame: 7,
+    id: "stolenSupplies",
+    name: "Recover the Stolen Supplies",
+    location: "Greenbank Lane",
+    description: "Follow the goblin tracks and bring the tavern's stolen provisions home.",
+    difficulty: 8,
+    duration: 7,
+    gold: 65,
+    fame: 3,
     unlockFame: 0,
     focus: "wit",
-    marker: { left: "62%", top: "44%" }
+    tutorial: true,
+    guaranteedSuccess: true,
+    marker: { left: "56%", top: "47%" }
   },
   {
-    id: "tollRoad",
-    name: "Bandit Toll Road",
-    location: "Old North Road",
-    difficulty: 38,
-    duration: 14,
-    gold: 82,
-    fame: 12,
-    unlockFame: 6,
+    id: "greenbankCart",
+    name: "Guard the Greenbank Cart",
+    location: "Greenbank Road",
+    description: "Escort a flour cart through the stretch of road the goblins have been watching.",
+    difficulty: 24,
+    duration: 8,
+    gold: 48,
+    fame: 4,
+    unlockFame: 0,
     focus: "str",
-    marker: { left: "70%", top: "61%" }
+    localRequest: true,
+    marker: { left: "63%", top: "56%" }
   },
   {
-    id: "moonlitRuins",
-    name: "Moonlit Ruins",
-    location: "Moonlit Ruins",
-    difficulty: 54,
-    duration: 18,
-    gold: 118,
-    fame: 18,
-    unlockFame: 20,
+    id: "lostWoodcutter",
+    name: "Find the Lost Woodcutter",
+    location: "Mushroomwood Edge",
+    description: "Search the woodland paths before nightfall and keep an eye out for goblin snares.",
+    difficulty: 27,
+    duration: 9,
+    gold: 55,
+    fame: 5,
+    unlockFame: 0,
+    focus: "wit",
+    localRequest: true,
+    marker: { left: "69%", top: "36%" }
+  },
+  {
+    id: "mooncapRemedy",
+    name: "Gather Mooncap Remedy",
+    location: "Mara's Herb Path",
+    description: "Collect mooncap mushrooms for the village healer without disturbing the local nest.",
+    difficulty: 30,
+    duration: 10,
+    gold: 60,
+    fame: 5,
+    unlockFame: 0,
     focus: "mag",
-    marker: { left: "82%", top: "29%" }
+    localRequest: true,
+    marker: { left: "76%", top: "44%" }
   },
   {
-    id: "dukeGala",
-    name: "Duke's Gala Guard",
-    location: "Highcourt",
-    difficulty: 68,
-    duration: 22,
-    gold: 155,
-    fame: 24,
-    unlockFame: 38,
+    id: "barrowHill",
+    name: "Defeat the Barrow Hill Chief",
+    location: "Barrow Hill",
+    description: "Break the goblin camp, recover the stolen trade goods, and make Greenbank Road safe again.",
+    difficulty: 40,
+    duration: 13,
+    gold: 170,
+    fame: 22,
+    unlockFame: 0,
+    focus: "str",
+    chapterBoss: true,
+    marker: { left: "84%", top: "23%" }
+  },
+  {
+    id: "oldNorthRoad",
+    name: "Reopen the Old North Road",
+    location: "Old North Road",
+    description: "A larger contract from beyond Greenbank, available to a chartered guild.",
+    difficulty: 58,
+    duration: 14,
+    gold: 120,
+    fame: 14,
+    unlockFame: 18,
     focus: "cha",
-    marker: { left: "87%", top: "68%" }
+    postCharter: true,
+    marker: { left: "88%", top: "60%" }
   }
 ];
 
@@ -298,9 +410,10 @@ const traitLabels = [
 ];
 
 let currentPopupEventId = null;
+let currentChapterMomentId = null;
 let dispatchAnimations = [];
 let activeView = "guildhall";
-let selectedGuildRoomId = "questBoard";
+let selectedGuildRoomId = "tavernRoom";
 let selectedAdventurerId = null;
 let toastTimer = null;
 const state = loadState();
@@ -308,6 +421,10 @@ const state = loadState();
 const elements = {
   titleScreen: document.querySelector("#titleScreen"),
   introScene: document.querySelector("#introScene"),
+  introEyebrow: document.querySelector("#introEyebrow"),
+  introTitle: document.querySelector("#introTitle"),
+  introCopy: document.querySelector("#introCopy"),
+  introPortrait: document.querySelector("#introPortrait"),
   startGame: document.querySelector("#startGameButton"),
   continueIntro: document.querySelector("#continueIntroButton"),
   day: document.querySelector("#dayValue"),
@@ -323,6 +440,7 @@ const elements = {
   guildhallRoomDetail: document.querySelector("#guildhallRoomDetail"),
   realmMap: document.querySelector("#realmMap"),
   mapStatus: document.querySelector("#mapStatus"),
+  chapterObjective: document.querySelector("#chapterObjective"),
   eventMissionList: document.querySelector("#eventMissionList"),
   scoutEvent: document.querySelector("#scoutEventButton"),
   dockButtons: document.querySelectorAll("[data-view]"),
@@ -348,11 +466,16 @@ const elements = {
   eventDialogText: document.querySelector("#eventDialogText"),
   viewEvent: document.querySelector("#viewEventButton"),
   closeEvent: document.querySelector("#closeEventButton"),
+  chapterDialog: document.querySelector("#chapterDialog"),
+  chapterDialogEyebrow: document.querySelector("#chapterDialogEyebrow"),
+  chapterDialogTitle: document.querySelector("#chapterDialogTitle"),
+  chapterDialogText: document.querySelector("#chapterDialogText"),
+  chapterDialogButton: document.querySelector("#chapterDialogButton"),
   toastRail: document.querySelector("#toastRail")
 };
 
 elements.startGame.addEventListener("click", startIntro);
-elements.continueIntro.addEventListener("click", enterGame);
+elements.continueIntro.addEventListener("click", advanceIntro);
 elements.createFounder.addEventListener("click", createFounder);
 elements.randomFounder.addEventListener("click", randomiseFounder);
 elements.recruit.addEventListener("click", recruitAdventurer);
@@ -364,6 +487,7 @@ elements.scoutEvent.addEventListener("click", () => {
 });
 elements.closeEvent.addEventListener("click", closeEventDialog);
 elements.viewEvent.addEventListener("click", viewPopupEvent);
+elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
 elements.founderName.addEventListener("input", renderFounderPreview);
 elements.founderClass.addEventListener("change", renderFounderPreview);
 elements.dockButtons.forEach((button) => {
@@ -377,18 +501,31 @@ function defaultState() {
   return {
     version: SAVE_VERSION,
     screen: "title",
+    introStep: 0,
     day: 1,
-    gold: 180,
+    gold: 80,
     fame: 0,
     adventurers: [],
     selectedIds: [],
     activeMissions: [],
     eventMissions: [],
-    facilities: Object.fromEntries(facilities.map((facility) => [facility.id, 1])),
+    facilities: {
+      tavern: 1,
+      questBoard: 0,
+      dormitory: 0,
+      trainingYard: 0,
+      kitchen: 0,
+      workshop: 0
+    },
+    chapter: {
+      stage: "tavern",
+      completedLocalMissions: [],
+      charterEarned: false
+    },
     log: [
       {
         day: 1,
-        text: "A battered sign is hung above the door. Guildstead is open for business."
+        text: "The Wayfarer's Rest opens for another quiet day on Greenbank Road."
       }
     ],
     founderCreated: false
@@ -399,15 +536,36 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
+    const legacySave = saved.version < SAVE_VERSION;
+    const progressedLegacySave = legacySave && Boolean(saved.founderCreated);
+    const savedFacilities = saved.facilities || {};
+    const migratedFacilities = legacySave
+      ? progressedLegacySave ? {
+          tavern: savedFacilities.tavern || 1,
+          questBoard: savedFacilities.questBoard || 1,
+          dormitory: savedFacilities.infirmary || 1,
+          trainingYard: savedFacilities.trainingYard || 1,
+          kitchen: 1,
+          workshop: savedFacilities.workshop || 1
+        } : fresh.facilities
+      : { ...fresh.facilities, ...savedFacilities };
+    const migratedChapter = legacySave
+      ? progressedLegacySave ? {
+          stage: "chartered",
+          completedLocalMissions: ["greenbankCart", "lostWoodcutter", "mooncapRemedy"],
+          charterEarned: true
+        } : fresh.chapter
+      : { ...fresh.chapter, ...(saved.chapter || {}) };
     const loaded = {
       ...fresh,
       ...saved,
       version: SAVE_VERSION,
       screen: saved.screen || (saved.founderCreated ? "game" : "title"),
-      facilities: { ...fresh.facilities, ...saved.facilities },
+      facilities: migratedFacilities,
+      chapter: migratedChapter,
       eventMissions: saved.eventMissions || [],
       selectedIds: []
     };
@@ -433,9 +591,10 @@ function resetGame() {
     // Reset the in-memory state regardless of storage availability.
   }
   currentPopupEventId = null;
+  currentChapterMomentId = null;
   dispatchAnimations = [];
   activeView = "guildhall";
-  selectedGuildRoomId = "questBoard";
+  selectedGuildRoomId = "tavernRoom";
   selectedAdventurerId = null;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
@@ -444,13 +603,24 @@ function resetGame() {
 }
 
 function startIntro() {
+  state.introStep = 0;
   state.screen = "intro";
   render();
+}
+
+function advanceIntro() {
+  if (state.introStep < introScenes.length - 1) {
+    state.introStep += 1;
+    render();
+    return;
+  }
+  enterGame();
 }
 
 function enterGame() {
   state.screen = "game";
   if (!state.founderCreated) {
+    state.chapter.stage = "hero";
     activeView = "hero";
   }
   render();
@@ -464,7 +634,7 @@ function render() {
   elements.gold.textContent = state.gold;
   elements.fame.textContent = state.fame;
   elements.rank.textContent = getRank();
-  elements.rosterValue.textContent = `${state.adventurers.length}/12`;
+  elements.rosterValue.textContent = `${state.adventurers.length}/${getRosterCapacity()}`;
   elements.rankProgress.style.width = `${getRankProgress()}%`;
   elements.creatorPanel.classList.toggle("hidden", state.founderCreated);
 
@@ -476,8 +646,11 @@ function render() {
   renderMissions();
   renderLog();
   renderEventDialog();
+  renderChapterDialog();
+  renderChapterProgress();
   renderActiveView();
   renderFounderPreview();
+  renderIntroScene();
   saveState();
 }
 
@@ -485,20 +658,35 @@ function renderScreens() {
   const titleOpen = state.screen === "title";
   const introOpen = state.screen === "intro";
   const eventOpen = Boolean(currentPopupEventId);
+  const chapterOpen = Boolean(currentChapterMomentId);
   elements.titleScreen.classList.toggle("hidden", !titleOpen);
   elements.introScene.classList.toggle("hidden", !introOpen);
-  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen);
+  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen);
+}
+
+function renderIntroScene() {
+  const scene = introScenes[state.introStep] || introScenes[0];
+  elements.introEyebrow.textContent = scene.eyebrow;
+  elements.introTitle.textContent = scene.title;
+  elements.introCopy.innerHTML = scene.copy.map((paragraph) => `<p>${paragraph}</p>`).join("");
+  elements.introPortrait.className = `unit-sprite slot-${scene.portraitSlot}`;
+  elements.continueIntro.textContent = scene.button;
+  document.querySelectorAll(".story-progress i").forEach((pip, index) => {
+    pip.classList.toggle("active", index <= state.introStep);
+  });
 }
 
 function renderRooms() {
   elements.roomGrid.innerHTML = facilities
     .map((facility) => {
       const level = state.facilities[facility.id];
+      const unlocked = isFacilityUnlocked(facility.id);
+      const built = level > 0;
       return `
-        <article class="room room-${facility.id}" style="grid-column:${facility.gridColumn};grid-row:${facility.gridRow};--room-colour:${facility.colour}">
+        <article class="room room-${facility.id} ${built ? "built" : unlocked ? "available" : "locked"}" style="grid-column:${facility.gridColumn};grid-row:${facility.gridRow};--room-colour:${facility.colour}">
           <span class="room-icon">${facility.icon}</span>
           <span class="room-name">${facility.name}</span>
-          <span class="room-level">Level ${level}</span>
+          <span class="room-level">${built ? `Level ${level}` : unlocked ? "Available" : "Locked"}</span>
           <span class="room-decoration" aria-hidden="true"></span>
         </article>
       `;
@@ -510,21 +698,24 @@ function renderFacilities() {
   elements.facilityList.innerHTML = facilities
     .map((facility) => {
       const level = state.facilities[facility.id];
+      const unlocked = isFacilityUnlocked(facility.id);
+      const built = level > 0;
       const cost = upgradeCost(facility);
       const maxed = level >= 5;
       const levelPips = Array.from({ length: 5 }, (_, index) => `<i class="${index < level ? "filled" : ""}"></i>`).join("");
       return `
-        <article class="facility-card">
+        <article class="facility-card ${built ? "built" : unlocked ? "available" : "locked"}">
           <span class="facility-icon" style="--facility-colour:${facility.colour}" aria-hidden="true">${facility.icon}</span>
           <div class="facility-copy">
             <div class="facility-title">
               <h3>${facility.name}</h3>
-              <span class="facility-levels" aria-label="Level ${level} of 5">${levelPips}</span>
+              <span class="facility-levels" aria-label="${built ? `Level ${level} of 5` : "Not built"}">${levelPips}</span>
             </div>
             <p class="card-meta">${facility.effect}</p>
+            ${!built ? `<p class="facility-requirement">${getFacilityUnlockText(facility.id)}</p>` : ""}
           </div>
-          <button class="secondary-button" data-upgrade="${facility.id}" type="button" ${maxed || state.gold < cost ? "disabled" : ""}>
-            ${maxed ? "Max level" : `${cost}G`}
+          <button class="${built ? "secondary-button" : "primary-button"}" data-upgrade="${facility.id}" type="button" ${!unlocked || maxed || state.gold < cost ? "disabled" : ""}>
+            ${!unlocked ? "Locked" : maxed ? "Max level" : built ? `${cost}G` : `Build ${cost}G`}
           </button>
         </article>
       `;
@@ -538,6 +729,7 @@ function renderFacilities() {
 
 function renderMap() {
   const facilityMarkers = facilities
+    .filter((facility) => state.facilities[facility.id] > 0)
     .map((facility) => `
       <button class="map-facility facility-${facility.id}" data-map-view="facilities" style="left:${facility.mapLeft};top:${facility.mapTop};--marker-colour:${facility.colour}" type="button" aria-label="${facility.name}, level ${state.facilities[facility.id]}">
         <span class="map-building" aria-hidden="true"><i>${facility.icon}</i></span>
@@ -547,7 +739,7 @@ function renderMap() {
     .join("");
 
   const missionMarkers = missionDeck
-    .filter((mission) => state.fame >= mission.unlockFame)
+    .filter((mission) => isMissionVisible(mission))
     .map((mission) => `
       <button class="map-mission" data-map-view="quest" style="left:${mission.marker.left};top:${mission.marker.top}" type="button">
         <span class="mission-pin" aria-hidden="true"></span>
@@ -588,9 +780,9 @@ function renderMap() {
     <span class="region-label region-coast">Silver Coast</span>
     <span class="region-label region-hollow">Darkhollow</span>
     <span class="map-compass" aria-hidden="true">N<i></i></span>
-    <button class="map-guild" data-map-view="guildhall" type="button">
+    <button class="map-guild ${state.chapter.charterEarned ? "chartered" : "tavern-map"}" data-map-view="guildhall" type="button">
       <div class="map-town" aria-hidden="true"><i></i><i></i><i></i></div>
-      <span class="map-label">Guildstead<b>Guild Rank ${getRank()}</b></span>
+      <span class="map-label">${getVenueName()}<b>${state.chapter.charterEarned ? `Guild Rank ${getRank()}` : "Roadside Tavern"}</b></span>
     </button>
     ${facilityMarkers}
     ${missionMarkers}
@@ -610,13 +802,16 @@ function renderMap() {
 }
 
 function renderEventSummaries() {
-  elements.scoutEvent.disabled = !state.founderCreated || state.eventMissions.length >= 3;
+  elements.scoutEvent.disabled = !state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3;
   if (state.eventMissions.length === 0) {
+    const emptyText = state.facilities.questBoard < 1
+      ? "Mara can send scouts once the tavern has a proper Quest Board."
+      : "No urgent realm events. Advance the day or send scouts when the roads grow suspiciously quiet.";
     elements.eventMissionList.innerHTML = `
       <div class="event-empty">
         <span class="empty-sigil" aria-hidden="true">!</span>
         <h3>The roads are quiet</h3>
-        <p>No urgent realm events. Advance the day or send scouts once your hero is ready.</p>
+        <p>${emptyText}</p>
       </div>
     `;
     return;
@@ -676,9 +871,9 @@ function getViewMeta(view) {
       status: "Create your hero to begin managing Guildstead."
     },
     guildhall: {
-      eyebrow: "Guildhall",
-      title: "Management View",
-      status: "Click rooms inside Guildstead to manage quests, adventurers, upgrades, and guild records."
+      eyebrow: state.chapter.charterEarned ? "Guildhall" : "Roadside tavern",
+      title: getVenueName(),
+      status: "Click a room or empty construction space to manage the tavern's growth."
     },
     quest: {
       eyebrow: "Quest board",
@@ -691,9 +886,9 @@ function getViewMeta(view) {
       status: "Select up to three idle adventurers before sending a party."
     },
     facilities: {
-      eyebrow: "Guild hall",
-      title: "Facilities",
-      status: "Upgrade rooms to improve mission rewards, recruits, and recovery."
+      eyebrow: state.chapter.charterEarned ? "Guild hall" : "Tavern plans",
+      title: "Build & Upgrade",
+      status: "Add rooms to the tavern, then improve them as Guildstead's reputation grows."
     },
     events: {
       eyebrow: "Realm events",
@@ -721,9 +916,20 @@ function renderGuildhallInterior() {
   const rooms = guildRooms
     .map((room) => {
       const level = room.facilityId ? state.facilities[room.facilityId] : 1;
+      const unlocked = isFacilityUnlocked(room.facilityId);
+      const built = level > 0;
       const selected = selectedGuildRoomId === room.id;
+      if (!built) {
+        return `
+          <button class="guild-room ${room.id} empty-room ${unlocked ? "available" : "locked"} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
+            <span class="room-label">${room.label}</span>
+            <span class="empty-room-sigil" aria-hidden="true">${unlocked ? "+" : "?"}</span>
+            <span class="empty-room-copy">${unlocked ? "Ready to build" : getFacilityUnlockText(room.facilityId)}</span>
+          </button>
+        `;
+      }
       return `
-        <button class="guild-room ${room.id} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
+        <button class="guild-room ${room.id} built ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
           <span class="room-label">${room.label}</span>
           <span class="room-scene">${renderSprite({ classId: room.occupant, race: "Human", name: room.label }, "small")}</span>
           <span class="room-furniture" aria-hidden="true"></span>
@@ -737,7 +943,7 @@ function renderGuildhallInterior() {
   elements.guildhallInterior.innerHTML = `
     <div class="guildhall-roof">
       <span class="guildhall-crest">G</span>
-      <span>Guildstead Hall</span>
+      <span>${getVenueName()}</span>
       <i class="roof-window" aria-hidden="true"></i>
     </div>
     <div class="guildhall-rooms">${rooms}</div>
@@ -753,20 +959,28 @@ function renderGuildhallInterior() {
 function renderGuildRoomDetail() {
   const room = guildRooms.find((item) => item.id === selectedGuildRoomId) || guildRooms[0];
   const level = room.facilityId ? state.facilities[room.facilityId] : 1;
+  const facility = facilities.find((item) => item.id === room.facilityId);
+  const unlocked = isFacilityUnlocked(room.facilityId);
+  const built = level > 0;
+  const cost = facility ? upgradeCost(facility) : 0;
   elements.guildhallRoomDetail.innerHTML = `
     <article class="room-detail-card">
       <span class="room-detail-icon" aria-hidden="true">${room.label.slice(0, 1)}</span>
       <div class="room-detail-copy">
-        <p class="eyebrow">Selected room</p>
-        <h3>${room.name} <span>Level ${level}</span></h3>
-        <p class="card-meta">${room.description}</p>
+        <p class="eyebrow">${built ? "Selected room" : "Construction space"}</p>
+        <h3>${room.name} ${built ? `<span>Level ${level}</span>` : ""}</h3>
+        <p class="card-meta">${built ? room.description : getFacilityUnlockText(room.facilityId)}</p>
       </div>
-      <button class="primary-button" data-room-action="${room.targetView}" type="button">${room.action}</button>
+      ${built
+        ? `<button class="primary-button" data-room-action="${room.targetView}" type="button">${room.action}</button>`
+        : `<button class="primary-button" data-build-room="${room.facilityId}" type="button" ${!unlocked || state.gold < cost ? "disabled" : ""}>${unlocked ? `Build ${cost}G` : "Locked"}</button>`}
     </article>
   `;
 
   const action = elements.guildhallRoomDetail.querySelector("[data-room-action]");
-  action.addEventListener("click", () => setActiveView(action.dataset.roomAction));
+  action?.addEventListener("click", () => setActiveView(action.dataset.roomAction));
+  const buildAction = elements.guildhallRoomDetail.querySelector("[data-build-room]");
+  buildAction?.addEventListener("click", () => upgradeFacility(buildAction.dataset.buildRoom));
 }
 
 function selectGuildRoom(roomId) {
@@ -798,7 +1012,9 @@ function renderRoster() {
       }).join("")}
     </div>
   `;
-  elements.recruit.disabled = !state.founderCreated || state.gold < 45;
+  const rosterFull = state.adventurers.length >= getRosterCapacity();
+  elements.recruit.disabled = !state.founderCreated || state.gold < 45 || rosterFull;
+  elements.recruit.textContent = rosterFull ? "Dormitory Needed" : "Recruit 45G";
 
   if (state.adventurers.length === 0) {
     elements.rosterList.innerHTML = `<article class="facility-card"><p class="card-meta">Create a hero to open the roster.</p></article>`;
@@ -941,17 +1157,18 @@ function renderMissions() {
     </section>
   `;
 
-  const allMissions = [...missionDeck, ...state.eventMissions];
+  const allMissions = [...missionDeck.filter((mission) => isMissionVisible(mission)), ...state.eventMissions];
   const missionCards = allMissions
     .map((mission) => {
-      const locked = state.fame < (mission.unlockFame || 0);
+      const lockReason = getMissionLockReason(mission);
+      const locked = Boolean(lockReason);
       const active = state.activeMissions.find((activeMission) => activeMission.missionId === mission.id);
       const progress = active ? Math.round((active.elapsed / active.duration) * 100) : 0;
       const odds = selectedParty.length ? getMissionOdds(selectedParty, mission) : 0;
       const oddsTone = odds >= 75 ? "good" : odds >= 45 ? "fair" : "poor";
       const oddsLabel = odds >= 75 ? "Promising" : odds >= 45 ? "Risky" : "Dangerous";
       return `
-        <article class="mission-card ${mission.isEvent ? "event" : ""} ${locked ? "locked" : ""}">
+        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${locked ? "locked" : ""}">
           <div class="mission-card-main">
             <div class="mission-title-row">
               <div>
@@ -960,6 +1177,7 @@ function renderMissions() {
               </div>
               <span class="focus-chip">${mission.focus.toUpperCase()}</span>
             </div>
+            ${mission.description ? `<p class="mission-description">${mission.description}</p>` : ""}
             <div class="reward-row">
               <span>Risk ${mission.difficulty}</span>
               <span>${mission.duration}s</span>
@@ -967,7 +1185,7 @@ function renderMissions() {
               <span>${mission.fame} fame</span>
             </div>
             ${mission.isEvent ? `<p class="mission-note">Expires on day ${mission.expiresDay}</p>` : ""}
-            ${locked ? `<p class="mission-note locked-note">Requires ${mission.unlockFame} fame</p>` : ""}
+            ${locked ? `<p class="mission-note locked-note">${lockReason}</p>` : ""}
             ${active ? `<div class="mission-progress-label"><span>Expedition underway</span><strong>${progress}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>` : ""}
           </div>
           <div class="mission-action">
@@ -1089,12 +1307,13 @@ function createFounder() {
   state.adventurers.push(makeRecruit(2));
   state.adventurers.push(makeRecruit(3));
   selectedAdventurerId = founder.id;
+  state.selectedIds = [founder.id];
   state.founderCreated = true;
-  activeView = "adventurers";
-  addLog(`${name} pins the first charter to the wall. Two hopeful recruits arrive before lunch.`);
-  scoutForEvent(true);
+  state.chapter.stage = "firstQuest";
+  activeView = "quest";
+  addLog(`${name} answers Mara's call. Two tavern regulars volunteer to help with the goblin problem.`);
   render();
-  showToast("Charter signed", `${name} has founded Guildstead.`, "success");
+  showToast("First job posted", `${name} is ready to recover the tavern supplies.`, "info");
 }
 
 function randomiseFounder() {
@@ -1105,7 +1324,7 @@ function randomiseFounder() {
 }
 
 function recruitAdventurer() {
-  if (!state.founderCreated || state.gold < 45) {
+  if (!state.founderCreated || state.gold < 45 || state.adventurers.length >= getRosterCapacity()) {
     return;
   }
   state.gold -= 45;
@@ -1149,11 +1368,11 @@ function makeAdventurer(name, classId, founder) {
 function makeIdentity(name, classId, founder, day) {
   const race = founder ? races[0] : pick(races);
   const origin = founder
-    ? "Founded Guildstead with a charter and a stubborn amount of hope"
+    ? "Answered Mara's call when goblins threatened the Wayfarer's Rest"
     : pick(origins);
   const className = classes[classId].label;
   const firstEntry = founder
-    ? `Founded Guildstead as a ${className}.`
+    ? `Joined the Wayfarer's Rest as its first ${className}.`
     : `${origin} and joined Guildstead as a ${className}.`;
 
   return {
@@ -1217,7 +1436,7 @@ function toggleAdventurer(id) {
 
 function startMission(missionId) {
   const mission = getMission(missionId);
-  if (!mission || state.fame < (mission.unlockFame || 0) || state.selectedIds.length === 0) {
+  if (!mission || getMissionLockReason(mission) || state.selectedIds.length === 0) {
     return;
   }
   const partyIds = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle").slice(0, 3);
@@ -1237,7 +1456,7 @@ function startMission(missionId) {
     missionSnapshot: { ...mission },
     partyIds,
     elapsed: 0,
-    duration: Math.max(6, mission.duration - Math.floor((state.facilities.questBoard - 1) * 1.5))
+    duration: Math.max(5, mission.duration - Math.floor(Math.max(0, state.facilities.questBoard - 1) * 1.5))
   });
 
   if (mission.isEvent) {
@@ -1291,7 +1510,7 @@ function resolveMission(activeMission) {
   const party = activeMission.partyIds.map(getAdventurer).filter(Boolean);
   const power = getPartyPower(party, mission);
   const roll = Math.floor(Math.random() * 18);
-  const success = power + roll >= mission.difficulty;
+  const success = mission.guaranteedSuccess || power + roll >= mission.difficulty;
   const partyNames = party.map((adventurer) => adventurer.name).join(", ");
 
   if (success) {
@@ -1302,9 +1521,10 @@ function resolveMission(activeMission) {
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Completed ${mission.name} and helped earn ${fame} fame.`);
-      grantXp(adventurer, 9 + mission.fame);
+      grantXp(adventurer, 9 + mission.fame + state.facilities.trainingYard * 2);
     });
     addLog(`${partyNames} complete ${mission.name}, earning ${gold}G and ${fame} fame.`);
+    handleChapterMissionSuccess(mission);
     showToast("Mission complete", `${mission.name} earned ${gold}G and ${fame} fame.`, "success");
   } else {
     const consolationGold = Math.floor(mission.gold * 0.3);
@@ -1316,7 +1536,7 @@ function resolveMission(activeMission) {
     });
     const injured = party[Math.floor(Math.random() * party.length)];
     injured.status = "injured";
-    injured.recovery = Math.max(4, 12 - state.facilities.infirmary * 2);
+    injured.recovery = Math.max(4, 12 - state.facilities.dormitory * 2);
     addLifeEvent(injured, `Was injured during ${mission.name}.`);
     addLog(`${partyNames} retreat from ${mission.name}. ${injured.name} needs ${injured.recovery}s to recover.`);
     showToast("Party retreated", `${injured.name} was injured at ${mission.location}.`, "danger");
@@ -1331,6 +1551,8 @@ function getPartyPower(party, mission) {
   const facilityPower =
     state.facilities.trainingYard * 2 +
     state.facilities.workshop * 3 +
+    state.facilities.kitchen * 2 +
+    state.facilities.dormitory +
     state.facilities.tavern;
   return Math.floor(statPower / 3 + facilityPower);
 }
@@ -1354,20 +1576,31 @@ function upgradeFacility(id) {
   if (!facility) {
     return;
   }
-  const current = state.facilities[id];
+  const current = state.facilities[id] || 0;
   const cost = upgradeCost(facility);
-  if (current >= 5 || state.gold < cost) {
+  if (!isFacilityUnlocked(id) || current >= 5 || state.gold < cost) {
     return;
   }
   state.gold -= cost;
-  state.facilities[id] += 1;
-  addLog(`${facility.name} improves to level ${state.facilities[id]}.`);
+  state.facilities[id] = current + 1;
+  const built = current === 0;
+  addLog(built ? `${facility.name} is built at the Wayfarer's Rest.` : `${facility.name} improves to level ${state.facilities[id]}.`);
+  if (id === "questBoard" && built && state.chapter.stage === "buildBoard") {
+    state.chapter.stage = "localRequests";
+    activeView = "quest";
+    addLog("Mara pins the first three local requests to the new board.");
+  }
+  if (["dormitory", "trainingYard", "kitchen"].includes(id) && built && state.chapter.stage === "expansion") {
+    state.chapter.stage = "boss";
+    activeView = "quest";
+    addLog("With the tavern expanded, Mara marks the Barrow Hill goblin camp on the map.");
+  }
   render();
-  showToast("Facility improved", `${facility.name} is now level ${state.facilities[id]}.`, "success");
+  showToast(built ? "New room built" : "Facility improved", `${facility.name} is now level ${state.facilities[id]}.`, "success");
 }
 
 function scoutForEvent(force = false) {
-  if (!state.founderCreated || state.eventMissions.length >= 3) {
+  if (!state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3) {
     return;
   }
   if (!force && Math.random() > 0.55) {
@@ -1451,15 +1684,15 @@ function playDispatchAnimation(party, mission) {
 }
 
 function upgradeCost(facility) {
-  const level = state.facilities[facility.id];
-  return facility.baseCost + (level - 1) * 80;
+  const level = state.facilities[facility.id] || 0;
+  return level === 0 ? facility.buildCost : facility.baseCost + (level - 1) * 80;
 }
 
 function advanceDays(amount) {
   state.day += amount;
   checkBirthdays();
   expireEvents();
-  const stipend = 12 + state.facilities.tavern * 2;
+  const stipend = 10 + state.facilities.tavern * 3 + state.facilities.kitchen * 3;
   state.gold += stipend;
   if (state.day % 7 === 0) {
     const upkeep = Math.max(8, state.adventurers.length * 7 - state.fame);
@@ -1468,10 +1701,180 @@ function advanceDays(amount) {
   } else {
     addLog(`A steady day brings in ${stipend}G from odd jobs and room hire.`);
   }
-  if (state.founderCreated && state.day % 3 === 0 && state.eventMissions.length < 2) {
+  if (state.founderCreated && state.facilities.questBoard > 0 && state.day % 3 === 0 && state.eventMissions.length < 2) {
     scoutForEvent(true);
   }
   render();
+}
+
+function renderChapterProgress() {
+  const objective = getChapterObjective();
+  elements.chapterObjective.innerHTML = `
+    <span class="chapter-number" aria-hidden="true">1</span>
+    <div class="chapter-objective-copy">
+      <span>Chapter One: Goblin Trouble</span>
+      <strong>${objective.title}</strong>
+      <small>${objective.detail}</small>
+    </div>
+    <div class="chapter-meter" aria-label="Chapter ${objective.progress}% complete">
+      <i style="width:${objective.progress}%"></i>
+      <b>${objective.progress}%</b>
+    </div>
+  `;
+}
+
+function getChapterObjective() {
+  const completed = state.chapter.completedLocalMissions.length;
+  const objectives = {
+    tavern: { title: "Open the tavern", detail: "A quiet morning is about to become rather less quiet.", progress: 0 },
+    hero: { title: "Choose your first hero", detail: "Find someone willing to investigate the goblin raid.", progress: 8 },
+    firstQuest: { title: "Recover the stolen supplies", detail: "Select a party and follow the tracks along Greenbank Lane.", progress: 18 },
+    buildBoard: { title: "Build the Quest Board", detail: "Spend 55G to turn Mara's idea into a proper local service.", progress: 32 },
+    localRequests: { title: `Complete local requests (${completed}/3)`, detail: "Help Greenbank and earn enough trust to expand the tavern.", progress: 38 + completed * 12 },
+    expansion: { title: "Choose your first expansion", detail: "Build a Dormitory, Training Yard, or Kitchen.", progress: 78 },
+    boss: { title: "Defeat the Barrow Hill Chief", detail: "End the goblin threat and earn an official guild charter.", progress: 90 },
+    chartered: { title: "Guildstead is officially open", detail: "The Western March now has an adventurers' guild of its own.", progress: 100 }
+  };
+  return objectives[state.chapter.stage] || objectives.chartered;
+}
+
+function renderChapterDialog() {
+  const moment = currentChapterMomentId ? chapterMoments[currentChapterMomentId] : null;
+  elements.chapterDialog.classList.toggle("hidden", !moment);
+  if (!moment) {
+    return;
+  }
+  elements.chapterDialogEyebrow.textContent = moment.eyebrow;
+  elements.chapterDialogTitle.textContent = moment.title;
+  elements.chapterDialogText.textContent = moment.text;
+  elements.chapterDialogButton.textContent = moment.button;
+}
+
+function closeChapterMoment() {
+  const moment = currentChapterMomentId ? chapterMoments[currentChapterMomentId] : null;
+  currentChapterMomentId = null;
+  if (moment?.view) {
+    activeView = moment.view;
+  }
+  render();
+}
+
+function showChapterMoment(id) {
+  if (!chapterMoments[id]) {
+    return;
+  }
+  currentPopupEventId = null;
+  currentChapterMomentId = id;
+}
+
+function handleChapterMissionSuccess(mission) {
+  if (mission.tutorial && state.chapter.stage === "firstQuest") {
+    state.chapter.stage = "buildBoard";
+    showChapterMoment("questBoard");
+    return;
+  }
+  if (mission.localRequest && !state.chapter.completedLocalMissions.includes(mission.id)) {
+    state.chapter.completedLocalMissions.push(mission.id);
+    if (state.chapter.completedLocalMissions.length >= 3 && !state.chapter.charterEarned) {
+      state.chapter.stage = "expansion";
+      showChapterMoment("expansion");
+    }
+    return;
+  }
+  if (mission.chapterBoss && !state.chapter.charterEarned) {
+    state.chapter.stage = "chartered";
+    state.chapter.charterEarned = true;
+    showChapterMoment("charter");
+  }
+}
+
+function isFacilityUnlocked(id) {
+  if (id === "tavern") {
+    return true;
+  }
+  if (id === "questBoard") {
+    return ["buildBoard", "localRequests", "expansion", "boss", "chartered"].includes(state.chapter.stage);
+  }
+  if (["dormitory", "trainingYard", "kitchen"].includes(id)) {
+    return state.chapter.completedLocalMissions.length >= 3 || state.chapter.charterEarned;
+  }
+  if (id === "workshop") {
+    return state.chapter.charterEarned;
+  }
+  return false;
+}
+
+function getFacilityUnlockText(id) {
+  if (id === "tavern") {
+    return "The starting room at the Wayfarer's Rest.";
+  }
+  if (id === "questBoard") {
+    return isFacilityUnlocked(id) ? "Mara's salvaged noticeboard is ready to build." : "Recover the stolen tavern supplies first.";
+  }
+  if (["dormitory", "trainingYard", "kitchen"].includes(id)) {
+    const remaining = Math.max(0, 3 - state.chapter.completedLocalMissions.length);
+    return isFacilityUnlocked(id) ? "Blueprint unlocked by helping Greenbank." : `Complete ${remaining} more local request${remaining === 1 ? "" : "s"}.`;
+  }
+  if (id === "workshop") {
+    return isFacilityUnlocked(id) ? "Unlocked by the official guild charter." : "Defeat the Barrow Hill chief and earn a guild charter.";
+  }
+  return "Blueprint not yet discovered.";
+}
+
+function isMissionVisible(mission) {
+  const active = state.activeMissions.some((activeMission) => activeMission.missionId === mission.id);
+  if (mission.tutorial) {
+    return active || ["firstQuest", "buildBoard"].includes(state.chapter.stage);
+  }
+  if (mission.localRequest) {
+    return state.facilities.questBoard > 0;
+  }
+  if (mission.chapterBoss) {
+    return state.facilities.questBoard > 0;
+  }
+  if (mission.postCharter) {
+    return state.chapter.charterEarned;
+  }
+  return true;
+}
+
+function getMissionLockReason(mission) {
+  if (mission.isEvent) {
+    return state.fame < (mission.unlockFame || 0) ? `Requires ${mission.unlockFame} fame` : "";
+  }
+  if (mission.tutorial && !["firstQuest", "buildBoard"].includes(state.chapter.stage)) {
+    return "Complete the tavern opening first";
+  }
+  if (mission.localRequest && state.facilities.questBoard < 1) {
+    return "Build the Quest Board first";
+  }
+  if (mission.chapterBoss) {
+    if (state.chapter.completedLocalMissions.length < 3) {
+      return `Complete ${state.chapter.completedLocalMissions.length}/3 local requests`;
+    }
+    if (getExpansionCount() < 1) {
+      return "Build your first tavern expansion";
+    }
+  }
+  if (mission.postCharter && !state.chapter.charterEarned) {
+    return "Earn the official guild charter";
+  }
+  if (state.fame < (mission.unlockFame || 0)) {
+    return `Requires ${mission.unlockFame} fame`;
+  }
+  return "";
+}
+
+function getExpansionCount() {
+  return ["dormitory", "trainingYard", "kitchen"].filter((id) => state.facilities[id] > 0).length;
+}
+
+function getVenueName() {
+  return state.chapter.charterEarned ? "Guildstead Hall" : "The Wayfarer's Rest";
+}
+
+function getRosterCapacity() {
+  return Math.min(12, 3 + state.facilities.dormitory * 3);
 }
 
 function getRank() {
@@ -1512,6 +1915,9 @@ function getCalendar() {
 function getMissionOdds(party, mission) {
   if (!party.length) {
     return 0;
+  }
+  if (mission.guaranteedSuccess) {
+    return 100;
   }
   const power = getPartyPower(party, mission);
   const requiredRoll = mission.difficulty - power;

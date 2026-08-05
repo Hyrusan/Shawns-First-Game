@@ -11,6 +11,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Goblin quest chain culminating in the Barrow Hill chief
 - Male and female hero creation across four visual classes
 - Persistent adventurer profiles and two complementary sprite atlases
+- Positive and negative quirks with real quest effects
+- Natural class abilities, long-term potential, and Training Yard techniques
 - Three-person expedition parties
 - Class-specific expedition battle animations
 - Real-time mission clocks that continue while managing other screens

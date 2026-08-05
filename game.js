@@ -1,13 +1,63 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 8;
+const SAVE_VERSION = 9;
 
 const classes = {
-  warden: { label: "Warrior", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
-  spellwright: { label: "Mage", stats: { str: 3, mag: 9, wit: 7, cha: 4 } },
-  ranger: { label: "Ranger", stats: { str: 6, mag: 4, wit: 8, cha: 5 } },
-  minstrel: { label: "Minstrel", stats: { str: 4, mag: 5, wit: 6, cha: 9 } },
-  rookie: { label: "Rookie", stats: { str: 5, mag: 4, wit: 5, cha: 5 } }
+  warden: { label: "Warrior", primary: "str", secondary: "wit", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
+  spellwright: { label: "Mage", primary: "mag", secondary: "wit", stats: { str: 3, mag: 9, wit: 7, cha: 4 } },
+  ranger: { label: "Ranger", primary: "wit", secondary: "str", stats: { str: 6, mag: 4, wit: 8, cha: 5 } },
+  minstrel: { label: "Minstrel", primary: "cha", secondary: "mag", stats: { str: 4, mag: 5, wit: 6, cha: 9 } },
+  rookie: { label: "Rookie", primary: "str", secondary: "wit", stats: { str: 5, mag: 4, wit: 5, cha: 5 } }
 };
+
+const quirkCatalog = {
+  dauntless: { name: "Dauntless", tone: "positive", description: "+4 power on dangerous quests.", dangerPower: 4 },
+  quickStudy: { name: "Quick Study", tone: "positive", description: "Earns 15% more experience.", xpRate: 1.15 },
+  keenEye: { name: "Keen Eye", tone: "positive", description: "+3 power on WIT quests.", focus: "wit", focusPower: 3 },
+  hearty: { name: "Hearty", tone: "positive", description: "Recovers from injuries 3 seconds sooner.", recoveryReduction: 3 },
+  charmer: { name: "Charming", tone: "positive", description: "Adds 6% to quest gold rewards.", goldRate: 0.06 },
+  lucky: { name: "Lucky", tone: "positive", description: "+2 to the party's success roll.", rollBonus: 2 },
+  nervous: { name: "Nervous", tone: "negative", description: "-3 power on dangerous quests.", dangerPower: -3 },
+  clumsy: { name: "Clumsy", tone: "negative", description: "-2 power on every quest.", power: -2 },
+  homesick: { name: "Homesick", tone: "negative", description: "Journeys take 8% longer.", durationRate: 1.08 },
+  stubborn: { name: "Stubborn", tone: "negative", description: "Earns 10% less experience.", xpRate: 0.9 },
+  frail: { name: "Frail", tone: "negative", description: "Injuries take 3 seconds longer to heal.", recoveryReduction: -3 },
+  showboat: { name: "Showboat", tone: "negative", description: "-3 power when travelling alone.", soloPower: -3 }
+};
+
+const abilityCatalog = {
+  shieldBash: { name: "Shield Bash", source: "natural", classId: "warden", level: 1, description: "+4 power on STR quests.", focus: "str", focusPower: 4 },
+  holdTheLine: { name: "Hold the Line", source: "natural", classId: "warden", level: 4, description: "+2 power for every companion.", allyPower: 2 },
+  steelResolve: { name: "Steel Resolve", source: "natural", classId: "warden", level: 8, description: "Recovers from injuries 4 seconds sooner.", recoveryReduction: 4 },
+  emberBolt: { name: "Ember Bolt", source: "natural", classId: "spellwright", level: 1, description: "+4 power on MAG quests.", focus: "mag", focusPower: 4 },
+  arcaneStudy: { name: "Arcane Study", source: "natural", classId: "spellwright", level: 4, description: "Earns 12% more experience.", xpRate: 1.12 },
+  grandRitual: { name: "Grand Ritual", source: "natural", classId: "spellwright", level: 8, description: "+5 power on dangerous quests.", dangerPower: 5 },
+  aimedShot: { name: "Aimed Shot", source: "natural", classId: "ranger", level: 1, description: "+4 power on WIT quests.", focus: "wit", focusPower: 4 },
+  pathfinder: { name: "Pathfinder", source: "natural", classId: "ranger", level: 4, description: "Reduces journey time by 8%.", durationRate: 0.92 },
+  monsterHunter: { name: "Monster Hunter", source: "natural", classId: "ranger", level: 8, description: "+5 power on dangerous quests.", dangerPower: 5 },
+  rousingVerse: { name: "Rousing Verse", source: "natural", classId: "minstrel", level: 1, description: "+2 power for every companion.", allyPower: 2 },
+  fortunateTune: { name: "Fortunate Tune", source: "natural", classId: "minstrel", level: 4, description: "Adds 8% to quest gold rewards.", goldRate: 0.08 },
+  heroesEncore: { name: "Hero's Encore", source: "natural", classId: "minstrel", level: 8, description: "Successful quests earn 1 extra fame.", fameBonus: 1 },
+  luckySwing: { name: "Lucky Swing", source: "natural", classId: "rookie", level: 1, description: "+2 power on every quest.", power: 2 },
+  adaptable: { name: "Adaptable", source: "natural", classId: "rookie", level: 4, description: "+2 power on the quest's key stat.", focusPower: 2 },
+  fieldDressing: { name: "Field Dressing", source: "training", trainingLevel: 1, cost: 35, description: "Recovers from injuries 3 seconds sooner.", recoveryReduction: 3 },
+  questcraft: { name: "Questcraft", source: "training", trainingLevel: 1, cost: 45, description: "+2 power on every quest.", power: 2 },
+  rapidStudy: { name: "Rapid Study", source: "training", trainingLevel: 2, cost: 65, description: "Earns 15% more experience.", xpRate: 1.15 },
+  trailMarch: { name: "Trail March", source: "training", trainingLevel: 2, cost: 70, description: "Reduces journey time by 8%.", durationRate: 0.92 },
+  monsterLore: { name: "Monster Lore", source: "training", trainingLevel: 3, cost: 95, description: "+4 power on dangerous quests.", dangerPower: 4 },
+  inspiringPresence: { name: "Inspiring Presence", source: "training", trainingLevel: 3, cost: 105, description: "+2 power for every companion.", allyPower: 2 }
+};
+
+const classAbilityTracks = {
+  warden: ["shieldBash", "holdTheLine", "steelResolve"],
+  spellwright: ["emberBolt", "arcaneStudy", "grandRitual"],
+  ranger: ["aimedShot", "pathfinder", "monsterHunter"],
+  minstrel: ["rousingVerse", "fortunateTune", "heroesEncore"],
+  rookie: ["luckySwing", "adaptable"]
+};
+
+const trainingAbilityIds = ["fieldDressing", "questcraft", "rapidStudy", "trailMarch", "monsterLore", "inspiringPresence"];
+const positiveQuirkIds = ["dauntless", "quickStudy", "keenEye", "hearty", "charmer", "lucky"];
+const negativeQuirkIds = ["nervous", "clumsy", "homesick", "stubborn", "frail", "showboat"];
 
 const introScenes = [
   {
@@ -545,7 +595,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -752,7 +802,7 @@ function renderFacilities() {
 
 function renderMap() {
   const facilityMarkers = facilities
-    .filter((facility) => state.facilities[facility.id] > 0)
+    .filter((facility) => facility.id !== "tavern" && state.facilities[facility.id] > 0)
     .map((facility) => `
       <button class="map-facility facility-${facility.id}" data-map-view="facilities" style="left:${facility.mapLeft};top:${facility.mapTop};--marker-colour:${facility.colour}" type="button" aria-label="${facility.name}, level ${state.facilities[facility.id]}">
         <span class="map-building" aria-hidden="true"><i>${facility.icon}</i></span>
@@ -1065,6 +1115,10 @@ function renderRoster() {
                 <span class="badge">${statusText}</span>
               </div>
               <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${adventurer.race} ${classes[adventurer.classId].label} | Age ${adventurer.age}</p>
+              <div class="quirk-peek">
+                <span class="positive">+ ${quirkCatalog[adventurer.quirks.positive].name}</span>
+                <span class="negative">- ${quirkCatalog[adventurer.quirks.negative].name}</span>
+              </div>
               <div class="stats-row">
                 ${miniStat("STR", adventurer.stats.str)}
                 ${miniStat("MAG", adventurer.stats.mag)}
@@ -1126,6 +1180,11 @@ function renderAdventurerDetail() {
           <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${adventurer.race} ${classes[adventurer.classId].label} | Level ${adventurer.level} | ${adventurer.status}</p>
           <div class="xp-line"><span>Experience</span><strong>${adventurer.xp}/${xpForNext(adventurer.level)}</strong></div>
           <div class="progress-track slim"><div class="progress-fill" style="width:${xpProgress}%"></div></div>
+          <div class="potential-line">
+            <span>Potential</span>
+            ${renderPotential(adventurer.potential)}
+            <strong>${getPotentialLabel(adventurer.potential)}</strong>
+          </div>
         </div>
       </div>
 
@@ -1150,6 +1209,31 @@ function renderAdventurerDetail() {
 
       <p class="profile-note">${race?.note || "A curious soul with a future to write."}</p>
 
+      <section class="character-section">
+        <div class="section-line-heading">
+          <p class="eyebrow">Quirks</p>
+          <span>Every strength has company</span>
+        </div>
+        <div class="quirk-list">
+          ${renderQuirk(adventurer.quirks.positive)}
+          ${renderQuirk(adventurer.quirks.negative)}
+        </div>
+      </section>
+
+      <section class="character-section">
+        <div class="section-line-heading">
+          <p class="eyebrow">Abilities</p>
+          <span>${(adventurer.abilities || []).length} learned</span>
+        </div>
+        <div class="ability-list">${renderKnownAbilities(adventurer)}</div>
+      </section>
+
+      ${renderTrainingCurriculum(adventurer)}
+
+      <div class="section-line-heading personality-heading">
+        <p class="eyebrow">Personality</p>
+        <span>Life at the guild shapes these traits</span>
+      </div>
       <div class="trait-grid">
         ${traitLabels.map(([key, label]) => renderTrait(label, adventurer.traits[key])).join("")}
       </div>
@@ -1160,6 +1244,10 @@ function renderAdventurerDetail() {
       </div>
     </article>
   `;
+
+  elements.adventurerDetail.querySelectorAll("[data-teach-ability]").forEach((button) => {
+    button.addEventListener("click", () => teachAbility(adventurer.id, button.dataset.teachAbility));
+  });
 }
 
 function renderMissions() {
@@ -1207,7 +1295,7 @@ function renderMissions() {
             ${mission.description ? `<p class="mission-description">${mission.description}</p>` : ""}
             <div class="reward-row">
               <span>Risk ${mission.difficulty}</span>
-              <span>${formatMissionTime(mission.duration)}</span>
+              <span>${formatMissionTime(selectedParty.length ? getMissionDuration(mission, selectedParty) : mission.duration)}</span>
               <span>${mission.gold}G</span>
               <span>${mission.fame} fame</span>
             </div>
@@ -1342,6 +1430,90 @@ function renderTrait(label, value = 1) {
       <span>${label}</span>
       <span class="trait-pips" aria-label="${label} ${value} out of 5">${pips}</span>
     </div>
+  `;
+}
+
+function renderPotential(value) {
+  const pips = Array.from({ length: 5 }, (_, index) => `<i class="${index < value ? "filled" : ""}"></i>`).join("");
+  return `<span class="potential-pips" aria-label="Potential ${value} out of 5">${pips}</span>`;
+}
+
+function renderQuirk(id) {
+  const quirk = quirkCatalog[id];
+  if (!quirk) {
+    return "";
+  }
+  return `
+    <div class="quirk-row ${quirk.tone}">
+      <span class="quirk-sign" aria-hidden="true">${quirk.tone === "positive" ? "+" : "-"}</span>
+      <div><strong>${quirk.name}</strong><small>${quirk.description}</small></div>
+    </div>
+  `;
+}
+
+function renderAbilityRow(id, extraClass = "") {
+  const ability = abilityCatalog[id];
+  if (!ability) {
+    return "";
+  }
+  const source = ability.source === "natural" ? `Class ability | Lv ${ability.level}` : "Training ability";
+  return `
+    <div class="ability-row ${extraClass}">
+      <span class="ability-sigil" aria-hidden="true">${ability.source === "natural" ? classes[ability.classId]?.label.slice(0, 1) || "A" : "T"}</span>
+      <div><strong>${ability.name}</strong><small>${ability.description}</small></div>
+      <span class="ability-source">${source}</span>
+    </div>
+  `;
+}
+
+function renderKnownAbilities(adventurer) {
+  const known = (adventurer.abilities || []).map((id) => renderAbilityRow(id)).join("");
+  const nextNaturalId = (classAbilityTracks[adventurer.classId] || [])
+    .find((id) => !adventurer.abilities.includes(id));
+  const nextNatural = nextNaturalId ? abilityCatalog[nextNaturalId] : null;
+  const nextRow = nextNatural
+    ? `<div class="ability-row upcoming"><span class="ability-sigil" aria-hidden="true">?</span><div><strong>${nextNatural.name}</strong><small>Naturally learned at level ${nextNatural.level}.</small></div><span class="ability-source">Upcoming</span></div>`
+    : "";
+  return known + nextRow || `<p class="system-empty">No abilities learned yet.</p>`;
+}
+
+function renderTrainingCurriculum(adventurer) {
+  const trainingLevel = state.facilities.trainingYard || 0;
+  const learned = getTaughtAbilityIds(adventurer).length;
+  const capacity = getTrainingCapacity(adventurer);
+  if (trainingLevel < 1) {
+    return `
+      <section class="character-section training-section locked">
+        <div class="section-line-heading"><p class="eyebrow">Training</p><span>${learned}/${capacity} techniques</span></div>
+        <p class="system-empty">Build the Training Yard during Guildstead's first expansion to teach this adventurer new abilities.</p>
+      </section>
+    `;
+  }
+
+  const rows = trainingAbilityIds.map((id) => {
+    const ability = abilityCatalog[id];
+    const known = adventurer.abilities.includes(id);
+    const levelLocked = trainingLevel < ability.trainingLevel;
+    const full = learned >= capacity && !known;
+    const disabled = known || levelLocked || full || state.gold < ability.cost || adventurer.status !== "idle";
+    const buttonText = known ? "Learned" : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : adventurer.status !== "idle" ? "Unavailable" : `${ability.cost}G`;
+    return `
+      <div class="training-row ${known ? "known" : ""} ${levelLocked ? "locked" : ""}">
+        <span class="ability-sigil" aria-hidden="true">T</span>
+        <div><strong>${ability.name}</strong><small>${ability.description}</small></div>
+        <button class="secondary-button" data-teach-ability="${id}" type="button" ${disabled ? "disabled" : ""}>${buttonText}</button>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <section class="character-section training-section">
+      <div class="section-line-heading">
+        <p class="eyebrow">Training Yard Lv ${trainingLevel}</p>
+        <span>${learned}/${capacity} techniques</span>
+      </div>
+      <div class="training-list">${rows}</div>
+    </section>
   `;
 }
 
@@ -1483,6 +1655,7 @@ function makeAdventurer(name, classId, founder, gender = null) {
     xp: 0,
     status: "idle",
     recovery: 0,
+    abilities: getNaturalAbilityIds(classId, 1),
     stats: { ...base }
   };
 }
@@ -1505,6 +1678,8 @@ function makeIdentity(name, classId, founder, day, gender = null) {
     dream: pick(dreams),
     origin,
     birthdayDay: 1 + Math.floor(Math.random() * 28),
+    potential: founder ? 5 : 2 + Math.floor(Math.random() * 3),
+    quirks: rollQuirks(),
     traits: rollTraits(founder),
     lifeLog: [{ day: day || 1, text: firstEntry }]
   };
@@ -1515,7 +1690,7 @@ function normaliseAdventurer(adventurer, day) {
   const legacyFounderGender = ["spellwright", "ranger"].includes(classId) ? "female" : "male";
   const gender = adventurer.gender || (adventurer.founder ? legacyFounderGender : (Math.random() > 0.5 ? "female" : "male"));
   const identity = makeIdentity(adventurer.name || "Adventurer", classId, Boolean(adventurer.founder), day || 1, gender);
-  return {
+  const normalised = {
     ...adventurer,
     name: adventurer.name || "Adventurer",
     classId,
@@ -1526,9 +1701,30 @@ function normaliseAdventurer(adventurer, day) {
     dream: adventurer.dream || identity.dream,
     origin: adventurer.origin || identity.origin,
     birthdayDay: adventurer.birthdayDay || identity.birthdayDay,
+    potential: adventurer.founder ? 5 : Math.max(1, Math.min(5, adventurer.potential || identity.potential)),
+    quirks: {
+      positive: adventurer.quirks?.positive && quirkCatalog[adventurer.quirks.positive] ? adventurer.quirks.positive : identity.quirks.positive,
+      negative: adventurer.quirks?.negative && quirkCatalog[adventurer.quirks.negative] ? adventurer.quirks.negative : identity.quirks.negative
+    },
+    abilities: Array.isArray(adventurer.abilities) ? adventurer.abilities.filter((id) => abilityCatalog[id]) : [],
     traits: { ...identity.traits, ...(adventurer.traits || {}) },
     lifeLog: adventurer.lifeLog?.length ? adventurer.lifeLog : identity.lifeLog,
     stats: { ...classes[classId].stats, ...(adventurer.stats || {}) }
+  };
+  syncNaturalAbilities(normalised);
+  return normalised;
+}
+
+function rollQuirks() {
+  const positive = pick(positiveQuirkIds);
+  const conflicts = {
+    dauntless: "nervous",
+    quickStudy: "stubborn",
+    hearty: "frail"
+  };
+  return {
+    positive,
+    negative: pick(negativeQuirkIds.filter((id) => id !== conflicts[positive]))
   };
 }
 
@@ -1545,6 +1741,129 @@ function rollTraits(founder) {
 
 function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
+}
+
+function getNaturalAbilityIds(classId, level) {
+  return (classAbilityTracks[classId] || [])
+    .filter((id) => abilityCatalog[id].level <= level);
+}
+
+function syncNaturalAbilities(adventurer, announce = false) {
+  if (!Array.isArray(adventurer.abilities)) {
+    adventurer.abilities = [];
+  }
+  getNaturalAbilityIds(adventurer.classId, adventurer.level || 1).forEach((id) => {
+    if (adventurer.abilities.includes(id)) {
+      return;
+    }
+    adventurer.abilities.push(id);
+    if (announce) {
+      const ability = abilityCatalog[id];
+      addLifeEvent(adventurer, `Naturally learned ${ability.name}.`);
+      addLog(`${adventurer.name} naturally learns ${ability.name}.`);
+    }
+  });
+}
+
+function getTaughtAbilityIds(adventurer) {
+  return (adventurer.abilities || []).filter((id) => abilityCatalog[id]?.source === "training");
+}
+
+function getTrainingCapacity(adventurer) {
+  if (adventurer.potential >= 5) {
+    return 4;
+  }
+  if (adventurer.potential >= 3) {
+    return 3;
+  }
+  return 2;
+}
+
+function getPotentialLabel(potential) {
+  return ["Unproven", "Steady", "Promising", "Remarkable", "Exceptional"][Math.max(1, potential) - 1] || "Unproven";
+}
+
+function getCharacterEffects(adventurer) {
+  const quirkIds = [adventurer.quirks?.positive, adventurer.quirks?.negative].filter(Boolean);
+  return [...quirkIds, ...(adventurer.abilities || [])]
+    .map((id) => quirkCatalog[id] || abilityCatalog[id])
+    .filter(Boolean);
+}
+
+function getEffectMissionPower(effect, mission, partySize) {
+  let power = effect.power || 0;
+  if (effect.focusPower && (!effect.focus || effect.focus === mission.focus)) {
+    power += effect.focusPower;
+  }
+  if (effect.dangerPower && mission.difficulty >= 45) {
+    power += effect.dangerPower;
+  }
+  if (effect.allyPower) {
+    power += effect.allyPower * Math.max(0, partySize - 1);
+  }
+  if (effect.soloPower && partySize === 1) {
+    power += effect.soloPower;
+  }
+  return power;
+}
+
+function getPotentialPower(adventurer) {
+  return Math.floor(Math.max(0, adventurer.potential - 1) * Math.max(1, adventurer.level) / 4);
+}
+
+function getPartyDurationRate(party) {
+  const adjustment = party.reduce((total, adventurer) => {
+    return total + getCharacterEffects(adventurer).reduce((sum, effect) => sum + ((effect.durationRate || 1) - 1), 0);
+  }, 0);
+  return Math.max(0.75, Math.min(1.25, 1 + adjustment));
+}
+
+function getPartyRollBonus(party) {
+  return party.reduce((total, adventurer) => {
+    return total + getCharacterEffects(adventurer).reduce((sum, effect) => sum + (effect.rollBonus || 0), 0);
+  }, 0);
+}
+
+function getPartyGoldRate(party) {
+  return 1 + party.reduce((total, adventurer) => {
+    return total + getCharacterEffects(adventurer).reduce((sum, effect) => sum + (effect.goldRate || 0), 0);
+  }, 0);
+}
+
+function getPartyFameBonus(party) {
+  return party.reduce((total, adventurer) => {
+    return total + getCharacterEffects(adventurer).reduce((sum, effect) => sum + (effect.fameBonus || 0), 0);
+  }, 0);
+}
+
+function getXpRate(adventurer) {
+  return getCharacterEffects(adventurer).reduce((rate, effect) => rate * (effect.xpRate || 1), 1);
+}
+
+function getRecoveryReduction(adventurer) {
+  return getCharacterEffects(adventurer).reduce((total, effect) => total + (effect.recoveryReduction || 0), 0);
+}
+
+function teachAbility(adventurerId, abilityId) {
+  const adventurer = getAdventurer(adventurerId);
+  const ability = abilityCatalog[abilityId];
+  const trainingLevel = state.facilities.trainingYard || 0;
+  if (!adventurer || !ability || ability.source !== "training" || adventurer.status !== "idle") {
+    return;
+  }
+  if (trainingLevel < ability.trainingLevel || state.gold < ability.cost || adventurer.abilities.includes(abilityId)) {
+    return;
+  }
+  if (getTaughtAbilityIds(adventurer).length >= getTrainingCapacity(adventurer)) {
+    showToast("Training capacity reached", `${adventurer.name} cannot master another taught ability.`, "danger");
+    return;
+  }
+  state.gold -= ability.cost;
+  adventurer.abilities.push(abilityId);
+  addLifeEvent(adventurer, `Learned ${ability.name} in the Training Yard.`);
+  addLog(`${adventurer.name} masters ${ability.name} in the Training Yard.`);
+  render();
+  showToast("Ability learned", `${adventurer.name} learned ${ability.name}.`, "success");
 }
 
 function toggleAdventurer(id) {
@@ -1576,7 +1895,7 @@ function startMission(missionId) {
     addLifeEvent(adventurer, `Set out for ${mission.name}.`);
   });
 
-  const duration = Math.max(20, mission.duration - Math.floor(Math.max(0, state.facilities.questBoard - 1) * 1.5));
+  const duration = getMissionDuration(mission, party);
   const startedAt = Date.now();
   state.activeMissions.push({
     id: crypto.randomUUID(),
@@ -1601,6 +1920,11 @@ function startMission(missionId) {
   render();
   playDispatchAnimation(party, mission);
   showToast("Expedition departed", `${party.map((adventurer) => adventurer.name).join(", ")} set out for ${mission.location}.`, "info");
+}
+
+function getMissionDuration(mission, party) {
+  const baseDuration = mission.duration - Math.floor(Math.max(0, state.facilities.questBoard - 1) * 1.5);
+  return Math.max(20, Math.round(baseDuration * getPartyDurationRate(party)));
 }
 
 function tick() {
@@ -1642,19 +1966,20 @@ function resolveMission(activeMission) {
   const mission = getMissionForActive(activeMission);
   const party = activeMission.partyIds.map(getAdventurer).filter(Boolean);
   const power = getPartyPower(party, mission);
-  const roll = Math.floor(Math.random() * 18);
+  const roll = Math.floor(Math.random() * 18) + getPartyRollBonus(party);
   const success = mission.guaranteedSuccess || power + roll >= mission.difficulty;
   const partyNames = party.map((adventurer) => adventurer.name).join(", ");
 
   if (success) {
-    const gold = mission.gold + state.facilities.questBoard * 6;
-    const fame = mission.fame + Math.floor(state.facilities.questBoard / 2);
+    const baseGold = mission.gold + state.facilities.questBoard * 6;
+    const gold = Math.round(baseGold * getPartyGoldRate(party));
+    const fame = mission.fame + Math.floor(state.facilities.questBoard / 2) + getPartyFameBonus(party);
     state.gold += gold;
     state.fame += fame;
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Completed ${mission.name} and helped earn ${fame} fame.`);
-      grantXp(adventurer, 9 + mission.fame + state.facilities.trainingYard * 2);
+      grantXp(adventurer, Math.round((9 + mission.fame + state.facilities.trainingYard * 2) * getXpRate(adventurer)));
     });
     addLog(`${partyNames} complete ${mission.name}, earning ${gold}G and ${fame} fame.`);
     handleChapterMissionSuccess(mission);
@@ -1665,11 +1990,11 @@ function resolveMission(activeMission) {
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Retreated from ${mission.name}, wiser and bruised.`);
-      grantXp(adventurer, 4);
+      grantXp(adventurer, Math.round(4 * getXpRate(adventurer)));
     });
     const injured = party[Math.floor(Math.random() * party.length)];
     injured.status = "injured";
-    injured.recovery = Math.max(4, 12 - state.facilities.dormitory * 2);
+    injured.recovery = Math.max(3, 12 - state.facilities.dormitory * 2 - getRecoveryReduction(injured));
     addLifeEvent(injured, `Was injured during ${mission.name}.`);
     addLog(`${partyNames} retreat from ${mission.name}. ${injured.name} needs ${injured.recovery}s to recover.`);
     showToast("Party retreated", `${injured.name} was injured at ${mission.location}.`, "danger");
@@ -1679,7 +2004,9 @@ function resolveMission(activeMission) {
 function getPartyPower(party, mission) {
   const statPower = party.reduce((total, adventurer) => {
     const stats = adventurer.stats;
-    return total + stats.str + stats.mag + stats.wit + stats.cha + stats[mission.focus] * 1.5 + adventurer.level * 2;
+    const effectPower = getCharacterEffects(adventurer)
+      .reduce((sum, effect) => sum + getEffectMissionPower(effect, mission, party.length), 0);
+    return total + stats.str + stats.mag + stats.wit + stats.cha + stats[mission.focus] * 1.5 + adventurer.level * 2 + effectPower + getPotentialPower(adventurer);
   }, 0);
   const facilityPower =
     state.facilities.trainingYard * 2 +
@@ -1695,12 +2022,18 @@ function grantXp(adventurer, amount) {
   while (adventurer.xp >= xpForNext(adventurer.level)) {
     adventurer.xp -= xpForNext(adventurer.level);
     adventurer.level += 1;
-    const favourite = adventurer.classId === "spellwright" ? "mag" : adventurer.classId === "minstrel" ? "cha" : adventurer.classId === "ranger" ? "wit" : "str";
-    adventurer.stats[favourite] += 2;
-    adventurer.stats.str += 1;
-    adventurer.stats.wit += 1;
+    const classData = classes[adventurer.classId];
+    adventurer.stats[classData.primary] += 2;
+    adventurer.stats[classData.secondary] += 1;
+    if (adventurer.potential >= 5 || (adventurer.potential >= 4 && adventurer.level % 2 === 0)) {
+      adventurer.stats[classData.primary] += 1;
+    }
+    if (adventurer.potential >= 5 && adventurer.level % 3 === 0) {
+      adventurer.stats[classData.secondary] += 1;
+    }
     addLifeEvent(adventurer, `Reached level ${adventurer.level} as a ${classes[adventurer.classId].label}.`);
     addLog(`${adventurer.name} reaches level ${adventurer.level}.`);
+    syncNaturalAbilities(adventurer, true);
   }
 }
 
@@ -2055,7 +2388,7 @@ function getMissionOdds(party, mission) {
     return 100;
   }
   const power = getPartyPower(party, mission);
-  const requiredRoll = mission.difficulty - power;
+  const requiredRoll = mission.difficulty - power - getPartyRollBonus(party);
   if (requiredRoll <= 0) {
     return 100;
   }

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111817">
+    <title>Guildstead</title>
+    <link rel="stylesheet" href="styles.css?v=7">
+  </head>
+  <body>
+    <section id="titleScreen" class="title-screen">
+      <div class="title-landscape" aria-hidden="true">
+        <span class="title-mountain mountain-one"></span>
+        <span class="title-mountain mountain-two"></span>
+        <span class="title-guild"><i></i><i></i><i></i></span>
+        <span class="unit-sprite slot-0 title-adventurer title-adventurer-one"></span>
+        <span class="unit-sprite slot-2 title-adventurer title-adventurer-two"></span>
+        <span class="unit-sprite slot-3 title-adventurer title-adventurer-three"></span>
+      </div>
+      <div class="title-panel">
+        <div class="crest crest-large" aria-hidden="true"><span>G</span></div>
+        <p class="eyebrow">The holy realm of Jenny presents</p>
+        <h1>Guildstead</h1>
+        <div class="title-rule" aria-hidden="true"><span></span></div>
+        <p class="title-copy">Raise a tiny guild, guide remarkable adventurers, and leave the realm with stories worth keeping.</p>
+        <button id="startGameButton" class="primary-button title-button" type="button">Open the Guildhall</button>
+      </div>
+    </section>
+
+    <section id="introScene" class="story-screen hidden" aria-live="polite">
+      <div class="story-stage">
+        <div class="story-portrait" aria-hidden="true">
+          <span class="unit-sprite slot-0"></span>
+        </div>
+        <div class="story-panel">
+          <p class="eyebrow">Royal guild charter</p>
+          <h2>Welcome to Guildstead</h2>
+          <p>Please create your hero, who will help you during your time as Guild Master.</p>
+          <p>You are here to look after the holy realm of Jenny. The roads need guarding, the halls need upgrading, and the adventurers need someone sensible holding the purse strings.</p>
+          <button id="continueIntroButton" class="primary-button" type="button">Create Your Hero</button>
+        </div>
+      </div>
+    </section>
+
+    <main class="game-shell">
+      <header class="topbar">
+        <div class="hud-brand">
+          <div class="crest" aria-hidden="true"><span>G</span></div>
+          <div>
+            <p class="eyebrow">Guild management office</p>
+            <h1>Guildstead</h1>
+          </div>
+        </div>
+
+        <div class="hud-calendar" aria-label="Guild calendar">
+          <span id="calendarValue">Spring, Year 1</span>
+          <strong>Day <span id="dayValue">1</span></strong>
+        </div>
+
+        <section class="stat-strip" aria-label="Guild resources">
+          <div class="stat stat-gold">
+            <span class="stat-icon" aria-hidden="true">G</span>
+            <span class="stat-label">Gold</span>
+            <strong id="goldValue">180</strong>
+          </div>
+          <div class="stat stat-fame">
+            <span class="stat-icon" aria-hidden="true">F</span>
+            <span class="stat-label">Fame</span>
+            <strong id="fameValue">0</strong>
+          </div>
+          <div class="stat stat-roster">
+            <span class="stat-icon" aria-hidden="true">A</span>
+            <span class="stat-label">Roster</span>
+            <strong id="rosterValue">0/12</strong>
+          </div>
+          <div class="stat stat-rank">
+            <span class="stat-icon" aria-hidden="true">R</span>
+            <span class="stat-label">Rank</span>
+            <strong id="rankValue">F</strong>
+            <span class="rank-meter"><i id="rankProgress"></i></span>
+          </div>
+        </section>
+      </header>
+
+      <section class="game-workspace">
+        <nav class="command-dock" aria-label="Guild menus">
+          <button class="dock-button active" data-view="guildhall" type="button">
+            <span class="dock-icon" aria-hidden="true">G</span><span>Hall</span>
+          </button>
+          <button class="dock-button" data-view="quest" type="button">
+            <span class="dock-icon" aria-hidden="true">Q</span><span>Quests</span>
+          </button>
+          <button class="dock-button" data-view="adventurers" type="button">
+            <span class="dock-icon" aria-hidden="true">A</span><span>Roster</span>
+          </button>
+          <button class="dock-button" data-view="facilities" type="button">
+            <span class="dock-icon" aria-hidden="true">F</span><span>Build</span>
+          </button>
+          <button class="dock-button" data-view="events" type="button">
+            <span class="dock-icon" aria-hidden="true">!</span><span>Events</span>
+          </button>
+          <button class="dock-button" data-view="log" type="button">
+            <span class="dock-icon" aria-hidden="true">L</span><span>Ledger</span>
+          </button>
+        </nav>
+
+        <section class="command-layout">
+          <section class="map-stage panel">
+            <div class="panel-heading map-heading">
+              <div>
+                <p class="eyebrow">Holy realm of Jenny</p>
+                <h2>Guildstead &amp; The Western March</h2>
+              </div>
+              <div class="map-actions">
+                <button id="nextDayButton" class="icon-button" type="button" title="Advance one day">Next Day</button>
+                <button id="scoutEventButton" class="secondary-button" type="button">Scout Event</button>
+              </div>
+            </div>
+            <div id="realmMap" class="map-canvas" aria-label="Interactive guild and realm map"></div>
+            <div class="map-footer">
+              <div class="map-legend" aria-label="Map legend">
+                <span><i class="legend-dot guild-dot"></i>Guild</span>
+                <span><i class="legend-dot quest-dot"></i>Quest</span>
+                <span><i class="legend-dot event-dot"></i>Realm event</span>
+              </div>
+              <div id="mapStatus" class="map-status">Select a room, location, or menu to manage the guild.</div>
+            </div>
+          </section>
+
+          <section class="command-panel panel">
+            <div class="panel-heading command-heading">
+              <div>
+                <p id="activeViewEyebrow" class="eyebrow">Guildhall</p>
+                <h2 id="activeViewTitle">Management View</h2>
+              </div>
+              <button id="resetButton" class="ghost-button compact-reset" type="button" title="Reset the demo">Reset</button>
+            </div>
+
+            <div class="view-stack">
+              <section id="creatorPanel" class="creator-panel view-panel" data-panel="hero">
+                <div class="founder-showcase">
+                  <div id="founderPreview" class="founder-preview"></div>
+                  <div>
+                    <p class="eyebrow">Founding adventurer</p>
+                    <h2>Create Your Hero</h2>
+                    <p class="card-meta">Your first guild member and the beginning of Guildstead's history.</p>
+                  </div>
+                </div>
+                <div class="creator-fields">
+                  <label>
+                    Name
+                    <input id="founderName" type="text" maxlength="18" value="Shawn">
+                  </label>
+                  <label>
+                    Calling
+                    <select id="founderClass">
+                      <option value="warden">Warden</option>
+                      <option value="spellwright">Spellwright</option>
+                      <option value="ranger">Ranger</option>
+                      <option value="minstrel">Minstrel</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="creator-actions">
+                  <button id="createFounderButton" class="primary-button" type="button">Sign the Charter</button>
+                  <button id="randomFounderButton" class="secondary-button" type="button">Surprise Me</button>
+                </div>
+              </section>
+
+              <section class="view-panel" data-panel="quest">
+                <div id="missionList" class="mission-list"></div>
+              </section>
+
+              <section class="view-panel active" data-panel="guildhall">
+                <div id="guildhallInterior" class="guildhall-interior" aria-label="Guildhall interior management view"></div>
+                <div id="guildhallRoomDetail" class="guildhall-room-detail"></div>
+              </section>
+
+              <section class="view-panel" data-panel="adventurers">
+                <div class="panel-heading inner-heading">
+                  <div>
+                    <p class="eyebrow">Guild roster</p>
+                    <h2>Adventurers</h2>
+                  </div>
+                  <button id="recruitButton" class="secondary-button" type="button">Recruit 45G</button>
+                </div>
+                <div id="selectedSummary" class="selected-summary">Party 0/3</div>
+                <div id="adventurerDetail" class="adventurer-detail"></div>
+                <div id="rosterList" class="roster-list"></div>
+              </section>
+
+              <section class="view-panel" data-panel="facilities">
+                <div class="guild-board">
+                  <div id="roomGrid" class="room-grid" aria-label="Guild facility grid"></div>
+                  <div id="facilityList" class="facility-list"></div>
+                </div>
+              </section>
+
+              <section class="view-panel" data-panel="events">
+                <div id="eventMissionList" class="event-list"></div>
+              </section>
+
+              <section class="view-panel" data-panel="log">
+                <ol id="eventLog" class="event-log"></ol>
+              </section>
+            </div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <section id="eventDialog" class="event-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="eventDialogTitle">
+      <div class="event-panel">
+        <div class="event-art" aria-hidden="true">
+          <span class="event-moon"></span>
+          <span class="event-trees"></span>
+          <span class="unit-sprite slot-2"></span>
+        </div>
+        <div class="event-copy">
+          <p class="eyebrow">Realm event</p>
+          <h2 id="eventDialogTitle">Event Mission</h2>
+          <p id="eventDialogText"></p>
+          <div class="event-actions">
+            <button id="viewEventButton" class="primary-button" type="button">View On Map</button>
+            <button id="closeEventButton" class="secondary-button" type="button">Close</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="toastRail" class="toast-rail" aria-live="polite"></div>
+    <script src="game.js?v=7"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+# Local development output
+.server-*.log
+
+# Codex workspace metadata
+.agents/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini

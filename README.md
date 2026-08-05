@@ -36,6 +36,12 @@ python -m http.server 4173 --bind 127.0.0.1
 
 Then open `http://127.0.0.1:4173/`.
 
+## Play Online
+
+The latest version from `main` is automatically published through GitHub Pages:
+
+`https://hyrusan.github.io/Shawns-First-Game/`
+
 ## Project Structure
 
 - `index.html`: interface structure and game screens

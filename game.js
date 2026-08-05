@@ -1,9 +1,9 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 7;
+const SAVE_VERSION = 8;
 
 const classes = {
-  warden: { label: "Warden", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
-  spellwright: { label: "Spellwright", stats: { str: 3, mag: 9, wit: 7, cha: 4 } },
+  warden: { label: "Warrior", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
+  spellwright: { label: "Mage", stats: { str: 3, mag: 9, wit: 7, cha: 4 } },
   ranger: { label: "Ranger", stats: { str: 6, mag: 4, wit: 8, cha: 5 } },
   minstrel: { label: "Minstrel", stats: { str: 4, mag: 5, wit: 6, cha: 9 } },
   rookie: { label: "Rookie", stats: { str: 5, mag: 4, wit: 5, cha: 5 } }
@@ -217,7 +217,7 @@ const missionDeck = [
     location: "Greenbank Lane",
     description: "Follow the goblin tracks and bring the tavern's stolen provisions home.",
     difficulty: 8,
-    duration: 7,
+    duration: 30,
     gold: 65,
     fame: 3,
     unlockFame: 0,
@@ -232,7 +232,7 @@ const missionDeck = [
     location: "Greenbank Road",
     description: "Escort a flour cart through the stretch of road the goblins have been watching.",
     difficulty: 24,
-    duration: 8,
+    duration: 36,
     gold: 48,
     fame: 4,
     unlockFame: 0,
@@ -246,7 +246,7 @@ const missionDeck = [
     location: "Mushroomwood Edge",
     description: "Search the woodland paths before nightfall and keep an eye out for goblin snares.",
     difficulty: 27,
-    duration: 9,
+    duration: 42,
     gold: 55,
     fame: 5,
     unlockFame: 0,
@@ -260,7 +260,7 @@ const missionDeck = [
     location: "Mara's Herb Path",
     description: "Collect mooncap mushrooms for the village healer without disturbing the local nest.",
     difficulty: 30,
-    duration: 10,
+    duration: 48,
     gold: 60,
     fame: 5,
     unlockFame: 0,
@@ -274,7 +274,7 @@ const missionDeck = [
     location: "Barrow Hill",
     description: "Break the goblin camp, recover the stolen trade goods, and make Greenbank Road safe again.",
     difficulty: 40,
-    duration: 13,
+    duration: 60,
     gold: 170,
     fame: 22,
     unlockFame: 0,
@@ -288,7 +288,7 @@ const missionDeck = [
     location: "Old North Road",
     description: "A larger contract from beyond Greenbank, available to a chartered guild.",
     difficulty: 58,
-    duration: 14,
+    duration: 75,
     gold: 120,
     fame: 14,
     unlockFame: 18,
@@ -305,7 +305,7 @@ const eventMissionDeck = [
     location: "Jenny's Belltown",
     description: "A sacred lantern has gone dark outside Belltown. The wardens ask Guildstead to investigate before evening prayers.",
     difficulty: 30,
-    duration: 12,
+    duration: 45,
     gold: 72,
     fame: 14,
     focus: "mag",
@@ -318,7 +318,7 @@ const eventMissionDeck = [
     location: "Saffron Bridge",
     description: "The bridge bells are ringing without a keeper. Travellers are stuck on the crossing and need a calm escort home.",
     difficulty: 36,
-    duration: 13,
+    duration: 50,
     gold: 86,
     fame: 16,
     focus: "cha",
@@ -331,7 +331,7 @@ const eventMissionDeck = [
     location: "West Abbey",
     description: "A shipment for the holy kitchens has vanished from the ledgers. The abbey wants sharp eyes and quiet questions.",
     difficulty: 42,
-    duration: 15,
+    duration: 65,
     gold: 96,
     fame: 18,
     focus: "wit",
@@ -447,9 +447,13 @@ const elements = {
   viewPanels: document.querySelectorAll("[data-panel]"),
   activeViewEyebrow: document.querySelector("#activeViewEyebrow"),
   activeViewTitle: document.querySelector("#activeViewTitle"),
+  expeditionWatch: document.querySelector("#expeditionWatch"),
   creatorPanel: document.querySelector("#creatorPanel"),
   founderName: document.querySelector("#founderName"),
   founderClass: document.querySelector("#founderClass"),
+  founderGender: document.querySelector("#founderGender"),
+  founderClassOptions: document.querySelectorAll("[data-founder-class]"),
+  founderGenderOptions: document.querySelectorAll("[data-founder-gender]"),
   founderPreview: document.querySelector("#founderPreview"),
   createFounder: document.querySelector("#createFounderButton"),
   randomFounder: document.querySelector("#randomFounderButton"),
@@ -489,7 +493,12 @@ elements.closeEvent.addEventListener("click", closeEventDialog);
 elements.viewEvent.addEventListener("click", viewPopupEvent);
 elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
 elements.founderName.addEventListener("input", renderFounderPreview);
-elements.founderClass.addEventListener("change", renderFounderPreview);
+elements.founderClassOptions.forEach((button) => {
+  button.addEventListener("click", () => selectFounderClass(button.dataset.founderClass));
+});
+elements.founderGenderOptions.forEach((button) => {
+  button.addEventListener("click", () => selectFounderGender(button.dataset.founderGender));
+});
 elements.dockButtons.forEach((button) => {
   button.addEventListener("click", () => setActiveView(button.dataset.view));
 });
@@ -536,13 +545,13 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
-    const legacySave = saved.version < SAVE_VERSION;
-    const progressedLegacySave = legacySave && Boolean(saved.founderCreated);
+    const chapterLegacySave = saved.version < 7;
+    const progressedLegacySave = chapterLegacySave && Boolean(saved.founderCreated);
     const savedFacilities = saved.facilities || {};
-    const migratedFacilities = legacySave
+    const migratedFacilities = chapterLegacySave
       ? progressedLegacySave ? {
           tavern: savedFacilities.tavern || 1,
           questBoard: savedFacilities.questBoard || 1,
@@ -552,7 +561,7 @@ function loadState() {
           workshop: savedFacilities.workshop || 1
         } : fresh.facilities
       : { ...fresh.facilities, ...savedFacilities };
-    const migratedChapter = legacySave
+    const migratedChapter = chapterLegacySave
       ? progressedLegacySave ? {
           stage: "chartered",
           completedLocalMissions: ["greenbankCart", "lostWoodcutter", "mooncapRemedy"],
@@ -570,6 +579,19 @@ function loadState() {
       selectedIds: []
     };
     loaded.adventurers = (saved.adventurers || []).map((adventurer) => normaliseAdventurer(adventurer, loaded.day));
+    const now = Date.now();
+    loaded.activeMissions = (saved.activeMissions || []).map((activeMission) => {
+      if (activeMission.startedAt && activeMission.endsAt) {
+        return activeMission;
+      }
+      const elapsed = Math.min(activeMission.elapsed || 0, activeMission.duration || 0);
+      return {
+        ...activeMission,
+        elapsed,
+        startedAt: now - elapsed * 1000,
+        endsAt: now + Math.max(0, (activeMission.duration || 0) - elapsed) * 1000
+      };
+    });
     return loaded;
   } catch {
     return fresh;
@@ -644,6 +666,7 @@ function render() {
   renderMap();
   renderRoster();
   renderMissions();
+  renderExpeditionWatch();
   renderLog();
   renderEventDialog();
   renderChapterDialog();
@@ -740,12 +763,16 @@ function renderMap() {
 
   const missionMarkers = missionDeck
     .filter((mission) => isMissionVisible(mission))
-    .map((mission) => `
-      <button class="map-mission" data-map-view="quest" style="left:${mission.marker.left};top:${mission.marker.top}" type="button">
+    .map((mission) => {
+      const active = state.activeMissions.some((activeMission) => activeMission.missionId === mission.id);
+      const completed = state.chapter.completedLocalMissions.includes(mission.id) || (mission.chapterBoss && state.chapter.charterEarned);
+      return `
+      <button class="map-mission ${active ? "active" : ""} ${completed ? "completed" : ""}" data-map-view="quest" style="left:${mission.marker.left};top:${mission.marker.top}" type="button" aria-label="${mission.name} at ${mission.location}">
         <span class="mission-pin" aria-hidden="true"></span>
-        <span class="map-label">${mission.location}<b>${mission.focus.toUpperCase()}</b></span>
+        <span class="map-label">${active ? mission.location : mission.name}<b>${active ? "Expedition active" : mission.location}</b></span>
       </button>
-    `)
+    `;
+    })
     .join("");
 
   const eventMarkers = state.eventMissions
@@ -759,7 +786,7 @@ function renderMap() {
 
   const dispatchMarkup = dispatchAnimations
     .map((animation) => `
-      <div class="dispatch-runner" style="--travel-x:${animation.travelX}px;--travel-y:${animation.travelY}px">
+      <div class="dispatch-runner" style="offset-path:path('M 0 0 Q ${animation.controlX} ${animation.controlY} ${animation.travelX} ${animation.travelY}')">
         ${animation.party.map((adventurer) => renderSprite(adventurer, "small walking")).join("")}
         <span class="dispatch-label">${animation.location}</span>
       </div>
@@ -1037,7 +1064,7 @@ function renderRoster() {
                 <h3>${adventurer.name}</h3>
                 <span class="badge">${statusText}</span>
               </div>
-              <p class="card-meta">${adventurer.race} ${classes[adventurer.classId].label} | Age ${adventurer.age}</p>
+              <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${adventurer.race} ${classes[adventurer.classId].label} | Age ${adventurer.age}</p>
               <div class="stats-row">
                 ${miniStat("STR", adventurer.stats.str)}
                 ${miniStat("MAG", adventurer.stats.mag)}
@@ -1096,7 +1123,7 @@ function renderAdventurerDetail() {
         <div>
           <p class="eyebrow">${adventurer.founder ? "Founder" : "Guild Adventurer"}</p>
           <h3>${adventurer.name}</h3>
-          <p class="card-meta">${adventurer.race} ${classes[adventurer.classId].label} | Level ${adventurer.level} | ${adventurer.status}</p>
+          <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${adventurer.race} ${classes[adventurer.classId].label} | Level ${adventurer.level} | ${adventurer.status}</p>
           <div class="xp-line"><span>Experience</span><strong>${adventurer.xp}/${xpForNext(adventurer.level)}</strong></div>
           <div class="progress-track slim"><div class="progress-fill" style="width:${xpProgress}%"></div></div>
         </div>
@@ -1180,7 +1207,7 @@ function renderMissions() {
             ${mission.description ? `<p class="mission-description">${mission.description}</p>` : ""}
             <div class="reward-row">
               <span>Risk ${mission.difficulty}</span>
-              <span>${mission.duration}s</span>
+              <span>${formatMissionTime(mission.duration)}</span>
               <span>${mission.gold}G</span>
               <span>${mission.fame} fame</span>
             </div>
@@ -1208,7 +1235,7 @@ function renderMissions() {
           <div>
             <span class="mission-kicker">Active expedition</span>
             <h3>${mission.name}</h3>
-            <p class="card-meta">${mission.location}</p>
+            <p class="card-meta">${mission.location} | ${formatMissionTime(getMissionRemaining(activeMission))} remaining</p>
           </div>
           <div class="active-party">${members.map((member) => `<span title="${member.name}">${renderSprite(member, "tiny")}</span>`).join("")}</div>
         </article>
@@ -1221,6 +1248,63 @@ function renderMissions() {
   elements.missionList.querySelectorAll("[data-mission]").forEach((button) => {
     button.addEventListener("click", () => startMission(button.dataset.mission));
   });
+}
+
+function renderExpeditionWatch() {
+  const activeMission = state.activeMissions[0];
+  elements.expeditionWatch.classList.toggle("hidden", !activeMission);
+  if (!activeMission) {
+    elements.expeditionWatch.innerHTML = "";
+    return;
+  }
+
+  const mission = getMissionForActive(activeMission);
+  const members = activeMission.partyIds.map(getAdventurer).filter(Boolean);
+  const progress = Math.min(100, Math.round((activeMission.elapsed / activeMission.duration) * 100));
+  const remaining = getMissionRemaining(activeMission);
+  const extraCount = Math.max(0, state.activeMissions.length - 1);
+  const actors = members
+    .map((member, index) => `
+      <span class="battle-actor actor-${member.classId}" style="--actor-index:${index};--actor-delay:${index * -0.63}s" title="${member.name}, ${classes[member.classId].label}">
+        ${renderSprite(member, "battle-sprite")}
+        <i class="class-effect" aria-hidden="true"></i>
+      </span>
+    `)
+    .join("");
+
+  elements.expeditionWatch.innerHTML = `
+    <div class="expedition-watch-heading">
+      <div>
+        <span class="mission-kicker">Expedition watch${extraCount ? ` +${extraCount}` : ""}</span>
+        <h3>${mission.name}</h3>
+      </div>
+      <strong class="mission-clock" aria-label="${remaining} seconds remaining">${formatMissionTime(remaining)}</strong>
+    </div>
+    <div class="battle-stage focus-${mission.focus} ${mission.chapterBoss ? "boss-stage" : ""}" aria-label="${members.map((member) => member.name).join(", ")} fighting at ${mission.location}">
+      <span class="battle-scenery" aria-hidden="true"></span>
+      <div class="battle-party">${actors}</div>
+      <span class="battle-enemy" aria-hidden="true"><i></i><b></b></span>
+      <span class="battle-impact" aria-hidden="true"></span>
+    </div>
+    <div class="expedition-watch-footer">
+      <span>${mission.location}</span>
+      <strong>${progress}%</strong>
+    </div>
+    <div class="progress-track slim"><div class="progress-fill" style="width:${progress}%"></div></div>
+  `;
+}
+
+function getMissionRemaining(activeMission) {
+  if (activeMission.endsAt) {
+    return Math.max(0, Math.ceil((activeMission.endsAt - Date.now()) / 1000));
+  }
+  return Math.max(0, Math.ceil(activeMission.duration - activeMission.elapsed));
+}
+
+function formatMissionTime(totalSeconds) {
+  const seconds = Math.max(0, Math.ceil(totalSeconds));
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
 function renderLog() {
@@ -1263,10 +1347,22 @@ function renderTrait(label, value = 1) {
 
 function renderSprite(adventurer, extraClass = "") {
   const slot = getSpriteSlot(adventurer);
-  return `<span class="unit-sprite slot-${slot} ${extraClass}" aria-hidden="true"></span>`;
+  const atlasClass = adventurer.founder || adventurer.useHeroAtlas ? "hero-atlas" : "";
+  return `<span class="unit-sprite slot-${slot} ${atlasClass} ${extraClass}" aria-hidden="true"></span>`;
 }
 
 function getSpriteSlot(adventurer) {
+  const classSlots = {
+    warden: 0,
+    spellwright: 1,
+    ranger: 2,
+    minstrel: 3,
+    rookie: 0
+  };
+  if (adventurer.founder || adventurer.useHeroAtlas) {
+    const genderRow = adventurer.gender === "female" ? 4 : 0;
+    return (classSlots[adventurer.classId] ?? 0) + genderRow;
+  }
   const raceSlots = {
     Dwarf: 4,
     Angel: 5,
@@ -1277,14 +1373,36 @@ function getSpriteSlot(adventurer) {
   if (raceSlots[adventurer.race] !== undefined) {
     return raceSlots[adventurer.race];
   }
-  const classSlots = {
-    warden: 0,
-    spellwright: 1,
-    ranger: 2,
-    minstrel: 3,
-    rookie: 4
-  };
-  return classSlots[adventurer.classId] ?? 0;
+  return adventurer.classId === "rookie" ? 4 : classSlots[adventurer.classId] ?? 0;
+}
+
+function selectFounderClass(classId) {
+  if (!classes[classId] || classId === "rookie") {
+    return;
+  }
+  elements.founderClass.value = classId;
+  renderFounderPreview();
+}
+
+function selectFounderGender(gender) {
+  if (!["male", "female"].includes(gender)) {
+    return;
+  }
+  elements.founderGender.value = gender;
+  renderFounderPreview();
+}
+
+function updateCreatorSelectionState() {
+  elements.founderClassOptions.forEach((button) => {
+    const active = button.dataset.founderClass === elements.founderClass.value;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  elements.founderGenderOptions.forEach((button) => {
+    const active = button.dataset.founderGender === elements.founderGender.value;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
 }
 
 function renderFounderPreview() {
@@ -1292,8 +1410,10 @@ function renderFounderPreview() {
     return;
   }
   const classId = elements.founderClass.value || "warden";
+  const gender = elements.founderGender.value || "male";
   const name = cleanName(elements.founderName.value) || "Your Hero";
-  elements.founderPreview.innerHTML = `${renderSprite({ classId, race: "Human", name })}<span>${classes[classId].label}</span>`;
+  updateCreatorSelectionState();
+  elements.founderPreview.innerHTML = `${renderSprite({ classId, gender, race: "Human", name, founder: true })}<span>${gender === "female" ? "Female" : "Male"} ${classes[classId].label}</span>`;
 }
 
 function createFounder() {
@@ -1302,7 +1422,8 @@ function createFounder() {
   }
   const name = cleanName(elements.founderName.value) || "Founder";
   const classId = elements.founderClass.value;
-  const founder = makeAdventurer(name, classId, true);
+  const gender = elements.founderGender.value || "male";
+  const founder = makeAdventurer(name, classId, true, gender);
   state.adventurers.push(founder);
   state.adventurers.push(makeRecruit(2));
   state.adventurers.push(makeRecruit(3));
@@ -1320,6 +1441,7 @@ function randomiseFounder() {
   elements.founderName.value = names[Math.floor(Math.random() * names.length)];
   const classIds = ["warden", "spellwright", "ranger", "minstrel"];
   elements.founderClass.value = classIds[Math.floor(Math.random() * classIds.length)];
+  elements.founderGender.value = Math.random() > 0.5 ? "female" : "male";
   renderFounderPreview();
 }
 
@@ -1348,9 +1470,9 @@ function makeRecruit(seed) {
   return recruit;
 }
 
-function makeAdventurer(name, classId, founder) {
+function makeAdventurer(name, classId, founder, gender = null) {
   const base = classes[classId].stats;
-  const identity = makeIdentity(name, classId, founder, state.day);
+  const identity = makeIdentity(name, classId, founder, state.day, gender);
   return {
     id: crypto.randomUUID(),
     name,
@@ -1365,7 +1487,7 @@ function makeAdventurer(name, classId, founder) {
   };
 }
 
-function makeIdentity(name, classId, founder, day) {
+function makeIdentity(name, classId, founder, day, gender = null) {
   const race = founder ? races[0] : pick(races);
   const origin = founder
     ? "Answered Mara's call when goblins threatened the Wayfarer's Rest"
@@ -1377,6 +1499,7 @@ function makeIdentity(name, classId, founder, day) {
 
   return {
     race: race.name,
+    gender: gender || (Math.random() > 0.5 ? "female" : "male"),
     age: founder ? 19 : 18 + Math.floor(Math.random() * 15),
     favouriteFood: pick(favouriteFoods),
     dream: pick(dreams),
@@ -1389,11 +1512,14 @@ function makeIdentity(name, classId, founder, day) {
 
 function normaliseAdventurer(adventurer, day) {
   const classId = classes[adventurer.classId] ? adventurer.classId : "rookie";
-  const identity = makeIdentity(adventurer.name || "Adventurer", classId, Boolean(adventurer.founder), day || 1);
+  const legacyFounderGender = ["spellwright", "ranger"].includes(classId) ? "female" : "male";
+  const gender = adventurer.gender || (adventurer.founder ? legacyFounderGender : (Math.random() > 0.5 ? "female" : "male"));
+  const identity = makeIdentity(adventurer.name || "Adventurer", classId, Boolean(adventurer.founder), day || 1, gender);
   return {
     ...adventurer,
     name: adventurer.name || "Adventurer",
     classId,
+    gender,
     race: adventurer.race || identity.race,
     age: adventurer.age || identity.age,
     favouriteFood: adventurer.favouriteFood || identity.favouriteFood,
@@ -1450,13 +1576,17 @@ function startMission(missionId) {
     addLifeEvent(adventurer, `Set out for ${mission.name}.`);
   });
 
+  const duration = Math.max(20, mission.duration - Math.floor(Math.max(0, state.facilities.questBoard - 1) * 1.5));
+  const startedAt = Date.now();
   state.activeMissions.push({
     id: crypto.randomUUID(),
     missionId,
     missionSnapshot: { ...mission },
     partyIds,
     elapsed: 0,
-    duration: Math.max(5, mission.duration - Math.floor(Math.max(0, state.facilities.questBoard - 1) * 1.5))
+    duration,
+    startedAt,
+    endsAt: startedAt + duration * 1000
   });
 
   if (mission.isEvent) {
@@ -1475,8 +1605,11 @@ function startMission(missionId) {
 
 function tick() {
   let changed = false;
+  const now = Date.now();
   state.activeMissions.forEach((activeMission) => {
-    activeMission.elapsed += 1;
+    activeMission.elapsed = activeMission.startedAt
+      ? Math.min(activeMission.duration, Math.floor((now - activeMission.startedAt) / 1000))
+      : activeMission.elapsed + 1;
     changed = true;
   });
 
@@ -1674,13 +1807,15 @@ function playDispatchAnimation(party, mission) {
     party: party.map((adventurer) => ({ ...adventurer })),
     location: mission.location,
     travelX: Math.round(targetX),
-    travelY: Math.round(targetY)
+    travelY: Math.round(targetY),
+    controlX: Math.round(targetX * 0.48),
+    controlY: Math.round(targetY * 0.48 - Math.min(90, mapBox.height * 0.16))
   });
   renderMap();
   setTimeout(() => {
     dispatchAnimations = dispatchAnimations.filter((animation) => animation.id !== animationId);
     renderMap();
-  }, 1500);
+  }, 1400);
 }
 
 function upgradeCost(facility) {

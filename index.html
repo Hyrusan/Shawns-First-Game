@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=9">
+    <link rel="stylesheet" href="styles.css?v=11">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -137,6 +137,8 @@
               <button id="resetButton" class="ghost-button compact-reset" type="button" title="Reset the demo">Reset</button>
             </div>
 
+            <section id="expeditionWatch" class="expedition-watch hidden" aria-live="polite"></section>
+
             <div class="view-stack">
               <section id="creatorPanel" class="creator-panel view-panel" data-panel="hero">
                 <div class="founder-showcase">
@@ -147,20 +149,34 @@
                     <p class="card-meta">Mara needs someone brave enough to recover the tavern's stolen supplies.</p>
                   </div>
                 </div>
-                <div class="creator-fields">
+                <div class="creator-identity">
                   <label>
                     Name
                     <input id="founderName" type="text" maxlength="18" value="Shawn">
                   </label>
-                  <label>
-                    Calling
-                    <select id="founderClass">
-                      <option value="warden">Warden</option>
-                      <option value="spellwright">Spellwright</option>
-                      <option value="ranger">Ranger</option>
-                      <option value="minstrel">Minstrel</option>
-                    </select>
-                  </label>
+                  <fieldset class="appearance-fieldset">
+                    <legend>Gender</legend>
+                    <div class="gender-toggle" role="group" aria-label="Hero gender">
+                      <button class="appearance-option active" data-founder-gender="male" type="button">Male</button>
+                      <button class="appearance-option" data-founder-gender="female" type="button">Female</button>
+                    </div>
+                  </fieldset>
+                  <input id="founderGender" type="hidden" value="male">
+                  <input id="founderClass" type="hidden" value="warden">
+                </div>
+                <div class="class-picker" role="group" aria-label="Hero class">
+                  <button class="class-option active" data-founder-class="warden" type="button">
+                    <span aria-hidden="true">W</span><strong>Warrior</strong><small>Shield &amp; steel</small>
+                  </button>
+                  <button class="class-option" data-founder-class="spellwright" type="button">
+                    <span aria-hidden="true">M</span><strong>Mage</strong><small>Arcane power</small>
+                  </button>
+                  <button class="class-option" data-founder-class="ranger" type="button">
+                    <span aria-hidden="true">R</span><strong>Ranger</strong><small>Bow &amp; tracking</small>
+                  </button>
+                  <button class="class-option" data-founder-class="minstrel" type="button">
+                    <span aria-hidden="true">B</span><strong>Minstrel</strong><small>Music &amp; morale</small>
+                  </button>
                 </div>
                 <div class="creator-actions">
                   <button id="createFounderButton" class="primary-button" type="button">Answer the Call</button>
@@ -247,6 +263,6 @@
     </section>
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
-    <script src="game.js?v=10"></script>
+    <script src="game.js?v=11"></script>
   </body>
 </html>

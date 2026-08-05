@@ -7,6 +7,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 ## Current Demo
 
 - Interactive pixel-art world map and guildhall interior
+- Looping map theme with an in-game music control
 - Three-scene tavern prologue and guided Chapter One progression
 - Goblin quest chain culminating in the Barrow Hill chief
 - Male and female hero creation across four visual classes
@@ -40,7 +41,7 @@ Then open `http://127.0.0.1:4173/`.
 - `index.html`: interface structure and game screens
 - `styles.css`: visual design, responsive layout, map, and animations
 - `game.js`: simulation state, rendering, missions, facilities, and saves
-- `assets/`: generated hero sprites, recruit sprites, and the Western March map
+- `assets/`: generated sprites, the Western March map, and the map theme
 - `docs/`: design direction, visual references, and content seeds
 
 ## Status

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="stylesheet" href="styles.css?v=13">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -112,6 +112,9 @@
                 <h2>Guildstead &amp; The Western March</h2>
               </div>
               <div class="map-actions">
+                <button id="musicToggleButton" class="icon-button music-toggle" type="button" aria-label="Mute music" title="Mute music" aria-pressed="false">
+                  <span class="music-icon" aria-hidden="true"></span>
+                </button>
                 <button id="nextDayButton" class="icon-button" type="button" title="Advance one day">Next Day</button>
                 <button id="scoutEventButton" class="secondary-button" type="button">Scout Event</button>
               </div>
@@ -263,6 +266,7 @@
     </section>
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
-    <script src="game.js?v=12"></script>
+    <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
+    <script src="game.js?v=13"></script>
   </body>
 </html>

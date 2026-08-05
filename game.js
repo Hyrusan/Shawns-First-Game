@@ -493,6 +493,8 @@ const elements = {
   chapterObjective: document.querySelector("#chapterObjective"),
   eventMissionList: document.querySelector("#eventMissionList"),
   scoutEvent: document.querySelector("#scoutEventButton"),
+  musicToggle: document.querySelector("#musicToggleButton"),
+  mapTheme: document.querySelector("#mapTheme"),
   dockButtons: document.querySelectorAll("[data-view]"),
   viewPanels: document.querySelectorAll("[data-panel]"),
   activeViewEyebrow: document.querySelector("#activeViewEyebrow"),
@@ -539,6 +541,7 @@ elements.scoutEvent.addEventListener("click", () => {
   scoutForEvent(true);
   render();
 });
+elements.musicToggle.addEventListener("click", toggleMapMusic);
 elements.closeEvent.addEventListener("click", closeEventDialog);
 elements.viewEvent.addEventListener("click", viewPopupEvent);
 elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
@@ -552,6 +555,9 @@ elements.founderGenderOptions.forEach((button) => {
 elements.dockButtons.forEach((button) => {
   button.addEventListener("click", () => setActiveView(button.dataset.view));
 });
+elements.mapTheme.volume = 0.28;
+document.addEventListener("pointerdown", tryResumeBackgroundMusic, { passive: true });
+document.addEventListener("keydown", tryResumeBackgroundMusic);
 
 render();
 setInterval(tick, 1000);
@@ -587,7 +593,8 @@ function defaultState() {
         text: "The Wayfarer's Rest opens for another quiet day on Greenbank Road."
       }
     ],
-    founderCreated: false
+    founderCreated: false,
+    musicMuted: false
   };
 }
 
@@ -700,6 +707,7 @@ function enterGame() {
 
 function render() {
   renderScreens();
+  syncBackgroundMusic();
   const calendar = getCalendar();
   elements.day.textContent = state.day;
   elements.calendar.textContent = `${calendar.season}, Year ${calendar.year}`;
@@ -725,6 +733,44 @@ function render() {
   renderFounderPreview();
   renderIntroScene();
   saveState();
+}
+
+function toggleMapMusic() {
+  state.musicMuted = !state.musicMuted;
+  syncBackgroundMusic();
+  saveState();
+}
+
+function tryResumeBackgroundMusic() {
+  if (state.screen === "game" && !state.musicMuted && elements.mapTheme.paused) {
+    elements.mapTheme.play().catch(() => {
+      // A later player interaction can retry if the browser still blocks playback.
+    });
+  }
+}
+
+function syncBackgroundMusic() {
+  const shouldPlay = state.screen === "game" && !state.musicMuted;
+  elements.mapTheme.muted = Boolean(state.musicMuted);
+
+  if (shouldPlay) {
+    if (elements.mapTheme.paused) {
+      elements.mapTheme.play().catch(() => {
+        // Browsers may wait for the player's next interaction before allowing audio.
+      });
+    }
+  } else {
+    elements.mapTheme.pause();
+    if (state.screen !== "game") {
+      elements.mapTheme.currentTime = 0;
+    }
+  }
+
+  elements.musicToggle.classList.toggle("muted", Boolean(state.musicMuted));
+  elements.musicToggle.setAttribute("aria-pressed", String(Boolean(state.musicMuted)));
+  const action = state.musicMuted ? "Play music" : "Mute music";
+  elements.musicToggle.setAttribute("aria-label", action);
+  elements.musicToggle.title = action;
 }
 
 function renderScreens() {

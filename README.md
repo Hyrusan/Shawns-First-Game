@@ -17,6 +17,9 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Three-person expedition parties
 - Class-specific expedition battle animations
 - Real-time mission clocks that continue while managing other screens
+- Timed expedition encounters with class, ability, and quirk responses
+- Enemy health, encounter consequences, and an optional auto-decision fallback
+- Recoverable curios stored in the Guild Stores ledger
 - Mission odds, rewards, injuries, experience, and levelling
 - Room construction, blueprint unlocks, and facility upgrades
 - Official guild charter milestone and evolving tavern presentation
@@ -49,6 +52,15 @@ The latest version from `main` is automatically published through GitHub Pages:
 - `game.js`: simulation state, rendering, missions, facilities, and saves
 - `assets/`: generated sprites, the Western March map, and the map theme
 - `docs/`: design direction, visual references, and content seeds
+- `tests/`: deterministic gameplay smoke tests for expedition encounters
+
+## Testing
+
+Run the encounter smoke tests with Node.js:
+
+```powershell
+node --test tests\game-smoke.test.js
+```
 
 ## Status
 

@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 9;
+const SAVE_VERSION = 10;
 
 const classes = {
   warden: { label: "Warrior", primary: "str", secondary: "wit", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
@@ -390,6 +390,117 @@ const eventMissionDeck = [
   }
 ];
 
+const lootCatalog = {
+  goblinToken: { name: "Goblin Token", mark: "GT", description: "Proof that Guildstead has made Greenbank Road safer." },
+  oldRoadMap: { name: "Old Road Map", mark: "RM", description: "A weathered map with useful paths marked in charcoal." },
+  healingHerbs: { name: "Healing Herbs", mark: "HH", description: "A field kit of clean bandages and bitter-smelling herbs." },
+  silverCharm: { name: "Silver Charm", mark: "SC", description: "A small relic recovered from an old roadside cache." }
+};
+
+const encounterDeck = {
+  goblinAmbush: {
+    id: "goblinAmbush",
+    title: "Goblin Archers On The Ridge",
+    enemyName: "Goblin Raiders",
+    description: "Arrows strike the road ahead. The party has seconds to break the ambush before the goblins surround them.",
+    dangerous: true,
+    special: {
+      id: "monsterLore",
+      abilityId: "monsterLore",
+      label: "Exploit their habits",
+      detail: "Monster Lore reveals the signal caller hiding behind the ridge.",
+      result: "{hero} reads the goblin signals and collapses the ambush before it can close.",
+      powerBonus: 10,
+      enemyDamage: 38,
+      xpBonus: 4,
+      lootId: "goblinToken"
+    },
+    classChoices: {
+      warden: { label: "Hold the road", detail: "Draw their fire behind a raised shield.", result: "{hero} holds the road while the others close the distance.", powerBonus: 8, enemyDamage: 30 },
+      spellwright: { label: "Scatter the ridge", detail: "Answer the volley with a burst of flame.", result: "{hero}'s spell sends the archers scrambling from cover.", powerBonus: 7, enemyDamage: 34 },
+      ranger: { label: "Take the goat path", detail: "Circle through the bracken and strike from above.", result: "{hero} finds a hidden path and turns the ambush around.", powerBonus: 6, enemyDamage: 27, lootId: "oldRoadMap" },
+      minstrel: { label: "Spoil their rhythm", detail: "Use an echoing war song to confuse their signals.", result: "{hero}'s chorus throws the goblin volley into complete disorder.", powerBonus: 5, enemyDamage: 23, fameBonus: 1 },
+      rookie: { label: "Cause a distraction", detail: "Make enough noise to pull the archers out of position.", result: "{hero} creates a surprisingly effective distraction.", powerBonus: 4, enemyDamage: 19 }
+    }
+  },
+  collapsedBridge: {
+    id: "collapsedBridge",
+    title: "The Bridge Gives Way",
+    enemyName: "Roadside Marauders",
+    description: "A rotten span collapses under the supply cart while opportunistic bandits gather on the far bank.",
+    dangerous: true,
+    special: {
+      id: "trailMarch",
+      abilityId: "trailMarch",
+      label: "Use the old crossing",
+      detail: "Trail March recalls a shallow ford hidden downstream.",
+      result: "{hero} leads everyone through an old ford and catches the marauders off guard.",
+      powerBonus: 9,
+      enemyDamage: 30,
+      goldBonus: 18,
+      lootId: "oldRoadMap"
+    },
+    classChoices: {
+      warden: { label: "Shore up the beams", detail: "Hold the broken span steady while the party crosses.", result: "{hero} braces the bridge long enough to save every pack.", powerBonus: 7, enemyDamage: 20, injuryShield: 1 },
+      spellwright: { label: "Float the supplies", detail: "Carry the packs over the gap with careful magic.", result: "{hero} lifts the supplies across without losing so much as a spoon.", powerBonus: 6, enemyDamage: 24, goldBonus: 12 },
+      ranger: { label: "Find a ford", detail: "Read the river and lead the party through safely.", result: "{hero} finds firm footing beneath the rushing water.", powerBonus: 7, enemyDamage: 22, lootId: "oldRoadMap" },
+      minstrel: { label: "Rally the travellers", detail: "Turn a frightened crowd into a working repair crew.", result: "{hero} has the bridge patched before the bandits can believe it.", powerBonus: 5, enemyDamage: 18, fameBonus: 2 },
+      rookie: { label: "Carry the ropes", detail: "Get stuck in and keep the repair moving.", result: "{hero} keeps ropes, planks, and people exactly where they are needed.", powerBonus: 4, enemyDamage: 16 }
+    }
+  },
+  woundedTraveller: {
+    id: "woundedTraveller",
+    title: "A Wounded Traveller",
+    enemyName: "Road Stalkers",
+    description: "A wounded pilgrim lies beside the trail. Something is still moving in the long grass behind them.",
+    dangerous: false,
+    special: {
+      id: "fieldDressing",
+      abilityId: "fieldDressing",
+      label: "Treat them properly",
+      detail: "Field Dressing can stabilise the traveller before danger returns.",
+      result: "{hero} treats the traveller with calm, practised hands and learns where the attackers went.",
+      powerBonus: 8,
+      enemyDamage: 24,
+      fameBonus: 2,
+      injuryShield: 1,
+      lootId: "healingHerbs"
+    },
+    classChoices: {
+      warden: { label: "Guard the roadside", detail: "Form a shield wall while the traveller is moved.", result: "{hero} keeps watch and drives the hidden stalkers back.", powerBonus: 7, enemyDamage: 28, injuryShield: 1 },
+      spellwright: { label: "Read the magic", detail: "Trace the strange residue around the traveller's wounds.", result: "{hero} reveals the creatures hiding beneath an illusion.", powerBonus: 7, enemyDamage: 30, xpBonus: 3 },
+      ranger: { label: "Track the attackers", detail: "Follow the crushed grass before the trail goes cold.", result: "{hero} circles behind the attackers and secures the road.", powerBonus: 7, enemyDamage: 29, lootId: "healingHerbs" },
+      minstrel: { label: "Win their trust", detail: "Keep the traveller calm and learn what happened.", result: "{hero} coaxes out the full story and a warning that saves the party.", powerBonus: 5, enemyDamage: 17, fameBonus: 2 },
+      rookie: { label: "Share the supplies", detail: "Offer water, bandages, and a steady hand.", result: "{hero} gives up part of the pack and earns a grateful new friend.", powerBonus: 4, enemyDamage: 14, fameBonus: 1, injuryShield: 1 }
+    }
+  },
+  hiddenCache: {
+    id: "hiddenCache",
+    title: "A Cache Beneath The Roots",
+    enemyName: "Cache Guardian",
+    description: "An iron-bound coffer sits beneath an uprooted tree. Fresh tracks suggest its owner may still be nearby.",
+    dangerous: false,
+    special: {
+      id: "keenEye",
+      quirkId: "keenEye",
+      label: "Spot the false latch",
+      detail: "Keen Eye catches the tiny wire running beneath the lock.",
+      result: "{hero} finds the trap, opens the true latch, and recovers the cache intact.",
+      powerBonus: 8,
+      enemyDamage: 25,
+      goldBonus: 24,
+      lootId: "silverCharm"
+    },
+    classChoices: {
+      warden: { label: "Break the lock", detail: "Force the coffer before its owner returns.", result: "{hero} breaks the lock with one committed strike.", powerBonus: 6, enemyDamage: 24, goldBonus: 16 },
+      spellwright: { label: "Dispel the ward", detail: "Unpick the faint runes around the iron bands.", result: "{hero} peels away an old ward and opens the cache safely.", powerBonus: 7, enemyDamage: 28, xpBonus: 3, lootId: "silverCharm" },
+      ranger: { label: "Check for traps", detail: "Study the tracks, latch, and disturbed leaves first.", result: "{hero} finds every trap and the safest route out.", powerBonus: 7, enemyDamage: 25, goldBonus: 12, lootId: "oldRoadMap" },
+      minstrel: { label: "Recall the old ballad", detail: "The markings resemble a verse about a smuggler's hoard.", result: "{hero} remembers the final verse, including the coffer's hidden catch.", powerBonus: 5, enemyDamage: 18, fameBonus: 1, lootId: "silverCharm" },
+      rookie: { label: "Prod it from a distance", detail: "A long branch is not elegant, but it is available.", result: "{hero}'s cautious prodding springs the trap from a very sensible distance.", powerBonus: 4, enemyDamage: 15, goldBonus: 8 }
+    }
+  }
+};
+
 const names = [
   "Mira",
   "Bram",
@@ -515,6 +626,7 @@ const elements = {
   adventurerDetail: document.querySelector("#adventurerDetail"),
   missionList: document.querySelector("#missionList"),
   eventLog: document.querySelector("#eventLog"),
+  guildStores: document.querySelector("#guildStores"),
   reset: document.querySelector("#resetButton"),
   nextDay: document.querySelector("#nextDayButton"),
   eventDialog: document.querySelector("#eventDialog"),
@@ -574,6 +686,7 @@ function defaultState() {
     selectedIds: [],
     activeMissions: [],
     eventMissions: [],
+    inventory: {},
     facilities: {
       tavern: 1,
       questBoard: 0,
@@ -602,7 +715,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -633,21 +746,22 @@ function loadState() {
       facilities: migratedFacilities,
       chapter: migratedChapter,
       eventMissions: saved.eventMissions || [],
+      inventory: saved.inventory || {},
       selectedIds: []
     };
     loaded.adventurers = (saved.adventurers || []).map((adventurer) => normaliseAdventurer(adventurer, loaded.day));
     const now = Date.now();
     loaded.activeMissions = (saved.activeMissions || []).map((activeMission) => {
       if (activeMission.startedAt && activeMission.endsAt) {
-        return activeMission;
+        return normaliseActiveMission(activeMission);
       }
       const elapsed = Math.min(activeMission.elapsed || 0, activeMission.duration || 0);
-      return {
+      return normaliseActiveMission({
         ...activeMission,
         elapsed,
         startedAt: now - elapsed * 1000,
         endsAt: now + Math.max(0, (activeMission.duration || 0) - elapsed) * 1000
-      };
+      });
     });
     return loaded;
   } catch {
@@ -726,6 +840,7 @@ function render() {
   renderMissions();
   renderExpeditionWatch();
   renderLog();
+  renderStores();
   renderEventDialog();
   renderChapterDialog();
   renderChapterProgress();
@@ -1369,7 +1484,7 @@ function renderMissions() {
           <div>
             <span class="mission-kicker">Active expedition</span>
             <h3>${mission.name}</h3>
-            <p class="card-meta">${mission.location} | ${formatMissionTime(getMissionRemaining(activeMission))} remaining</p>
+            <p class="card-meta">${mission.location} | ${formatMissionTime(getMissionRemaining(activeMission))} remaining${activeMission.encounterStatus === "active" ? " | Decision waiting" : ""}</p>
           </div>
           <div class="active-party">${members.map((member) => `<span title="${member.name}">${renderSprite(member, "tiny")}</span>`).join("")}</div>
         </article>
@@ -1385,7 +1500,7 @@ function renderMissions() {
 }
 
 function renderExpeditionWatch() {
-  const activeMission = state.activeMissions[0];
+  const activeMission = state.activeMissions.find((mission) => mission.encounterStatus === "active") || state.activeMissions[0];
   elements.expeditionWatch.classList.toggle("hidden", !activeMission);
   if (!activeMission) {
     elements.expeditionWatch.innerHTML = "";
@@ -1396,6 +1511,10 @@ function renderExpeditionWatch() {
   const members = activeMission.partyIds.map(getAdventurer).filter(Boolean);
   const progress = Math.min(100, Math.round((activeMission.elapsed / activeMission.duration) * 100));
   const remaining = getMissionRemaining(activeMission);
+  const encounter = encounterDeck[activeMission.encounterId];
+  const enemyHealth = getEnemyHealth(activeMission);
+  const enemyHealthPercent = Math.round((enemyHealth / activeMission.enemyMaxHealth) * 100);
+  const enemyName = encounter?.enemyName || getMissionEnemyName(mission);
   const extraCount = Math.max(0, state.activeMissions.length - 1);
   const actors = members
     .map((member, index) => `
@@ -1414,18 +1533,229 @@ function renderExpeditionWatch() {
       </div>
       <strong class="mission-clock" aria-label="${remaining} seconds remaining">${formatMissionTime(remaining)}</strong>
     </div>
-    <div class="battle-stage focus-${mission.focus} ${mission.chapterBoss ? "boss-stage" : ""}" aria-label="${members.map((member) => member.name).join(", ")} fighting at ${mission.location}">
+    <div class="enemy-vitals">
+      <span>${enemyName}</span>
+      <strong>${enemyHealth}/${activeMission.enemyMaxHealth} HP</strong>
+      <div class="enemy-health-track" role="progressbar" aria-label="${enemyName} health" aria-valuemin="0" aria-valuemax="${activeMission.enemyMaxHealth}" aria-valuenow="${enemyHealth}"><i style="width:${enemyHealthPercent}%"></i></div>
+    </div>
+    <div class="battle-stage focus-${mission.focus} ${mission.chapterBoss ? "boss-stage" : ""} ${activeMission.encounterStatus === "active" ? "encounter-alert" : ""} ${enemyHealth === 0 ? "enemy-defeated" : ""}" aria-label="${members.map((member) => member.name).join(", ")} fighting at ${mission.location}">
       <span class="battle-scenery" aria-hidden="true"></span>
       <div class="battle-party">${actors}</div>
       <span class="battle-enemy" aria-hidden="true"><i></i><b></b></span>
       <span class="battle-impact" aria-hidden="true"></span>
     </div>
+    ${renderEncounterPanel(activeMission, encounter, members)}
     <div class="expedition-watch-footer">
       <span>${mission.location}</span>
       <strong>${progress}%</strong>
     </div>
     <div class="progress-track slim"><div class="progress-fill" style="width:${progress}%"></div></div>
   `;
+
+  elements.expeditionWatch.querySelectorAll("[data-encounter-choice]").forEach((button) => {
+    button.addEventListener("click", () => resolveEncounterChoice(activeMission.id, button.dataset.encounterChoice));
+  });
+}
+
+function renderEncounterPanel(activeMission, encounter, party) {
+  if (!encounter || activeMission.encounterStatus === "waiting") {
+    return `<div class="expedition-narrative"><span>On the road</span><p>The party is advancing towards ${getMissionForActive(activeMission).location}.</p></div>`;
+  }
+  if (activeMission.encounterStatus === "resolved") {
+    const outcome = activeMission.encounterOutcome || {};
+    const rewards = [
+      outcome.powerBonus ? `+${outcome.powerBonus} mission power` : "",
+      outcome.goldBonus ? `+${outcome.goldBonus}G` : "",
+      outcome.fameBonus ? `+${outcome.fameBonus} fame` : "",
+      outcome.lootId ? lootCatalog[outcome.lootId]?.name : ""
+    ].filter(Boolean);
+    return `
+      <div class="encounter-result" role="status">
+        <span class="encounter-result-mark" aria-hidden="true">OK</span>
+        <div><strong>${activeMission.encounterAutoResolved ? "Party decision" : "Your decision"}</strong><p>${activeMission.encounterResult}</p>${rewards.length ? `<div class="encounter-rewards">${rewards.map((reward) => `<span>${reward}</span>`).join("")}</div>` : ""}</div>
+      </div>
+    `;
+  }
+
+  const decisionTime = Math.max(0, Math.ceil((activeMission.encounterExpiresAt - Date.now()) / 1000));
+  const choices = getAvailableEncounterChoices(encounter, party);
+  return `
+    <section class="encounter-card" aria-labelledby="encounter-${activeMission.id}">
+      <div class="encounter-heading">
+        <div><span class="mission-kicker">Decision needed</span><h4 id="encounter-${activeMission.id}">${encounter.title}</h4></div>
+        <strong>${decisionTime}s</strong>
+      </div>
+      <p>${encounter.description}</p>
+      <div class="encounter-choices">
+        ${choices.map((choice) => `
+          <button type="button" data-encounter-choice="${choice.id}">
+            <span class="choice-badge">${choice.badge}</span>
+            <strong>${choice.label}</strong>
+            <small>${choice.detail}</small>
+          </button>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function getAvailableEncounterChoices(encounter, party) {
+  const choices = [];
+  const specialLeader = getEncounterChoiceLeader(encounter.special, party);
+  if (specialLeader) {
+    const specialName = encounter.special.abilityId
+      ? abilityCatalog[encounter.special.abilityId].name
+      : quirkCatalog[encounter.special.quirkId].name;
+    choices.push({ ...encounter.special, badge: `${specialName} | ${specialLeader.name}` });
+  }
+  const seenClasses = new Set();
+  party.forEach((member) => {
+    if (seenClasses.has(member.classId) || !encounter.classChoices[member.classId]) {
+      return;
+    }
+    seenClasses.add(member.classId);
+    choices.push({
+      id: `class-${member.classId}`,
+      ...encounter.classChoices[member.classId],
+      classId: member.classId,
+      badge: `${classes[member.classId].label} | ${member.name}`
+    });
+  });
+  choices.push({
+    id: "trustParty",
+    label: "Let the party decide",
+    detail: "They will choose a cautious response and continue without waiting.",
+    result: "The party makes a cautious call together and keeps the expedition moving.",
+    powerBonus: 2,
+    enemyDamage: 10,
+    badge: "Party instinct"
+  });
+  return choices;
+}
+
+function getEncounterChoiceLeader(choice, party) {
+  if (!choice) {
+    return null;
+  }
+  if (choice.classId) {
+    return party.find((member) => member.classId === choice.classId) || null;
+  }
+  if (choice.abilityId) {
+    return party.find((member) => member.abilities?.includes(choice.abilityId)) || null;
+  }
+  if (choice.quirkId) {
+    return party.find((member) => member.quirks?.positive === choice.quirkId || member.quirks?.negative === choice.quirkId) || null;
+  }
+  return party[0] || null;
+}
+
+function getEncounterQuirkEffect(adventurer, encounter, partySize) {
+  const positive = adventurer?.quirks?.positive;
+  const negative = adventurer?.quirks?.negative;
+  const effect = { powerBonus: 0, enemyDamage: 0, fameBonus: 0, xpBonus: 0, injuryShield: 0, notes: [] };
+  if (positive === "dauntless" && encounter.dangerous) {
+    effect.powerBonus += 2;
+    effect.enemyDamage += 5;
+    effect.notes.push("Dauntless strengthened the response");
+  } else if (positive === "quickStudy") {
+    effect.xpBonus += 2;
+    effect.notes.push("Quick Study found a lesson in the moment");
+  } else if (positive === "charmer") {
+    effect.fameBonus += 1;
+    effect.notes.push("Charming won over the witnesses");
+  } else if (positive === "lucky") {
+    effect.powerBonus += 2;
+    effect.notes.push("Lucky timing helped everything land");
+  } else if (positive === "hearty") {
+    effect.injuryShield += 1;
+    effect.notes.push("Hearty kept the party steady");
+  }
+  if (negative === "nervous" && encounter.dangerous) {
+    effect.powerBonus -= 2;
+    effect.enemyDamage -= 4;
+    effect.notes.push("Nervous made the opening harder to take");
+  } else if (negative === "clumsy") {
+    effect.powerBonus -= 1;
+    effect.enemyDamage -= 3;
+    effect.notes.push("Clumsy made the execution rather untidy");
+  } else if (negative === "stubborn") {
+    effect.xpBonus -= 1;
+    effect.notes.push("Stubborn missed part of the lesson");
+  } else if (negative === "showboat" && partySize === 1) {
+    effect.powerBonus -= 2;
+    effect.notes.push("Showboat took an unnecessary risk alone");
+  }
+  return effect;
+}
+
+function resolveEncounterChoice(activeMissionId, choiceId, automatic = false, shouldRender = true) {
+  const activeMission = state.activeMissions.find((mission) => mission.id === activeMissionId);
+  const encounter = activeMission ? encounterDeck[activeMission.encounterId] : null;
+  if (!activeMission || !encounter || activeMission.encounterStatus !== "active") {
+    return;
+  }
+  const party = activeMission.partyIds.map(getAdventurer).filter(Boolean);
+  const choice = getAvailableEncounterChoices(encounter, party).find((item) => item.id === choiceId);
+  if (!choice) {
+    return;
+  }
+  const leader = getEncounterChoiceLeader(choice, party) || party[0];
+  const quirkEffect = getEncounterQuirkEffect(leader, encounter, party.length);
+  const powerBonus = Math.max(0, (choice.powerBonus || 0) + quirkEffect.powerBonus);
+  const enemyDamage = Math.max(0, (choice.enemyDamage || 0) + quirkEffect.enemyDamage);
+  const fameBonus = Math.max(0, (choice.fameBonus || 0) + quirkEffect.fameBonus);
+  const xpBonus = Math.max(0, (choice.xpBonus || 0) + quirkEffect.xpBonus);
+  const injuryShield = Math.max(0, (choice.injuryShield || 0) + quirkEffect.injuryShield);
+  const result = choice.result.replace("{hero}", leader?.name || "The party");
+  const resultWithQuirk = quirkEffect.notes.length ? `${result} ${quirkEffect.notes.join(". ")}.` : result;
+
+  activeMission.powerBonus = (activeMission.powerBonus || 0) + powerBonus;
+  activeMission.encounterDamage = (activeMission.encounterDamage || 0) + enemyDamage;
+  activeMission.goldBonus = (activeMission.goldBonus || 0) + (choice.goldBonus || 0);
+  activeMission.fameBonus = (activeMission.fameBonus || 0) + fameBonus;
+  activeMission.xpBonus = (activeMission.xpBonus || 0) + xpBonus;
+  activeMission.injuryShield = (activeMission.injuryShield || 0) + injuryShield;
+  activeMission.encounterStatus = "resolved";
+  activeMission.encounterResolvedAt = Date.now();
+  activeMission.encounterAutoResolved = automatic;
+  activeMission.encounterResult = resultWithQuirk;
+  activeMission.encounterOutcome = { powerBonus, goldBonus: choice.goldBonus || 0, fameBonus, xpBonus, injuryShield, lootId: choice.lootId || "" };
+  if (choice.lootId) {
+    grantLoot(choice.lootId);
+  }
+
+  party.forEach((member) => {
+    const historyText = member.id === leader?.id
+      ? `Led the response to ${encounter.title}: ${choice.label}.`
+      : `Backed ${leader?.name || "the party"} during ${encounter.title}.`;
+    addLifeEvent(member, historyText);
+  });
+  addLog(`${leader?.name || "The party"} answers ${encounter.title.toLowerCase()} with "${choice.label}".`);
+  if (shouldRender) {
+    render();
+  }
+  if (!automatic) {
+    showToast("Expedition decision made", choice.lootId ? `${lootCatalog[choice.lootId].name} was added to Guild Stores.` : result, "success");
+  }
+}
+
+function grantLoot(lootId, amount = 1) {
+  if (!lootCatalog[lootId]) {
+    return;
+  }
+  state.inventory[lootId] = (state.inventory[lootId] || 0) + amount;
+}
+
+function getEnemyHealth(activeMission) {
+  const progress = Math.min(1, (activeMission.elapsed || 0) / Math.max(1, activeMission.duration || 1));
+  return Math.max(0, Math.round(activeMission.enemyMaxHealth * (1 - progress) - (activeMission.encounterDamage || 0)));
+}
+
+function getMissionEnemyName(mission) {
+  if (mission.chapterBoss) {
+    return "Barrow Hill Chief";
+  }
+  return mission.focus === "mag" ? "Wild Nest" : mission.focus === "cha" ? "Road Trouble" : "Goblin Scouts";
 }
 
 function getMissionRemaining(activeMission) {
@@ -1446,6 +1776,17 @@ function renderLog() {
     .slice(0, 12)
     .map((entry) => `<li><strong>Day ${entry.day}</strong> ${entry.text}</li>`)
     .join("");
+}
+
+function renderStores() {
+  const items = Object.entries(state.inventory || {}).filter(([lootId, count]) => lootCatalog[lootId] && count > 0);
+  elements.guildStores.innerHTML = `
+    <div class="stores-heading"><div><span class="eyebrow">Recovered curios</span><h3>Guild Stores</h3></div><strong>${items.reduce((total, [, count]) => total + count, 0)}</strong></div>
+    ${items.length ? `<div class="store-grid">${items.map(([lootId, count]) => {
+      const loot = lootCatalog[lootId];
+      return `<article class="store-item" title="${loot.description}"><span>${loot.mark}</span><div><strong>${loot.name}</strong><small>${loot.description}</small></div><b>x${count}</b></article>`;
+    }).join("")}</div>` : `<p class="stores-empty">Quest discoveries and unusual rewards will be kept here.</p>`}
+  `;
 }
 
 function renderEventDialog() {
@@ -1951,7 +2292,17 @@ function startMission(missionId) {
     elapsed: 0,
     duration,
     startedAt,
-    endsAt: startedAt + duration * 1000
+    endsAt: startedAt + duration * 1000,
+    encounterId: getEncounterIdForMission(mission),
+    encounterStatus: "waiting",
+    encounterTriggerAt: Math.max(5, Math.floor(duration * (mission.tutorial ? 0.24 : 0.3))),
+    enemyMaxHealth: Math.max(80, mission.difficulty + 70),
+    encounterDamage: 0,
+    powerBonus: 0,
+    goldBonus: 0,
+    fameBonus: 0,
+    xpBonus: 0,
+    injuryShield: 0
   });
 
   if (mission.isEvent) {
@@ -1981,6 +2332,11 @@ function tick() {
       ? Math.min(activeMission.duration, Math.floor((now - activeMission.startedAt) / 1000))
       : activeMission.elapsed + 1;
     changed = true;
+    const encounterUpdate = updateMissionEncounter(activeMission, now);
+    if (encounterUpdate === "triggered") {
+      const encounter = encounterDeck[activeMission.encounterId];
+      showToast("Expedition needs a decision", encounter.title, "info");
+    }
   });
 
   const complete = state.activeMissions.filter((activeMission) => activeMission.elapsed >= activeMission.duration);
@@ -2011,21 +2367,24 @@ function tick() {
 function resolveMission(activeMission) {
   const mission = getMissionForActive(activeMission);
   const party = activeMission.partyIds.map(getAdventurer).filter(Boolean);
-  const power = getPartyPower(party, mission);
+  if (activeMission.encounterStatus === "active") {
+    resolveEncounterChoice(activeMission.id, "trustParty", true, false);
+  }
+  const power = getPartyPower(party, mission) + (activeMission.powerBonus || 0);
   const roll = Math.floor(Math.random() * 18) + getPartyRollBonus(party);
   const success = mission.guaranteedSuccess || power + roll >= mission.difficulty;
   const partyNames = party.map((adventurer) => adventurer.name).join(", ");
 
   if (success) {
-    const baseGold = mission.gold + state.facilities.questBoard * 6;
+    const baseGold = mission.gold + state.facilities.questBoard * 6 + (activeMission.goldBonus || 0);
     const gold = Math.round(baseGold * getPartyGoldRate(party));
-    const fame = mission.fame + Math.floor(state.facilities.questBoard / 2) + getPartyFameBonus(party);
+    const fame = mission.fame + Math.floor(state.facilities.questBoard / 2) + getPartyFameBonus(party) + (activeMission.fameBonus || 0);
     state.gold += gold;
     state.fame += fame;
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Completed ${mission.name} and helped earn ${fame} fame.`);
-      grantXp(adventurer, Math.round((9 + mission.fame + state.facilities.trainingYard * 2) * getXpRate(adventurer)));
+      grantXp(adventurer, Math.round((9 + mission.fame + state.facilities.trainingYard * 2 + (activeMission.xpBonus || 0)) * getXpRate(adventurer)));
     });
     addLog(`${partyNames} complete ${mission.name}, earning ${gold}G and ${fame} fame.`);
     handleChapterMissionSuccess(mission);
@@ -2038,13 +2397,64 @@ function resolveMission(activeMission) {
       addLifeEvent(adventurer, `Retreated from ${mission.name}, wiser and bruised.`);
       grantXp(adventurer, Math.round(4 * getXpRate(adventurer)));
     });
-    const injured = party[Math.floor(Math.random() * party.length)];
-    injured.status = "injured";
-    injured.recovery = Math.max(3, 12 - state.facilities.dormitory * 2 - getRecoveryReduction(injured));
-    addLifeEvent(injured, `Was injured during ${mission.name}.`);
-    addLog(`${partyNames} retreat from ${mission.name}. ${injured.name} needs ${injured.recovery}s to recover.`);
-    showToast("Party retreated", `${injured.name} was injured at ${mission.location}.`, "danger");
+    if (activeMission.injuryShield > 0) {
+      addLog(`${partyNames} retreat from ${mission.name}, but their earlier preparation prevents an injury.`);
+      showToast("Party retreated safely", `The party escaped ${mission.location} without injury.`, "info");
+    } else {
+      const injured = party[Math.floor(Math.random() * party.length)];
+      injured.status = "injured";
+      injured.recovery = Math.max(3, 12 - state.facilities.dormitory * 2 - getRecoveryReduction(injured));
+      addLifeEvent(injured, `Was injured during ${mission.name}.`);
+      addLog(`${partyNames} retreat from ${mission.name}. ${injured.name} needs ${injured.recovery}s to recover.`);
+      showToast("Party retreated", `${injured.name} was injured at ${mission.location}.`, "danger");
+    }
   }
+}
+
+function normaliseActiveMission(activeMission) {
+  const mission = activeMission.missionSnapshot || missionDeck.find((item) => item.id === activeMission.missionId) || {};
+  const duration = activeMission.duration || mission.duration || 30;
+  return {
+    ...activeMission,
+    encounterId: activeMission.encounterId || getEncounterIdForMission(mission),
+    encounterStatus: activeMission.encounterStatus || "waiting",
+    encounterTriggerAt: activeMission.encounterTriggerAt || Math.max(5, Math.floor(duration * (mission.tutorial ? 0.24 : 0.3))),
+    enemyMaxHealth: activeMission.enemyMaxHealth || Math.max(80, (mission.difficulty || 10) + 70),
+    encounterDamage: activeMission.encounterDamage || 0,
+    powerBonus: activeMission.powerBonus || 0,
+    goldBonus: activeMission.goldBonus || 0,
+    fameBonus: activeMission.fameBonus || 0,
+    xpBonus: activeMission.xpBonus || 0,
+    injuryShield: activeMission.injuryShield || 0
+  };
+}
+
+function getEncounterIdForMission(mission) {
+  const label = `${mission.id || ""} ${mission.name || ""} ${mission.location || ""}`.toLowerCase();
+  if (mission.tutorial || mission.chapterBoss || label.includes("goblin")) {
+    return "goblinAmbush";
+  }
+  if (label.includes("bridge") || label.includes("road") || mission.focus === "str") {
+    return "collapsedBridge";
+  }
+  if (mission.focus === "mag" || mission.focus === "cha") {
+    return "woundedTraveller";
+  }
+  return "hiddenCache";
+}
+
+function updateMissionEncounter(activeMission, now) {
+  if (activeMission.encounterStatus === "waiting" && activeMission.elapsed >= activeMission.encounterTriggerAt && activeMission.elapsed < activeMission.duration) {
+    activeMission.encounterStatus = "active";
+    activeMission.encounterTriggeredAt = now;
+    activeMission.encounterExpiresAt = now + 18000;
+    return "triggered";
+  }
+  if (activeMission.encounterStatus === "active" && now >= activeMission.encounterExpiresAt) {
+    resolveEncounterChoice(activeMission.id, "trustParty", true, false);
+    return "resolved";
+  }
+  return "";
 }
 
 function getPartyPower(party, mission) {

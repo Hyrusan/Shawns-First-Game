@@ -85,7 +85,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=22/);
+  assert.match(index, /styles\.css\?v=23/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -96,7 +96,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=22/);
+  assert.match(index, /game\.js\?v=23/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -224,12 +224,148 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 12);
+  assert.equal(result.version, 13);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
   assert.equal(result.encounterStatus, "waiting");
   assert.equal(result.enemyMaxHealth, 94);
+});
+
+test("the Training Yard queues a stat drill, occupies the room, and completes on the next day", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const hero = makeAdventurer("Alden", "warden", true, "male");
+    hero.quirks.positive = "hearty";
+    state.adventurers = [hero];
+    state.founderCreated = true;
+    state.facilities.trainingYard = 1;
+    state.gold = 100;
+    const startingStr = hero.stats.str;
+    startTraining(hero.id, "stat", "str");
+    const queued = state.trainingJobs[0];
+    const goldAfterStart = state.gold;
+    const pickerWhileTraining = renderQuestPartyPicker(missionDeck[0]);
+    activeView = "facilities";
+    renderContextScene();
+    const cutawayWhileTraining = elements.contextScene.innerHTML;
+    renderTrainingPanel();
+    const panelWhileTraining = elements.trainingPanel.innerHTML;
+    advanceDays(1);
+    ({ startingStr, queuedReadyDay: queued.readyDay, goldAfterStart, pickerWhileTraining,
+       cutawayWhileTraining, panelWhileTraining, finalDay: state.day, finalStatus: hero.status,
+       finalStr: hero.stats.str, completedDrills: hero.trainingStats.str,
+       jobsRemaining: state.trainingJobs.length, history: hero.lifeLog.map((entry) => entry.text).join(" | ") });
+  `);
+
+  assert.equal(result.queuedReadyDay, 2);
+  assert.equal(result.goldAfterStart, 72);
+  assert.match(result.pickerWhileTraining, /Training to day 2/);
+  assert.match(result.cutawayWhileTraining, /facility-scene-trainingYard built level-1 training-active/);
+  assert.match(result.cutawayWhileTraining, /Alden/);
+  assert.match(result.panelWhileTraining, /Alden/);
+  assert.match(result.panelWhileTraining, /Completes day 2/);
+  assert.equal(result.finalDay, 2);
+  assert.equal(result.finalStatus, "idle");
+  assert.equal(result.finalStr, result.startingStr + 1);
+  assert.equal(result.completedDrills, 1);
+  assert.equal(result.jobsRemaining, 0);
+  assert.match(result.history, /Completed Weapon Drills/);
+});
+
+test("higher-level techniques take time and high-potential founders retain extra capacity", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "spellwright", true, "female");
+    founder.quirks.positive = "hearty";
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.facilities.trainingYard = 2;
+    state.gold = 200;
+    startTraining(founder.id, "ability", "rapidStudy");
+    const firstReadyDay = state.trainingJobs[0].readyDay;
+    advanceDays(1);
+    const halfwayStatus = founder.status;
+    const learnedHalfway = founder.abilities.includes("rapidStudy");
+    advanceDays(1);
+    ({ firstReadyDay, halfwayStatus, learnedHalfway, finalStatus: founder.status,
+       learnedFinally: founder.abilities.includes("rapidStudy"), techniqueCapacity: getTrainingCapacity(founder),
+       drillCapacity: getStatTrainingCapacity(founder), jobsRemaining: state.trainingJobs.length });
+  `);
+
+  assert.equal(result.firstReadyDay, 3);
+  assert.equal(result.halfwayStatus, "training");
+  assert.equal(result.learnedHalfway, false);
+  assert.equal(result.finalStatus, "idle");
+  assert.equal(result.learnedFinally, true);
+  assert.equal(result.techniqueCapacity, 4);
+  assert.equal(result.drillCapacity, 7);
+  assert.equal(result.jobsRemaining, 0);
+});
+
+test("version 12 saves preserve an active training job and settle it on the saved completion day", () => {
+  const context = createGameContext({
+    version: 12,
+    screen: "game",
+    day: 4,
+    gold: 100,
+    fame: 12,
+    adventurers: [{
+      id: "trainee", name: "Mira", gender: "female", classId: "spellwright", founder: false,
+      level: 1, xp: 0, status: "idle", recovery: 0, potential: 4,
+      stats: { str: 3, mag: 9, wit: 7, cha: 4 }, traits: {},
+      quirks: { positive: "hearty", negative: "stubborn" }, abilities: ["emberBolt"], lifeLog: []
+    }],
+    trainingJobs: [{
+      id: "saved-training", adventurerId: "trainee", kind: "ability", targetId: "fieldDressing",
+      startedDay: 4, readyDay: 5, cost: 35
+    }],
+    recruitment: { unlocked: true, order: null, candidates: [], hires: 0 },
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 1, kitchen: 0, workshop: 0 },
+    chapter: { stage: "boss", completedLocalMissions: ["greenbankCart", "lostWoodcutter", "mooncapRemedy"], charterEarned: false },
+    log: [],
+    founderCreated: true,
+    musicMuted: true
+  });
+  const result = run(context, `
+    const statusOnLoad = state.adventurers[0].status;
+    const jobsOnLoad = state.trainingJobs.length;
+    advanceDays(1);
+    ({ version: state.version, statusOnLoad, jobsOnLoad, statusAfter: state.adventurers[0].status,
+       learned: state.adventurers[0].abilities.includes("fieldDressing"), jobsAfter: state.trainingJobs.length,
+       hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
+  `);
+
+  assert.equal(result.version, 13);
+  assert.equal(result.statusOnLoad, "training");
+  assert.equal(result.jobsOnLoad, 1);
+  assert.equal(result.statusAfter, "idle");
+  assert.equal(result.learned, true);
+  assert.equal(result.jobsAfter, 0);
+  assert.equal(result.hasTrainingStats, true);
+});
+
+test("the first expansion specifically guides players through the Training Yard", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    state.chapter.stage = "expansion";
+    state.chapter.completedLocalMissions = ["greenbankCart", "lostWoodcutter", "mooncapRemedy"];
+    state.gold = 200;
+    const kitchenLockedBefore = !isFacilityUnlocked("kitchen");
+    const bossLockBefore = getMissionLockReason(missionDeck.find((mission) => mission.chapterBoss));
+    upgradeFacility("trainingYard");
+    ({ kitchenLockedBefore, bossLockBefore, yardLevel: state.facilities.trainingYard,
+       stage: state.chapter.stage, chapterMoment: currentChapterMomentId,
+       kitchenUnlockedAfter: isFacilityUnlocked("kitchen"), bossLockAfter: getMissionLockReason(missionDeck.find((mission) => mission.chapterBoss)) });
+  `);
+
+  assert.equal(result.kitchenLockedBefore, true);
+  assert.match(result.bossLockBefore, /Training Yard/);
+  assert.equal(result.yardLevel, 1);
+  assert.equal(result.stage, "boss");
+  assert.equal(result.chapterMoment, "trainingYard");
+  assert.equal(result.kitchenUnlockedAfter, true);
+  assert.equal(result.bossLockAfter, "");
 });
 
 test("new games begin with one founder and tavern notices produce a shortlist after one or two days", () => {
@@ -300,7 +436,7 @@ test("quest cards provide inline party selection with clear availability states"
   assert.match(result.emptyPicker, new RegExp(`data-quest-party="${result.busyId}"[^>]*disabled`));
   assert.match(result.emptyPicker, new RegExp(`data-quest-party="${result.injuredId}"[^>]*disabled`));
   assert.match(result.emptyPicker, /On quest/);
-  assert.match(result.emptyPicker, /Injured/);
+  assert.match(result.emptyPicker, /Recovering/);
   assert.match(result.emptyBoard, /data-compose-party="stolenSupplies"/);
   assert.match(result.emptyBoard, /data-party-picker="stolenSupplies"/);
   assert.match(result.emptyDispatch, /disabled/);
@@ -357,7 +493,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 12);
+  assert.equal(result.version, 13);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);

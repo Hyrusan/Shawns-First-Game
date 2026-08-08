@@ -16,7 +16,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Tavern recruitment notices with travel time and three-candidate shortlists
 - Persistent adventurer profiles and two complementary sprite atlases
 - Positive and negative quirks with real quest effects
-- Natural class abilities, long-term potential, and Training Yard techniques
+- Timed Training Yard drills and teachable techniques with potential-based capacity
 - Three-person expedition parties
 - Inline quest-party selection with availability and mission-fit indicators
 - Class-specific expedition battle animations
@@ -60,11 +60,11 @@ The latest version from `main` is automatically published through GitHub Pages:
 - `game.js`: simulation state, rendering, missions, facilities, and saves
 - `assets/`: generated sprites, the Western March map, and the map theme
 - `docs/`: design direction, visual references, and content seeds
-- `tests/`: deterministic gameplay smoke tests for expedition encounters
+- `tests/`: deterministic gameplay smoke tests for progression, training, saves, and expeditions
 
 ## Testing
 
-Run the encounter smoke tests with Node.js:
+Run the gameplay smoke tests with Node.js:
 
 ```powershell
 node --test tests\game-smoke.test.js

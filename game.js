@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 12;
+const SAVE_VERSION = 13;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -57,6 +57,12 @@ const classAbilityTracks = {
 };
 
 const trainingAbilityIds = ["fieldDressing", "questcraft", "rapidStudy", "trailMarch", "monsterLore", "inspiringPresence"];
+const trainingDrills = {
+  str: { name: "Weapon Drills", mark: "STR", stat: "str", cost: 28, description: "Raises STR by 1 through sparring and weapon practice." },
+  mag: { name: "Arcane Practice", mark: "MAG", stat: "mag", cost: 28, description: "Raises MAG by 1 through focus exercises and spellwork." },
+  wit: { name: "Fieldcraft Course", mark: "WIT", stat: "wit", cost: 28, description: "Raises WIT by 1 through tracking and tactical drills." },
+  cha: { name: "Leadership Drill", mark: "CHA", stat: "cha", cost: 28, description: "Raises CHA by 1 through command and morale practice." }
+};
 const positiveQuirkIds = ["dauntless", "quickStudy", "keenEye", "hearty", "charmer", "lucky"];
 const negativeQuirkIds = ["nervous", "clumsy", "homesick", "stubborn", "frail", "showboat"];
 
@@ -110,10 +116,17 @@ const chapterMoments = {
   },
   expansion: {
     eyebrow: "Guildstead Is Growing",
-    title: "We Need More Than A Noticeboard",
-    text: "Three local problems solved, and the tavern is full of people asking for help. Choose your first major expansion: beds for a larger roster, a yard for training, or a kitchen for better provisions.",
-    button: "Choose an Expansion",
+    title: "Heroes Need Somewhere To Train",
+    text: "Three local problems solved, and the goblins are gathering at Barrow Hill. Mara suggests turning the old yard into a proper training space before anyone attempts the chief's camp.",
+    button: "Build The Training Yard",
     view: "facilities"
+  },
+  trainingYard: {
+    eyebrow: "The First Expansion",
+    title: "Training Begins At Guildstead",
+    text: "The new yard is ready. Adventurers can spend a day improving a stat or learn techniques over one or two days. While training they cannot join expeditions, so timing now matters.",
+    button: "Choose A Trainee",
+    view: "adventurers"
   },
   charter: {
     eyebrow: "Royal Charter Awarded",
@@ -175,7 +188,7 @@ const facilities = [
     mapTop: "61%",
     buildCost: 95,
     baseCost: 120,
-    effect: "Adds strength and experience to every expedition"
+    effect: "Runs timed drills and teaches adventurers new techniques"
   },
   {
     id: "kitchen",
@@ -626,6 +639,7 @@ const elements = {
   randomFounder: document.querySelector("#randomFounderButton"),
   recruit: document.querySelector("#recruitButton"),
   recruitmentPanel: document.querySelector("#recruitmentPanel"),
+  trainingPanel: document.querySelector("#trainingPanel"),
   rosterList: document.querySelector("#rosterList"),
   selectedSummary: document.querySelector("#selectedSummary"),
   adventurerDetail: document.querySelector("#adventurerDetail"),
@@ -677,6 +691,7 @@ elements.mapTheme.volume = 0.28;
 document.addEventListener("pointerdown", tryResumeBackgroundMusic, { passive: true });
 document.addEventListener("keydown", tryResumeBackgroundMusic);
 
+processTrainingCompletions(false);
 render();
 setInterval(tick, 1000);
 
@@ -691,6 +706,7 @@ function defaultState() {
     adventurers: [],
     selectedIds: [],
     activeMissions: [],
+    trainingJobs: [],
     eventMissions: [],
     inventory: {},
     recruitment: {
@@ -727,7 +743,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -757,6 +773,7 @@ function loadState() {
       screen: saved.screen || (saved.founderCreated ? "game" : "title"),
       facilities: migratedFacilities,
       chapter: migratedChapter,
+      trainingJobs: [],
       eventMissions: saved.eventMissions || [],
       inventory: saved.inventory || {},
       recruitment: {
@@ -767,6 +784,15 @@ function loadState() {
     };
     loaded.adventurers = (saved.adventurers || []).map((adventurer) => normaliseAdventurer(adventurer, loaded.day));
     loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
+    loaded.trainingJobs = (saved.trainingJobs || [])
+      .map(normaliseTrainingJob)
+      .filter((job) => job && loaded.adventurers.some((adventurer) => adventurer.id === job.adventurerId));
+    loaded.trainingJobs.forEach((job) => {
+      const trainee = loaded.adventurers.find((adventurer) => adventurer.id === job.adventurerId);
+      if (trainee) {
+        trainee.status = "training";
+      }
+    });
     if (!saved.recruitment) {
       loaded.recruitment.unlocked = Boolean(loaded.founderCreated && !["tavern", "hero", "firstQuest"].includes(loaded.chapter.stage));
     }
@@ -859,6 +885,7 @@ function render() {
   renderGuildhallInterior();
   renderMap();
   renderRoster();
+  renderTrainingPanel();
   renderMissions();
   renderExpeditionWatch();
   renderLog();
@@ -1104,7 +1131,7 @@ function getContextSceneMeta(view) {
 }
 
 function renderLivingTavern(sceneMeta) {
-  const heroesAtHome = state.adventurers.filter((adventurer) => adventurer.status !== "busy");
+  const heroesAtHome = state.adventurers.filter((adventurer) => ["idle", "injured"].includes(adventurer.status));
   const applicants = activeView === "adventurers" ? state.recruitment.candidates.slice(0, 2) : [];
   const people = [
     ...heroesAtHome.slice(0, Math.max(1, 5 - applicants.length)).map((adventurer) => ({ adventurer, role: adventurer.status === "injured" ? "Resting" : "Off duty" })),
@@ -1112,6 +1139,7 @@ function renderLivingTavern(sceneMeta) {
   ].slice(0, 5);
   const tavernLevel = state.facilities.tavern || 1;
   const awayCount = state.adventurers.filter((adventurer) => adventurer.status === "busy").length;
+  const trainingCount = state.trainingJobs.length;
   const detailCount = Math.min(5, tavernLevel + (state.chapter.charterEarned ? 1 : 0));
 
   return `
@@ -1134,7 +1162,7 @@ function renderLivingTavern(sceneMeta) {
       ${people.length === 0 ? `<div class="empty-tavern-message"><strong>The room is quiet</strong><span>Create your founder to give the tavern its first regular.</span></div>` : ""}
       <footer class="context-scene-footer">
         <div><strong>${sceneMeta.title}</strong><span>${sceneMeta.note}</span></div>
-        <div class="venue-presence"><span>${heroesAtHome.length} here</span><span>${awayCount} away</span><span>Tavern Lv ${tavernLevel}</span></div>
+        <div class="venue-presence"><span>${heroesAtHome.length} here</span><span>${awayCount} away</span>${trainingCount ? `<span>${trainingCount} training</span>` : ""}<span>Tavern Lv ${tavernLevel}</span></div>
       </footer>
     </section>
   `;
@@ -1152,18 +1180,26 @@ function renderContextPatron(adventurer, index, role) {
 }
 
 function renderFacilityCutaway(sceneMeta) {
-  const availableHeroes = state.adventurers.filter((adventurer) => adventurer.status !== "busy");
+  const availableHeroes = state.adventurers.filter((adventurer) => ["idle", "injured"].includes(adventurer.status));
+  const trainingJobs = getActiveTrainingJobs();
   let occupantIndex = 0;
   const rooms = facilities.map((facility) => {
     const level = state.facilities[facility.id] || 0;
     const unlocked = isFacilityUnlocked(facility.id);
-    const occupant = level > 0 && occupantIndex < availableHeroes.length ? availableHeroes[occupantIndex++] : null;
+    const roomTrainingJobs = facility.id === "trainingYard" ? trainingJobs : [];
+    const occupant = roomTrainingJobs.length
+      ? getAdventurer(roomTrainingJobs[0].adventurerId)
+      : level > 0 && occupantIndex < availableHeroes.length ? availableHeroes[occupantIndex++] : null;
+    const status = roomTrainingJobs.length
+      ? `${roomTrainingJobs.length}/${getTrainingSlotCount()} training`
+      : level > 0 ? `Lv ${level}` : unlocked ? "Build" : "Locked";
     const props = Array.from({ length: Math.min(5, level) }, (_, index) => `<i class="upgrade-prop prop-${index + 1}" style="--prop-index:${index}"></i>`).join("");
     return `
-      <section class="cutaway-room facility-scene-${facility.id} ${level > 0 ? "built" : unlocked ? "available" : "locked"} level-${level}" aria-label="${facility.name}, ${level > 0 ? `level ${level}` : unlocked ? "ready to build" : "locked"}">
-        <header><strong>${facility.name}</strong><span>${level > 0 ? `Lv ${level}` : unlocked ? "Build" : "Locked"}</span></header>
+      <section class="cutaway-room facility-scene-${facility.id} ${level > 0 ? "built" : unlocked ? "available" : "locked"} level-${level} ${roomTrainingJobs.length ? "training-active" : ""}" aria-label="${facility.name}, ${roomTrainingJobs.length ? status : level > 0 ? `level ${level}` : unlocked ? "ready to build" : "locked"}">
+        <header><strong>${facility.id === "trainingYard" ? "Training" : facility.name}</strong><span>${status}</span></header>
         <div class="facility-scene-fixture" aria-hidden="true"><span></span>${props}</div>
-        ${occupant ? `<span class="room-occupant" title="${occupant.name} is using the ${facility.name}">${renderSprite(occupant, "small")}</span>` : ""}
+        ${roomTrainingJobs.length ? `<span class="training-yard-effects" aria-hidden="true"><i></i><i></i><i></i></span>` : ""}
+        ${occupant ? `<span class="room-occupant ${roomTrainingJobs.length ? "training" : ""}" title="${occupant.name} is ${roomTrainingJobs.length ? `completing ${getTrainingJobName(roomTrainingJobs[0])}` : `using the ${facility.name}`}">${renderSprite(occupant, "small")}${roomTrainingJobs.length > 1 ? `<b>+${roomTrainingJobs.length - 1}</b>` : ""}</span>` : ""}
         ${level === 0 ? `<span class="empty-room-mark" aria-hidden="true">${unlocked ? "+" : "?"}</span>` : ""}
       </section>
     `;
@@ -1175,7 +1211,7 @@ function renderFacilityCutaway(sceneMeta) {
       <div class="cutaway-room-grid">${rooms}</div>
       <footer class="context-scene-footer">
         <div><strong>${sceneMeta.title}</strong><span>${sceneMeta.note}</span></div>
-        <div class="venue-presence"><span>${getBuiltFacilityCount()} rooms</span><span>${availableHeroes.length} heroes home</span></div>
+        <div class="venue-presence"><span>${getBuiltFacilityCount()} rooms</span><span>${availableHeroes.length} heroes home</span>${trainingJobs.length ? `<span>${trainingJobs.length} training</span>` : ""}</div>
       </footer>
     </section>
   `;
@@ -1344,6 +1380,8 @@ function renderGuildhallInterior() {
       const unlocked = isFacilityUnlocked(room.facilityId);
       const built = level > 0;
       const selected = selectedGuildRoomId === room.id;
+      const roomTrainingJobs = room.facilityId === "trainingYard" ? getActiveTrainingJobs() : [];
+      const trainee = roomTrainingJobs.length ? getAdventurer(roomTrainingJobs[0].adventurerId) : null;
       if (!built) {
         return `
           <button class="guild-room ${room.id} empty-room ${unlocked ? "available" : "locked"} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
@@ -1354,12 +1392,13 @@ function renderGuildhallInterior() {
         `;
       }
       return `
-        <button class="guild-room ${room.id} built ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
+        <button class="guild-room ${room.id} built ${roomTrainingJobs.length ? "training-active" : ""} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
           <span class="room-label">${room.label}</span>
-          <span class="room-scene">${renderSprite({ classId: room.occupant, name: room.label }, "small")}</span>
+          <span class="room-scene">${renderSprite(trainee || { classId: room.occupant, name: room.label }, "small")}</span>
           <span class="room-furniture" aria-hidden="true"></span>
           <span class="room-glow" aria-hidden="true"></span>
-          <span class="room-level-chip">Lv ${level}</span>
+          ${roomTrainingJobs.length ? `<span class="room-training-sparks" aria-hidden="true"><i></i><i></i><i></i></span>` : ""}
+          <span class="room-level-chip">${roomTrainingJobs.length ? `${roomTrainingJobs.length}/${getTrainingSlotCount()} Training` : `Lv ${level}`}</span>
         </button>
       `;
     })
@@ -1388,6 +1427,10 @@ function renderGuildRoomDetail() {
   const unlocked = isFacilityUnlocked(room.facilityId);
   const built = level > 0;
   const cost = facility ? upgradeCost(facility) : 0;
+  const roomTrainingJobs = room.facilityId === "trainingYard" ? getActiveTrainingJobs() : [];
+  const trainingSummary = roomTrainingJobs.length
+    ? roomTrainingJobs.map((job) => `${getAdventurer(job.adventurerId)?.name || "Adventurer"}: ${getTrainingJobName(job)} until day ${job.readyDay}`).join(" | ")
+    : "The yard is ready for its next trainee.";
   elements.guildhallRoomDetail.innerHTML = `
     <article class="room-detail-card">
       <span class="room-detail-icon" aria-hidden="true">${room.label.slice(0, 1)}</span>
@@ -1395,6 +1438,7 @@ function renderGuildRoomDetail() {
         <p class="eyebrow">${built ? "Selected room" : "Construction space"}</p>
         <h3>${room.name} ${built ? `<span>Level ${level}</span>` : ""}</h3>
         <p class="card-meta">${built ? room.description : getFacilityUnlockText(room.facilityId)}</p>
+        ${built && room.facilityId === "trainingYard" ? `<p class="room-training-summary">${trainingSummary}</p>` : ""}
       </div>
       ${built
         ? `<button class="primary-button" data-room-action="${room.targetView}" type="button">${room.action}</button>`
@@ -1463,7 +1507,7 @@ function renderRoster() {
     .map((adventurer) => {
       const selected = state.selectedIds.includes(adventurer.id);
       const inspected = selectedAdventurerId === adventurer.id;
-      const statusText = adventurer.status === "idle" ? `Lv ${adventurer.level}` : adventurer.status;
+      const statusText = adventurer.status === "idle" ? `Lv ${adventurer.level}` : getAdventurerStatusLabel(adventurer);
       const partyFull = state.selectedIds.length >= 3 && !selected;
       return `
         <article class="adventurer-card ${adventurer.status} ${selected ? "selected" : ""} ${inspected ? "inspected" : ""}" data-adventurer="${adventurer.id}">
@@ -1488,7 +1532,7 @@ function renderRoster() {
             </div>
           </button>
           <button class="party-toggle ${selected ? "remove" : ""}" data-party="${adventurer.id}" type="button" ${adventurer.status !== "idle" || partyFull ? "disabled" : ""}>
-            ${adventurer.status !== "idle" ? adventurer.status : selected ? "Remove" : "Add"}
+            ${adventurer.status !== "idle" ? getAdventurerStatusLabel(adventurer) : selected ? "Remove" : "Add"}
           </button>
         </article>
       `;
@@ -1574,6 +1618,71 @@ function renderRecruitmentPanel() {
     </section>
   `;
   elements.recruitmentPanel.querySelector("[data-post-recruitment]")?.addEventListener("click", postRecruitmentNotice);
+}
+
+function renderTrainingPanel() {
+  if (!elements.trainingPanel) {
+    return;
+  }
+  const level = state.facilities.trainingYard || 0;
+  const unlocked = isFacilityUnlocked("trainingYard");
+  const visible = level > 0 || unlocked;
+  elements.trainingPanel.classList.toggle("hidden", !visible);
+  if (!visible) {
+    elements.trainingPanel.innerHTML = "";
+    return;
+  }
+
+  if (level < 1) {
+    elements.trainingPanel.innerHTML = `
+      <section class="training-overview blueprint">
+        <span class="training-sign" aria-hidden="true">T</span>
+        <div><p class="eyebrow">First expansion</p><h3>Build The Training Yard</h3><p>Mara's plans will turn the old yard into a place for drills, techniques, and visible character growth.</p></div>
+        <button class="primary-button" data-open-training-build type="button">Open Plans</button>
+      </section>
+    `;
+    elements.trainingPanel.querySelector("[data-open-training-build]")?.addEventListener("click", () => setActiveView("facilities"));
+    return;
+  }
+
+  const jobs = getActiveTrainingJobs();
+  const slots = getTrainingSlotCount();
+  const cards = jobs.map((job) => {
+    const adventurer = getAdventurer(job.adventurerId);
+    const progress = getTrainingJobProgress(job);
+    const daysLeft = Math.max(0, job.readyDay - state.day);
+    return `
+      <article class="training-job-card">
+        <span class="training-job-sprite">${renderSprite(adventurer, "small")}</span>
+        <div class="training-job-copy"><strong>${adventurer.name}</strong><span>${getTrainingJobName(job)}</span><small>Completes day ${job.readyDay} | ${daysLeft} day${daysLeft === 1 ? "" : "s"} left</small></div>
+        <span class="training-day-chip">${daysLeft}d</span>
+        <div class="training-progress"><i style="width:${progress}%"></i></div>
+        <button class="ghost-button" data-view-trainee="${adventurer.id}" type="button">View</button>
+      </article>
+    `;
+  });
+  for (let index = jobs.length; index < slots; index += 1) {
+    cards.push(`<div class="training-open-slot"><span>+</span><strong>Open training slot</strong><small>Select an idle hero below.</small></div>`);
+  }
+
+  elements.trainingPanel.innerHTML = `
+    <section class="training-overview active">
+      <div class="training-overview-heading">
+        <div><p class="eyebrow">Training Yard Lv ${level}</p><h3>${jobs.length ? `${jobs.length} adventurer${jobs.length === 1 ? "" : "s"} training` : "The Yard Is Ready"}</h3></div>
+        <span>${jobs.length}/${slots} slots</span>
+      </div>
+      <div class="training-job-grid">${cards.join("")}</div>
+      <p class="training-hint">Training advances with the guild calendar. Select an adventurer's profile to choose a drill or technique.</p>
+    </section>
+  `;
+
+  elements.trainingPanel.querySelectorAll("[data-view-trainee]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedAdventurerId = button.dataset.viewTrainee;
+      renderRoster();
+      elements.adventurerDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
 }
 
 function renderAdventurerDetail() {
@@ -1668,8 +1777,8 @@ function renderAdventurerDetail() {
     </article>
   `;
 
-  elements.adventurerDetail.querySelectorAll("[data-teach-ability]").forEach((button) => {
-    button.addEventListener("click", () => teachAbility(adventurer.id, button.dataset.teachAbility));
+  elements.adventurerDetail.querySelectorAll("[data-start-training]").forEach((button) => {
+    button.addEventListener("click", () => startTraining(adventurer.id, button.dataset.trainingKind, button.dataset.startTraining));
   });
 }
 
@@ -1790,7 +1899,7 @@ function renderQuestPartyPicker(mission) {
     const focusValue = adventurer.stats[mission.focus] || 0;
     const fitLabel = focusValue >= 8 ? "Strong fit" : focusValue >= 6 ? "Good fit" : "Support";
     const fitTone = focusValue >= 8 ? "strong-fit" : focusValue >= 6 ? "good-fit" : "support-fit";
-    const unavailableLabel = adventurer.status === "busy" ? "On quest" : "Injured";
+    const unavailableLabel = getAdventurerStatusLabel(adventurer);
     const actionLabel = selected ? "Selected" : available ? partyFull ? "Party full" : "Add" : unavailableLabel;
     return `
       <button class="quest-party-option ${fitTone} ${selected ? "selected" : ""} ${available ? "available" : "unavailable"}" data-quest-party="${adventurer.id}" type="button" aria-pressed="${selected}" ${disabled ? "disabled" : ""}>
@@ -2188,27 +2297,66 @@ function renderTrainingCurriculum(adventurer) {
   const trainingLevel = state.facilities.trainingYard || 0;
   const learned = getTaughtAbilityIds(adventurer).length;
   const capacity = getTrainingCapacity(adventurer);
+  const completedDrills = getCompletedTrainingDrills(adventurer);
+  const drillCapacity = getStatTrainingCapacity(adventurer);
   if (trainingLevel < 1) {
     return `
       <section class="character-section training-section locked">
         <div class="section-line-heading"><p class="eyebrow">Training</p><span>${learned}/${capacity} techniques</span></div>
-        <p class="system-empty">Build the Training Yard during Guildstead's first expansion to teach this adventurer new abilities.</p>
+        <p class="system-empty">Build the Training Yard during Guildstead's first expansion to improve stats and teach this adventurer new abilities.</p>
       </section>
     `;
   }
+
+  const activeJob = getTrainingJobForAdventurer(adventurer.id);
+  if (activeJob) {
+    const progress = getTrainingJobProgress(activeJob);
+    const daysLeft = Math.max(0, activeJob.readyDay - state.day);
+    return `
+      <section class="character-section training-section active-job">
+        <div class="section-line-heading"><p class="eyebrow">Training In Progress</p><span>Completes day ${activeJob.readyDay}</span></div>
+        <div class="profile-training-job">
+          <span class="ability-sigil training-pulse" aria-hidden="true">T</span>
+          <div><strong>${getTrainingJobName(activeJob)}</strong><small>${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining. This adventurer cannot join expeditions while training.</small></div>
+          <b>${progress}%</b>
+          <div class="training-progress"><i style="width:${progress}%"></i></div>
+        </div>
+      </section>
+    `;
+  }
+
+  const slotsFull = getActiveTrainingJobs().length >= getTrainingSlotCount();
+  const drillRows = Object.values(trainingDrills).map((drill) => {
+    const full = completedDrills >= drillCapacity;
+    const duration = getTrainingDuration(adventurer, "stat", drill.stat);
+    const disabled = full || slotsFull || state.gold < drill.cost || adventurer.status !== "idle";
+    const buttonText = full
+      ? "Drill limit"
+      : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : `${drill.cost}G / ${duration}d`;
+    return `
+      <div class="training-row stat-drill ${full ? "locked" : ""}">
+        <span class="ability-sigil" aria-hidden="true">${drill.mark.slice(0, 1)}</span>
+        <div><strong>${drill.name}</strong><small>${drill.description}</small></div>
+        <button class="secondary-button" data-start-training="${drill.stat}" data-training-kind="stat" type="button" ${disabled ? "disabled" : ""}>${buttonText}</button>
+      </div>
+    `;
+  }).join("");
 
   const rows = trainingAbilityIds.map((id) => {
     const ability = abilityCatalog[id];
     const known = adventurer.abilities.includes(id);
     const levelLocked = trainingLevel < ability.trainingLevel;
     const full = learned >= capacity && !known;
-    const disabled = known || levelLocked || full || state.gold < ability.cost || adventurer.status !== "idle";
-    const buttonText = known ? "Learned" : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : adventurer.status !== "idle" ? "Unavailable" : `${ability.cost}G`;
+    const duration = getTrainingDuration(adventurer, "ability", id);
+    const disabled = known || levelLocked || full || slotsFull || state.gold < ability.cost || adventurer.status !== "idle";
+    const buttonText = known
+      ? "Learned"
+      : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : `${ability.cost}G / ${duration}d`;
     return `
       <div class="training-row ${known ? "known" : ""} ${levelLocked ? "locked" : ""}">
         <span class="ability-sigil" aria-hidden="true">T</span>
         <div><strong>${ability.name}</strong><small>${ability.description}</small></div>
-        <button class="secondary-button" data-teach-ability="${id}" type="button" ${disabled ? "disabled" : ""}>${buttonText}</button>
+        <button class="secondary-button" data-start-training="${id}" data-training-kind="ability" type="button" ${disabled ? "disabled" : ""}>${buttonText}</button>
       </div>
     `;
   }).join("");
@@ -2217,8 +2365,11 @@ function renderTrainingCurriculum(adventurer) {
     <section class="character-section training-section">
       <div class="section-line-heading">
         <p class="eyebrow">Training Yard Lv ${trainingLevel}</p>
-        <span>${learned}/${capacity} techniques</span>
+        <span>${getActiveTrainingJobs().length}/${getTrainingSlotCount()} slots occupied</span>
       </div>
+      <div class="training-subheading"><strong>Stat drills</strong><span>${completedDrills}/${drillCapacity} completed</span></div>
+      <div class="training-list stat-training-list">${drillRows}</div>
+      <div class="training-subheading"><strong>Taught techniques</strong><span>${learned}/${capacity} learned</span></div>
       <div class="training-list">${rows}</div>
     </section>
   `;
@@ -2406,6 +2557,7 @@ function makeAdventurer(name, classId, founder, gender = null) {
     status: "idle",
     recovery: 0,
     abilities: getNaturalAbilityIds(classId, 1),
+    trainingStats: { str: 0, mag: 0, wit: 0, cha: 0 },
     stats: { ...base }
   };
 }
@@ -2455,12 +2607,33 @@ function normaliseAdventurer(adventurer, day) {
       negative: adventurer.quirks?.negative && quirkCatalog[adventurer.quirks.negative] ? adventurer.quirks.negative : identity.quirks.negative
     },
     abilities: Array.isArray(adventurer.abilities) ? adventurer.abilities.filter((id) => abilityCatalog[id]) : [],
+    trainingStats: { str: 0, mag: 0, wit: 0, cha: 0, ...(adventurer.trainingStats || {}) },
     traits: { ...identity.traits, ...(adventurer.traits || {}) },
     lifeLog: adventurer.lifeLog?.length ? adventurer.lifeLog : identity.lifeLog,
     stats: { ...classes[classId].stats, ...(adventurer.stats || {}) }
   };
   syncNaturalAbilities(normalised);
   return normalised;
+}
+
+function normaliseTrainingJob(job) {
+  if (!job || !job.adventurerId || !["stat", "ability"].includes(job.kind)) {
+    return null;
+  }
+  const validTarget = job.kind === "stat" ? trainingDrills[job.targetId] : abilityCatalog[job.targetId]?.source === "training";
+  if (!validTarget) {
+    return null;
+  }
+  const startedDay = Math.max(1, Number(job.startedDay) || 1);
+  return {
+    id: job.id || crypto.randomUUID(),
+    adventurerId: job.adventurerId,
+    kind: job.kind,
+    targetId: job.targetId,
+    startedDay,
+    readyDay: Math.max(startedDay + 1, Number(job.readyDay) || startedDay + 1),
+    cost: Math.max(0, Number(job.cost) || 0)
+  };
 }
 
 function rollQuirks() {
@@ -2592,26 +2765,150 @@ function getRecoveryReduction(adventurer) {
   return getCharacterEffects(adventurer).reduce((total, effect) => total + (effect.recoveryReduction || 0), 0);
 }
 
-function teachAbility(adventurerId, abilityId) {
+function getActiveTrainingJobs() {
+  return Array.isArray(state.trainingJobs) ? state.trainingJobs : [];
+}
+
+function getTrainingJobForAdventurer(adventurerId) {
+  return getActiveTrainingJobs().find((job) => job.adventurerId === adventurerId) || null;
+}
+
+function getTrainingSlotCount() {
+  return Math.min(3, Math.max(0, state.facilities.trainingYard || 0));
+}
+
+function getCompletedTrainingDrills(adventurer) {
+  return Object.values(adventurer.trainingStats || {}).reduce((total, value) => total + Math.max(0, Number(value) || 0), 0);
+}
+
+function getStatTrainingCapacity(adventurer) {
+  return 2 + Math.max(1, adventurer.potential || 1);
+}
+
+function getTrainingDuration(adventurer, kind, targetId) {
+  const baseDuration = kind === "ability" && (abilityCatalog[targetId]?.trainingLevel || 1) >= 2 ? 2 : 1;
+  return adventurer.quirks?.positive === "quickStudy" ? Math.max(1, baseDuration - 1) : baseDuration;
+}
+
+function getTrainingJobName(job) {
+  if (!job) {
+    return "Training";
+  }
+  return job.kind === "stat" ? trainingDrills[job.targetId]?.name || "Stat drill" : abilityCatalog[job.targetId]?.name || "Technique training";
+}
+
+function getTrainingJobProgress(job) {
+  const duration = Math.max(1, job.readyDay - job.startedDay);
+  return Math.max(0, Math.min(100, Math.round(((state.day - job.startedDay) / duration) * 100)));
+}
+
+function getAdventurerStatusLabel(adventurer) {
+  if (adventurer.status === "busy") {
+    return "On quest";
+  }
+  if (adventurer.status === "injured") {
+    return "Recovering";
+  }
+  if (adventurer.status === "training") {
+    const job = getTrainingJobForAdventurer(adventurer.id);
+    return job ? `Training to day ${job.readyDay}` : "In training";
+  }
+  if (adventurer.status === "candidate") {
+    return "Applicant";
+  }
+  return "Available";
+}
+
+function startTraining(adventurerId, kind, targetId) {
   const adventurer = getAdventurer(adventurerId);
-  const ability = abilityCatalog[abilityId];
   const trainingLevel = state.facilities.trainingYard || 0;
-  if (!adventurer || !ability || ability.source !== "training" || adventurer.status !== "idle") {
+  if (!adventurer || trainingLevel < 1 || adventurer.status !== "idle" || getTrainingJobForAdventurer(adventurerId)) {
     return;
   }
-  if (trainingLevel < ability.trainingLevel || state.gold < ability.cost || adventurer.abilities.includes(abilityId)) {
+  if (getActiveTrainingJobs().length >= getTrainingSlotCount()) {
+    showToast("Training Yard full", "Advance the day or improve the Yard to open another slot.", "danger");
     return;
   }
-  if (getTaughtAbilityIds(adventurer).length >= getTrainingCapacity(adventurer)) {
-    showToast("Training capacity reached", `${adventurer.name} cannot master another taught ability.`, "danger");
+
+  let cost = 0;
+  if (kind === "ability") {
+    const ability = abilityCatalog[targetId];
+    if (!ability || ability.source !== "training" || trainingLevel < ability.trainingLevel || adventurer.abilities.includes(targetId)) {
+      return;
+    }
+    if (getTaughtAbilityIds(adventurer).length >= getTrainingCapacity(adventurer)) {
+      showToast("Training capacity reached", `${adventurer.name} cannot master another taught ability.`, "danger");
+      return;
+    }
+    cost = ability.cost;
+  } else if (kind === "stat") {
+    const drill = trainingDrills[targetId];
+    if (!drill || getCompletedTrainingDrills(adventurer) >= getStatTrainingCapacity(adventurer)) {
+      return;
+    }
+    cost = drill.cost;
+  } else {
     return;
   }
-  state.gold -= ability.cost;
-  adventurer.abilities.push(abilityId);
-  addLifeEvent(adventurer, `Learned ${ability.name} in the Training Yard.`);
-  addLog(`${adventurer.name} masters ${ability.name} in the Training Yard.`);
+
+  if (state.gold < cost) {
+    return;
+  }
+  const duration = getTrainingDuration(adventurer, kind, targetId);
+  const job = {
+    id: crypto.randomUUID(),
+    adventurerId,
+    kind,
+    targetId,
+    startedDay: state.day,
+    readyDay: state.day + duration,
+    cost
+  };
+  state.gold -= cost;
+  state.trainingJobs.push(job);
+  state.selectedIds = state.selectedIds.filter((id) => id !== adventurerId);
+  adventurer.status = "training";
+  addLifeEvent(adventurer, `Began ${getTrainingJobName(job)} in the Training Yard.`);
+  addLog(`${adventurer.name} begins ${getTrainingJobName(job)} and will finish on day ${job.readyDay}.`);
   render();
-  showToast("Ability learned", `${adventurer.name} learned ${ability.name}.`, "success");
+  showToast("Training started", `${adventurer.name} will complete ${getTrainingJobName(job)} on day ${job.readyDay}.`, "info");
+}
+
+function processTrainingCompletions(announce = true) {
+  const completed = getActiveTrainingJobs().filter((job) => job.readyDay <= state.day);
+  if (completed.length === 0) {
+    return [];
+  }
+  completed.forEach((job) => {
+    const adventurer = getAdventurer(job.adventurerId);
+    if (!adventurer) {
+      return;
+    }
+    if (job.kind === "ability") {
+      const ability = abilityCatalog[job.targetId];
+      if (ability && !adventurer.abilities.includes(job.targetId)) {
+        adventurer.abilities.push(job.targetId);
+        addLifeEvent(adventurer, `Mastered ${ability.name} in the Training Yard.`);
+      }
+    } else {
+      const drill = trainingDrills[job.targetId];
+      if (drill) {
+        adventurer.trainingStats = { str: 0, mag: 0, wit: 0, cha: 0, ...(adventurer.trainingStats || {}) };
+        adventurer.stats[drill.stat] += 1;
+        adventurer.trainingStats[drill.stat] = (adventurer.trainingStats[drill.stat] || 0) + 1;
+        addLifeEvent(adventurer, `Completed ${drill.name} and raised ${drill.mark} to ${adventurer.stats[drill.stat]}.`);
+      }
+    }
+    adventurer.status = "idle";
+    addLog(`${adventurer.name} completes ${getTrainingJobName(job)} and returns to guild duty.`);
+  });
+  const completedIds = new Set(completed.map((job) => job.id));
+  state.trainingJobs = getActiveTrainingJobs().filter((job) => !completedIds.has(job.id));
+  if (announce) {
+    const names = completed.map((job) => getAdventurer(job.adventurerId)?.name).filter(Boolean);
+    showToast("Training complete", `${names.join(", ")} ${names.length === 1 ? "is" : "are"} ready for duty.`, "success");
+  }
+  return completed;
 }
 
 function toggleAdventurer(id) {
@@ -2874,10 +3171,11 @@ function upgradeFacility(id) {
     activeView = "quest";
     addLog("Mara pins the first three local requests to the new board.");
   }
-  if (["dormitory", "trainingYard", "kitchen"].includes(id) && built && state.chapter.stage === "expansion") {
+  if (id === "trainingYard" && built && state.chapter.stage === "expansion") {
     state.chapter.stage = "boss";
-    activeView = "quest";
-    addLog("With the tavern expanded, Mara marks the Barrow Hill goblin camp on the map.");
+    activeView = "adventurers";
+    addLog("With the Training Yard complete, Mara marks the Barrow Hill goblin camp on the map.");
+    showChapterMoment("trainingYard");
   }
   render();
   showToast(built ? "New room built" : "Facility improved", `${facility.name} is now level ${state.facilities[id]}.`, "success");
@@ -2977,6 +3275,7 @@ function upgradeCost(facility) {
 function advanceDays(amount) {
   state.day += amount;
   checkBirthdays();
+  const completedTraining = processTrainingCompletions(false);
   expireEvents();
   const stipend = 10 + state.facilities.tavern * 3 + state.facilities.kitchen * 3;
   state.gold += stipend;
@@ -2992,6 +3291,10 @@ function advanceDays(amount) {
   }
   processRecruitmentArrivals();
   render();
+  if (completedTraining.length > 0) {
+    const names = completedTraining.map((job) => getAdventurer(job.adventurerId)?.name).filter(Boolean);
+    showToast("Training complete", `${names.join(", ")} ${names.length === 1 ? "is" : "are"} ready for duty.`, "success");
+  }
 }
 
 function renderChapterProgress() {
@@ -3019,7 +3322,7 @@ function getChapterObjective() {
     recruitment: { title: "Recruit a second adventurer", detail: "Post a 45G tavern notice, wait for applicants, then choose one.", progress: 27 },
     buildBoard: { title: "Build the Quest Board", detail: "Spend 55G to turn Mara's idea into a proper local service.", progress: 32 },
     localRequests: { title: `Complete local requests (${completed}/3)`, detail: "Help Greenbank and earn enough trust to expand the tavern.", progress: 38 + completed * 12 },
-    expansion: { title: "Choose your first expansion", detail: "Build a Dormitory, Training Yard, or Kitchen.", progress: 78 },
+    expansion: { title: "Build the Training Yard", detail: "Spend 95G to prepare your adventurers for the goblin chief.", progress: 78 },
     boss: { title: "Defeat the Barrow Hill Chief", detail: "End the goblin threat and earn an official guild charter.", progress: 90 },
     chartered: { title: "Guildstead is officially open", detail: "The Western March now has an adventurers' guild of its own.", progress: 100 }
   };
@@ -3085,14 +3388,20 @@ function handleChapterMissionSuccess(mission) {
 }
 
 function isFacilityUnlocked(id) {
+  if ((state.facilities[id] || 0) > 0) {
+    return true;
+  }
   if (id === "tavern") {
     return true;
   }
   if (id === "questBoard") {
     return ["buildBoard", "localRequests", "expansion", "boss", "chartered"].includes(state.chapter.stage);
   }
-  if (["dormitory", "trainingYard", "kitchen"].includes(id)) {
+  if (id === "trainingYard") {
     return state.chapter.completedLocalMissions.length >= 3 || state.chapter.charterEarned;
+  }
+  if (["dormitory", "kitchen"].includes(id)) {
+    return state.chapter.stage === "boss" || state.facilities.trainingYard > 0 || state.chapter.charterEarned;
   }
   if (id === "workshop") {
     return state.chapter.charterEarned;
@@ -3107,9 +3416,12 @@ function getFacilityUnlockText(id) {
   if (id === "questBoard") {
     return isFacilityUnlocked(id) ? "Mara's salvaged noticeboard is ready to build." : "Recover the stolen tavern supplies first.";
   }
-  if (["dormitory", "trainingYard", "kitchen"].includes(id)) {
+  if (id === "trainingYard") {
     const remaining = Math.max(0, 3 - state.chapter.completedLocalMissions.length);
-    return isFacilityUnlocked(id) ? "Blueprint unlocked by helping Greenbank." : `Complete ${remaining} more local request${remaining === 1 ? "" : "s"}.`;
+    return isFacilityUnlocked(id) ? "Mara's Training Yard blueprint is ready to build." : `Complete ${remaining} more local request${remaining === 1 ? "" : "s"}.`;
+  }
+  if (["dormitory", "kitchen"].includes(id)) {
+    return isFacilityUnlocked(id) ? "Blueprint unlocked by the tavern's first expansion." : "Build the Training Yard first.";
   }
   if (id === "workshop") {
     return isFacilityUnlocked(id) ? "Unlocked by the official guild charter." : "Defeat the Barrow Hill chief and earn a guild charter.";
@@ -3148,8 +3460,8 @@ function getMissionLockReason(mission) {
     if (state.chapter.completedLocalMissions.length < 3) {
       return `Complete ${state.chapter.completedLocalMissions.length}/3 local requests`;
     }
-    if (getExpansionCount() < 1) {
-      return "Build your first tavern expansion";
+    if (state.facilities.trainingYard < 1 && state.chapter.stage !== "boss") {
+      return "Build the Training Yard first";
     }
   }
   if (mission.postCharter && !state.chapter.charterEarned) {

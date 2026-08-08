@@ -2353,7 +2353,7 @@
   .living-tavern {
     background:
       linear-gradient(180deg, rgb(7 12 12 / 3%), rgb(17 10 7 / 10%) 62%, rgb(8 11 10 / 34%)),
-      url("assets/tavern-interior-v1.webp") center 52% / cover no-repeat,
+      url("assets/tavern-interior-v1.webp") 67% 52% / cover no-repeat,
       #25170f;
   }
 
@@ -2840,7 +2840,7 @@
     .context-patrons { bottom: 38px; }
     .context-patron { width: 68px; }
     .context-patron .context-sprite { width: 64px; }
-    .context-patron:only-child { left: calc(50% - 34px); }
+    .context-patron:only-child { left: calc(70% - 34px); }
     .context-patron.patron-1 .context-sprite,
     .context-patron.patron-3 .context-sprite { width: 58px; }
     .context-patron::before { bottom: 20px; width: 46px; height: 9px; }

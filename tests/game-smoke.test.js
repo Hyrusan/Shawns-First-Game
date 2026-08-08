@@ -268,17 +268,77 @@ test("management views compact the map while quest views keep it expanded", () =
     setActiveView("adventurers");
     const rosterCompact = !isMapExpanded();
     const rosterClass = elements.commandLayout.classList.contains("management-focus");
+    const interiorVisible = !elements.contextScene.classList.contains("hidden") && elements.realmMap.classList.contains("hidden");
+    const rosterScene = elements.contextScene.innerHTML.includes("living-tavern");
+    setActiveView("facilities");
+    const facilityScene = elements.contextScene.innerHTML.includes("facility-cutaway-scene");
+    setActiveView("adventurers");
     toggleMapFocus();
     ({ questExpanded, questClass, rosterCompact, rosterClass,
-       manualExpanded: isMapExpanded(), manualClass: elements.commandLayout.classList.contains("map-focus") });
+       interiorVisible, rosterScene, facilityScene, manualExpanded: isMapExpanded(), manualClass: elements.commandLayout.classList.contains("map-focus"),
+       mapVisible: !elements.realmMap.classList.contains("hidden") && elements.contextScene.classList.contains("hidden") });
   `);
 
   assert.equal(result.questExpanded, true);
   assert.equal(result.questClass, true);
   assert.equal(result.rosterCompact, true);
   assert.equal(result.rosterClass, true);
+  assert.equal(result.interiorVisible, true);
+  assert.equal(result.rosterScene, true);
+  assert.equal(result.facilityScene, true);
   assert.equal(result.manualExpanded, true);
   assert.equal(result.manualClass, true);
+  assert.equal(result.mapVisible, true);
+});
+
+test("living tavern scenes show heroes at home and waiting applicants, but not heroes away", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const homeHero = makeAdventurer("Home Hero", "warden", false, "female");
+    const roadHero = makeAdventurer("Road Hero", "ranger", false, "male");
+    const applicant = makeAdventurer("New Applicant", "spellwright", false, "female");
+    homeHero.status = "idle";
+    roadHero.status = "busy";
+    applicant.status = "candidate";
+    state.adventurers = [homeHero, roadHero];
+    state.recruitment.unlocked = true;
+    state.recruitment.candidates = [applicant];
+    activeView = "adventurers";
+    renderContextScene();
+    const markup = elements.contextScene.innerHTML;
+    ({ hasHomeHero: markup.includes("Home Hero"), hasRoadHero: markup.includes("Road Hero"),
+       hasApplicant: markup.includes("New Applicant"), hasRecruitmentTable: markup.includes("recruitment-table") });
+  `);
+
+  assert.equal(result.hasHomeHero, true);
+  assert.equal(result.hasRoadHero, false);
+  assert.equal(result.hasApplicant, true);
+  assert.equal(result.hasRecruitmentTable, true);
+});
+
+test("facility cutaways reflect built rooms and their current upgrade levels", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const caretaker = makeAdventurer("Caretaker", "minstrel", false, "male");
+    state.adventurers = [caretaker];
+    state.facilities.tavern = 3;
+    state.facilities.questBoard = 2;
+    state.facilities.dormitory = 1;
+    activeView = "facilities";
+    renderContextScene();
+    const markup = elements.contextScene.innerHTML;
+    ({ tavernLevel: markup.includes("facility-scene-tavern built level-3"),
+       boardLevel: markup.includes("facility-scene-questBoard built level-2"),
+       lockedWorkshop: markup.includes("facility-scene-workshop locked level-0"),
+       caretakerAppearances: (markup.match(/Caretaker/g) || []).length,
+       roomCount: getBuiltFacilityCount() });
+  `);
+
+  assert.equal(result.tavernLevel, true);
+  assert.equal(result.boardLevel, true);
+  assert.equal(result.lockedWorkshop, true);
+  assert.equal(result.caretakerAppearances, 1);
+  assert.equal(result.roomCount, 3);
 });
 
 test("encounter bonuses flow into final gold, fame, experience, and injury protection", () => {

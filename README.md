@@ -29,6 +29,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Local browser save data
 - Responsive desktop and mobile layouts
 - Contextual map and management workspace modes
+- Living tavern interiors with idle heroes, applicants, and visible room upgrades
 
 ## Running Locally
 

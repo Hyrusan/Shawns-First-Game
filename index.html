@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="styles.css?v=16">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -108,8 +108,8 @@
           <section id="mapStage" class="map-stage panel compact-map">
             <div class="panel-heading map-heading">
               <div>
-                <p class="eyebrow">Holy realm of Jenny</p>
-                <h2>Guildstead &amp; The Western March</h2>
+                <p id="contextEyebrow" class="eyebrow">Holy realm of Jenny</p>
+                <h2 id="contextTitle">Guildstead &amp; The Western March</h2>
               </div>
               <div class="map-actions">
                 <button id="mapFocusButton" class="icon-button map-focus-button" type="button" aria-label="Expand the realm map" title="Expand the realm map" aria-pressed="false">
@@ -123,6 +123,7 @@
               </div>
             </div>
             <div id="chapterObjective" class="chapter-objective"></div>
+            <div id="contextScene" class="context-scene hidden" aria-label="Living view of the Wayfarer's Rest"></div>
             <div id="realmMap" class="map-canvas" aria-label="Interactive guild and realm map"></div>
             <div class="map-footer">
               <div class="map-legend" aria-label="Map legend">
@@ -272,6 +273,6 @@
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=15"></script>
+    <script src="game.js?v=16"></script>
   </body>
 </html>

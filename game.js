@@ -609,6 +609,9 @@ const elements = {
   guildhallInterior: document.querySelector("#guildhallInterior"),
   guildhallRoomDetail: document.querySelector("#guildhallRoomDetail"),
   realmMap: document.querySelector("#realmMap"),
+  contextScene: document.querySelector("#contextScene"),
+  contextEyebrow: document.querySelector("#contextEyebrow"),
+  contextTitle: document.querySelector("#contextTitle"),
   commandLayout: document.querySelector("#commandLayout"),
   mapStage: document.querySelector("#mapStage"),
   mapFocus: document.querySelector("#mapFocusButton"),
@@ -1068,6 +1071,130 @@ function renderMap() {
   renderEventSummaries();
 }
 
+function renderContextScene() {
+  const sceneMeta = getContextSceneMeta(activeView);
+  if (activeView === "facilities") {
+    elements.contextScene.innerHTML = renderFacilityCutaway(sceneMeta);
+    elements.contextScene.setAttribute("aria-label", `${getVenueName()} facility cutaway`);
+    return;
+  }
+  elements.contextScene.innerHTML = renderLivingTavern(sceneMeta);
+  elements.contextScene.setAttribute("aria-label", `${getVenueName()} ${sceneMeta.title}`);
+}
+
+function getContextSceneMeta(view) {
+  const scenes = {
+    hero: {
+      eyebrow: "Before the guild",
+      title: "An Empty Common Room",
+      note: "One brave answer will change this quiet tavern."
+    },
+    guildhall: {
+      eyebrow: state.chapter.charterEarned ? "Guildstead Hall" : "The Wayfarer's Rest",
+      title: "The Tavern At Work",
+      note: "A living view of the guild between expeditions."
+    },
+    adventurers: {
+      eyebrow: "Tavern common room",
+      title: state.recruitment.candidates.length ? "Applicants Have Arrived" : "Adventurers Off Duty",
+      note: state.recruitment.candidates.length ? "Mara's shortlist waits by the recruitment table." : "Idle heroes eat, rest, and trade stories here."
+    },
+    facilities: {
+      eyebrow: "Building overview",
+      title: state.chapter.charterEarned ? "Guildstead Hall Cutaway" : "Tavern Cutaway",
+      note: "Every room reflects its current construction level."
+    },
+    log: {
+      eyebrow: "Guild office",
+      title: "Ledgers By The Hearth",
+      note: "Quiet paperwork, warm food, and the day's stories."
+    }
+  };
+  return scenes[view] || scenes.guildhall;
+}
+
+function renderLivingTavern(sceneMeta) {
+  const heroesAtHome = state.adventurers.filter((adventurer) => adventurer.status !== "busy");
+  const applicants = activeView === "adventurers" ? state.recruitment.candidates.slice(0, 2) : [];
+  const people = [
+    ...heroesAtHome.slice(0, Math.max(1, 5 - applicants.length)).map((adventurer) => ({ adventurer, role: adventurer.status === "injured" ? "Resting" : "Off duty" })),
+    ...applicants.map((adventurer) => ({ adventurer, role: "Applicant" }))
+  ].slice(0, 5);
+  const tavernLevel = state.facilities.tavern || 1;
+  const awayCount = state.adventurers.filter((adventurer) => adventurer.status === "busy").length;
+  const detailCount = Math.min(5, tavernLevel + (state.chapter.charterEarned ? 1 : 0));
+
+  return `
+    <section class="living-tavern scene-${activeView} venue-level-${tavernLevel} ${state.chapter.charterEarned ? "chartered" : ""}">
+      <div class="tavern-wall" aria-hidden="true">
+        <span class="tavern-window"><i></i></span>
+        <span class="tavern-banner">${state.chapter.charterEarned ? "G" : "W"}</span>
+        <span class="tavern-shelf"><i></i><i></i><i></i></span>
+        ${Array.from({ length: detailCount }, (_, index) => `<i class="venue-detail detail-${index + 1}"></i>`).join("")}
+      </div>
+      <div class="tavern-fireplace" aria-hidden="true"><i></i></div>
+      <div class="tavern-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="tavern-table table-near" aria-hidden="true"><i></i></div>
+      <div class="tavern-table table-far" aria-hidden="true"><i></i></div>
+      ${activeView === "log" ? `<div class="ledger-desk" aria-hidden="true"><i></i><b></b></div>` : ""}
+      ${activeView === "adventurers" && state.recruitment.unlocked ? `<div class="recruitment-table" aria-hidden="true"><span>R</span><i></i></div>` : ""}
+      <div class="context-patrons">
+        ${people.map((person, index) => renderContextPatron(person.adventurer, index, person.role)).join("")}
+      </div>
+      ${people.length === 0 ? `<div class="empty-tavern-message"><strong>The room is quiet</strong><span>Create your founder to give the tavern its first regular.</span></div>` : ""}
+      <footer class="context-scene-footer">
+        <div><strong>${sceneMeta.title}</strong><span>${sceneMeta.note}</span></div>
+        <div class="venue-presence"><span>${heroesAtHome.length} here</span><span>${awayCount} away</span><span>Tavern Lv ${tavernLevel}</span></div>
+      </footer>
+    </section>
+  `;
+}
+
+function renderContextPatron(adventurer, index, role) {
+  const activities = ["Sharing a meal", "Trading stories", "Studying notices", "Warming by the fire", "Helping Mara"];
+  const activity = role === "Applicant" ? "Waiting for a decision" : adventurer.status === "injured" ? "Recovering" : activities[index % activities.length];
+  return `
+    <span class="context-patron patron-${index} ${role === "Applicant" ? "applicant" : ""} ${adventurer.status === "injured" ? "resting" : ""}" title="${adventurer.name}: ${activity}">
+      ${renderSprite(adventurer, "context-sprite")}
+      <span class="patron-label"><strong>${adventurer.name}</strong><small>${role}</small></span>
+    </span>
+  `;
+}
+
+function renderFacilityCutaway(sceneMeta) {
+  const availableHeroes = state.adventurers.filter((adventurer) => adventurer.status !== "busy");
+  let occupantIndex = 0;
+  const rooms = facilities.map((facility) => {
+    const level = state.facilities[facility.id] || 0;
+    const unlocked = isFacilityUnlocked(facility.id);
+    const occupant = level > 0 && occupantIndex < availableHeroes.length ? availableHeroes[occupantIndex++] : null;
+    const props = Array.from({ length: Math.min(5, level) }, (_, index) => `<i class="upgrade-prop prop-${index + 1}" style="--prop-index:${index}"></i>`).join("");
+    return `
+      <section class="cutaway-room facility-scene-${facility.id} ${level > 0 ? "built" : unlocked ? "available" : "locked"} level-${level}" aria-label="${facility.name}, ${level > 0 ? `level ${level}` : unlocked ? "ready to build" : "locked"}">
+        <header><strong>${facility.name}</strong><span>${level > 0 ? `Lv ${level}` : unlocked ? "Build" : "Locked"}</span></header>
+        <div class="facility-scene-fixture" aria-hidden="true"><span></span>${props}</div>
+        ${occupant ? `<span class="room-occupant" title="${occupant.name} is using the ${facility.name}">${renderSprite(occupant, "small")}</span>` : ""}
+        ${level === 0 ? `<span class="empty-room-mark" aria-hidden="true">${unlocked ? "+" : "?"}</span>` : ""}
+      </section>
+    `;
+  }).join("");
+
+  return `
+    <section class="facility-cutaway-scene ${state.chapter.charterEarned ? "chartered" : ""}">
+      <div class="cutaway-roof"><span>${getVenueName()}</span><i></i></div>
+      <div class="cutaway-room-grid">${rooms}</div>
+      <footer class="context-scene-footer">
+        <div><strong>${sceneMeta.title}</strong><span>${sceneMeta.note}</span></div>
+        <div class="venue-presence"><span>${getBuiltFacilityCount()} rooms</span><span>${availableHeroes.length} heroes home</span></div>
+      </footer>
+    </section>
+  `;
+}
+
+function getBuiltFacilityCount() {
+  return facilities.filter((facility) => (state.facilities[facility.id] || 0) > 0).length;
+}
+
 function renderEventSummaries() {
   elements.scoutEvent.disabled = !state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3;
   if (state.eventMissions.length === 0) {
@@ -1130,6 +1257,7 @@ function renderActiveView() {
     renderActiveView();
     return;
   }
+  renderContextScene();
   renderMapLayout();
 }
 
@@ -1196,13 +1324,24 @@ function toggleMapFocus() {
 
 function renderMapLayout() {
   const expanded = isMapExpanded();
+  const realmView = ["quest", "events"].includes(activeView);
+  const contextual = !expanded && !realmView;
+  const sceneMeta = getContextSceneMeta(activeView);
   elements.commandLayout.classList.toggle("map-focus", expanded);
   elements.commandLayout.classList.toggle("management-focus", !expanded);
   elements.mapStage.classList.toggle("compact-map", !expanded);
+  elements.mapStage.classList.toggle("contextual-stage", contextual);
+  elements.contextScene.classList.toggle("hidden", !contextual);
+  elements.realmMap.classList.toggle("hidden", contextual);
   elements.mapFocus.classList.toggle("expanded", expanded);
   elements.mapFocus.setAttribute("aria-pressed", String(expanded));
-  elements.mapFocus.setAttribute("aria-label", expanded ? "Give more space to management" : "Expand the realm map");
-  elements.mapFocus.title = expanded ? "Give more space to management" : "Expand the realm map";
+  elements.contextEyebrow.textContent = contextual ? sceneMeta.eyebrow : "Holy realm of Jenny";
+  elements.contextTitle.textContent = contextual ? sceneMeta.title : "Guildstead & The Western March";
+  const action = realmView
+    ? expanded ? "Compact the realm map" : "Expand the realm map"
+    : contextual ? "View the realm map" : "Return to the tavern interior";
+  elements.mapFocus.setAttribute("aria-label", action);
+  elements.mapFocus.title = action;
 }
 
 function renderGuildhallInterior() {

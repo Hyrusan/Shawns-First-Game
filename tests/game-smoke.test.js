@@ -79,6 +79,17 @@ function run(context, source) {
   return vm.runInContext(source, context);
 }
 
+test("the living tavern uses a bundled painted backdrop", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
+
+  assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
+  assert.match(index, /styles\.css\?v=18/);
+  assert.ok(fs.existsSync(backdrop));
+  assert.ok(fs.statSync(backdrop).size > 100_000);
+});
+
 test("a timed encounter exposes the founder's class response and records the choice", () => {
   const context = createGameContext();
   const result = run(context, `

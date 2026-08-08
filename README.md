@@ -31,6 +31,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Responsive desktop and mobile layouts
 - Contextual map and management workspace modes
 - Living tavern interiors with idle heroes, applicants, and visible room upgrades
+- Hand-painted fantasy-anime tavern backdrop with live sprite overlays
 
 ## Running Locally
 

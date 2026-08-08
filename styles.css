@@ -2564,36 +2564,61 @@
   .context-patron {
     position: absolute;
     display: grid;
-    width: 68px;
+    width: 98px;
     justify-items: center;
     transform-origin: bottom center;
     animation: tavern-patron-idle 2.1s ease-in-out calc(var(--patron-delay, 0) * -1s) infinite;
-    filter: drop-shadow(0 4px 0 rgb(31 18 11 / 32%));
   }
 
-  .context-patron .context-sprite { width: 62px; }
-  .context-patron.patron-0 { bottom: 18%; left: 11%; --patron-delay: 0.3; }
-  .context-patron.patron-1 { bottom: 24%; left: 31%; --patron-delay: 0.7; }
-  .context-patron.patron-2 { bottom: 12%; left: 49%; --patron-delay: 1.1; }
-  .context-patron.patron-3 { right: 23%; bottom: 20%; --patron-delay: 1.5; }
-  .context-patron.patron-4 { right: 7%; bottom: 12%; --patron-delay: 1.9; }
+  .context-patron::before {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    z-index: 0;
+    width: 62px;
+    height: 13px;
+    border-radius: 50%;
+    background: rgb(10 7 5 / 48%);
+    content: "";
+    filter: blur(3px);
+    translate: -50% 0;
+  }
+
+  .context-patron .context-sprite {
+    position: relative;
+    z-index: 1;
+    width: 92px;
+    filter: drop-shadow(0 5px 3px rgb(20 11 7 / 58%)) drop-shadow(0 0 5px rgb(238 174 87 / 16%));
+    image-rendering: auto;
+  }
+
+  .context-patron:only-child { bottom: 12%; left: calc(50% - 49px); }
+  .context-patron.patron-0:not(:only-child) { bottom: 16%; left: 5%; --patron-delay: 0.3; }
+  .context-patron.patron-1 { bottom: 25%; left: 27%; --patron-delay: 0.7; }
+  .context-patron.patron-1 .context-sprite { width: 82px; }
+  .context-patron.patron-2 { bottom: 11%; left: 48%; --patron-delay: 1.1; }
+  .context-patron.patron-3 { right: 18%; bottom: 23%; --patron-delay: 1.5; }
+  .context-patron.patron-3 .context-sprite { width: 84px; }
+  .context-patron.patron-4 { right: 1%; bottom: 10%; --patron-delay: 1.9; }
   .context-patron.resting { animation-duration: 3.2s; scale: 0.94; }
-  .context-patron.applicant { filter: drop-shadow(0 0 5px rgb(241 190 91 / 65%)) drop-shadow(0 4px 0 rgb(31 18 11 / 32%)); }
+  .context-patron.applicant .context-sprite { filter: drop-shadow(0 0 7px rgb(241 190 91 / 48%)) drop-shadow(0 5px 3px rgb(20 11 7 / 58%)); }
 
   .patron-label {
+    position: relative;
+    z-index: 2;
     display: grid;
-    max-width: 78px;
-    margin-top: -5px;
-    padding: 3px 5px;
-    border: 1px solid #251812;
+    max-width: 92px;
+    margin-top: -7px;
+    padding: 4px 7px;
+    border: 1px solid rgb(218 174 96 / 42%);
     border-radius: 3px;
-    background: rgb(17 22 19 / 88%);
-    box-shadow: 0 2px 0 rgb(20 12 8 / 45%);
+    background: rgb(12 18 17 / 91%);
+    box-shadow: 0 3px 8px rgb(7 5 4 / 42%);
     text-align: center;
   }
 
-  .patron-label strong { overflow: hidden; max-width: 68px; color: #f5dfaa; font-size: 0.5rem; text-overflow: ellipsis; white-space: nowrap; }
-  .patron-label small { color: #92b6a4; font-size: 0.39rem; text-transform: uppercase; }
+  .patron-label strong { overflow: hidden; max-width: 78px; color: #f5dfaa; font-size: 0.54rem; text-overflow: ellipsis; white-space: nowrap; }
+  .patron-label small { color: #9fc4b1; font-size: 0.4rem; text-transform: uppercase; }
 
   @keyframes tavern-patron-idle {
     50% { translate: 0 -2px; rotate: 0.8deg; }
@@ -2800,8 +2825,11 @@
 @layer responsive {
   @media (max-width: 980px) {
     .command-layout.management-focus .context-scene { min-height: 230px; flex: 0 1 300px; }
-    .context-patron .context-sprite { width: 52px; }
-    .context-patron { width: 58px; }
+    .context-patron .context-sprite { width: 76px; }
+    .context-patron { width: 82px; }
+    .context-patron:only-child { left: calc(50% - 41px); }
+    .context-patron.patron-1 .context-sprite,
+    .context-patron.patron-3 .context-sprite { width: 70px; }
     .patron-label small { display: none; }
   }
 
@@ -2810,10 +2838,14 @@
     .context-scene-footer { min-height: 38px; padding: 5px 7px; }
     .context-scene-footer > div:first-child > span { display: none; }
     .context-patrons { bottom: 38px; }
-    .context-patron { width: 45px; }
-    .context-patron .context-sprite { width: 44px; }
-    .patron-label { max-width: 54px; padding: 2px 3px; }
-    .patron-label strong { max-width: 48px; font-size: 0.42rem; }
+    .context-patron { width: 68px; }
+    .context-patron .context-sprite { width: 64px; }
+    .context-patron:only-child { left: calc(50% - 34px); }
+    .context-patron.patron-1 .context-sprite,
+    .context-patron.patron-3 .context-sprite { width: 58px; }
+    .context-patron::before { bottom: 20px; width: 46px; height: 9px; }
+    .patron-label { max-width: 68px; padding: 2px 4px; }
+    .patron-label strong { max-width: 60px; font-size: 0.44rem; }
     .tavern-fireplace { border-width: 4px; }
     .tavern-bar { border-width: 3px; }
     .cutaway-roof { height: 34px; font-size: 0.55rem; }

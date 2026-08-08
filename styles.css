@@ -1,4 +1,4 @@
-@layer reset, foundation, shell, world, management, overlays, responsive;
+@layer reset, foundation, shell, world, management, overlays, responsive, readability;
 
 @layer reset {
   *,
@@ -4935,5 +4935,305 @@
     .encounter-card { padding: 8px; }
     .expedition-narrative { grid-template-columns: 1fr; gap: 2px; }
     .expedition-narrative p { white-space: normal; }
+  }
+}
+
+@layer readability {
+  :root {
+    --type-caption: 0.7rem;
+    --type-small: 0.75rem;
+    --type-body: 0.82rem;
+    --type-control: 0.8rem;
+  }
+
+  body {
+    font-size: var(--type-body);
+    line-height: 1.45;
+  }
+
+  p,
+  li {
+    font-size: var(--type-body);
+  }
+
+  small {
+    font-size: var(--type-caption);
+    line-height: 1.35;
+  }
+
+  button {
+    min-height: 42px;
+    font-size: var(--type-control);
+    line-height: 1.15;
+  }
+
+  input,
+  select {
+    font-size: 0.88rem;
+  }
+
+  .eyebrow,
+  label,
+  .hud-calendar span,
+  .stat-label,
+  .region-label,
+  .map-label b,
+  .map-legend,
+  .mission-kicker,
+  .reward-row span,
+  .profile-fact span,
+  .event-log strong,
+  .candidate-class,
+  .candidate-potential > span,
+  .potential-line span,
+  .section-line-heading > span,
+  .ability-source,
+  .chapter-objective-copy span,
+  .enemy-vitals,
+  .expedition-narrative span,
+  .choice-badge {
+    font-size: var(--type-caption);
+  }
+
+  .dock-button,
+  .map-label,
+  .dispatch-label,
+  .map-status,
+  .party-slot,
+  .party-slot b,
+  .mission-party-button,
+  .mission-progress-label,
+  .odds,
+  .mini-stat,
+  .profile-fact strong,
+  .trait-row,
+  .life-log li,
+  .room-name,
+  .room-level,
+  .facility-requirement,
+  .empty-room-copy,
+  .candidate-name span,
+  .candidate-quirks span,
+  .training-row strong,
+  .training-row small,
+  .system-empty,
+  .class-option strong,
+  .class-option small,
+  .chapter-objective-copy small,
+  .enemy-vitals > strong,
+  .expedition-narrative p,
+  .encounter-card > p,
+  .encounter-choices button strong,
+  .encounter-choices button small,
+  .encounter-result strong,
+  .encounter-result p,
+  .encounter-rewards span,
+  .store-item strong,
+  .store-item small,
+  .store-item b,
+  .stores-empty {
+    font-size: var(--type-small);
+  }
+
+  .mission-description,
+  .mission-note,
+  .empty-tavern-message,
+  .context-scene-footer span,
+  .recruitment-service p,
+  .recruitment-waiting p {
+    font-size: var(--type-body);
+  }
+
+  .quest-party-picker > header strong,
+  .quest-party-copy strong,
+  .candidate-name h4,
+  .potential-line strong,
+  .ability-card strong {
+    font-size: 0.8rem;
+  }
+
+  .quest-party-picker > header > span,
+  .quest-party-copy small,
+  .quest-party-fit b,
+  .quest-party-fit small,
+  .quest-party-state,
+  .quest-party-empty,
+  .quest-party-picker > footer {
+    font-size: var(--type-caption);
+  }
+
+  .quest-party-option {
+    min-height: 94px;
+  }
+
+  .quest-party-copy small,
+  .quest-party-fit small {
+    white-space: normal;
+  }
+
+  .patron-label strong,
+  .patron-label small,
+  .context-scene-footer strong,
+  .venue-presence span,
+  .cutaway-room header strong,
+  .cutaway-room header span {
+    font-size: var(--type-caption);
+  }
+
+  .context-scene-footer {
+    min-height: 58px;
+  }
+
+  .patron-label {
+    max-width: 108px;
+  }
+
+  .patron-label strong {
+    max-width: 94px;
+  }
+
+  .cutaway-room header {
+    min-height: 31px;
+  }
+
+  .encounter-choices button {
+    min-height: 94px;
+  }
+
+  @media (max-width: 720px) {
+    .game-shell {
+      padding-bottom: 104px;
+    }
+
+    .command-dock {
+      gap: 4px;
+      padding: 6px;
+    }
+
+    .dock-button {
+      min-height: 70px;
+      padding: 6px 2px;
+      font-size: var(--type-caption);
+      line-height: 1.1;
+      overflow-wrap: anywhere;
+    }
+
+    .dock-icon {
+      width: 27px;
+    }
+
+    .stat {
+      min-height: 58px;
+      padding-block: 7px;
+    }
+
+    .stat-label,
+    .hud-calendar span {
+      font-size: var(--type-caption);
+    }
+
+    .map-label {
+      max-width: 126px;
+      min-width: 0;
+      font-size: var(--type-caption);
+      white-space: normal;
+    }
+
+    .map-status {
+      white-space: normal;
+    }
+
+    .context-scene-footer {
+      min-height: 48px;
+    }
+
+    .context-scene-footer strong,
+    .patron-label strong,
+    .cutaway-roof,
+    .cutaway-room header strong,
+    .cutaway-room header span,
+    .venue-presence span {
+      font-size: var(--type-caption);
+    }
+
+    .patron-label {
+      max-width: 82px;
+      padding: 3px 5px;
+    }
+
+    .patron-label strong {
+      max-width: 70px;
+    }
+
+    .cutaway-roof {
+      height: 42px;
+    }
+
+    .cutaway-room-grid {
+      inset-block-start: 42px;
+    }
+
+    .cutaway-room header {
+      min-height: 29px;
+      align-items: start;
+      flex-direction: column;
+    }
+
+    .quest-party-picker > header {
+      align-items: flex-start;
+    }
+
+    .quest-party-picker > header strong,
+    .quest-party-copy strong {
+      white-space: normal;
+    }
+
+    .quest-party-picker > footer {
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mission-action button,
+    .quest-party-picker > footer button {
+      min-height: 42px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .panel-heading {
+      min-height: 51px;
+    }
+
+    .mission-action {
+      gap: 8px;
+    }
+
+    .party-slot.filled {
+      min-height: 58px;
+    }
+
+    .room-grid {
+      grid-template-rows: repeat(3, 72px);
+    }
+
+    .room-grid .room-name,
+    .room-grid .room-level,
+    .empty-room-copy,
+    .chapter-objective-copy strong {
+      font-size: var(--type-small);
+    }
+
+    .room-grid .room-name {
+      max-width: calc(100% - 12px);
+      white-space: normal;
+    }
+
+    .empty-room-copy {
+      max-height: none;
+    }
+
+    .store-item {
+      min-height: 60px;
+    }
   }
 }

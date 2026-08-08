@@ -85,11 +85,22 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=21/);
+  assert.match(index, /styles\.css\?v=22/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
   assert.ok(fs.statSync(backdrop).size > 100_000);
+});
+
+test("compact interface text keeps a readable mobile floor", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+  assert.match(index, /game\.js\?v=22/);
+  assert.match(styles, /@layer[\s\S]*readability/);
+  assert.match(styles, /--type-caption: 0\.7rem/);
+  assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
+  assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.dock-button[\s\S]*font-size: var\(--type-caption\)/);
 });
 
 test("a timed encounter exposes the founder's class response and records the choice", () => {

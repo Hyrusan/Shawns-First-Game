@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=14">
+    <link rel="stylesheet" href="styles.css?v=15">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -104,14 +104,17 @@
           </button>
         </nav>
 
-        <section class="command-layout">
-          <section class="map-stage panel">
+        <section id="commandLayout" class="command-layout management-focus">
+          <section id="mapStage" class="map-stage panel compact-map">
             <div class="panel-heading map-heading">
               <div>
                 <p class="eyebrow">Holy realm of Jenny</p>
                 <h2>Guildstead &amp; The Western March</h2>
               </div>
               <div class="map-actions">
+                <button id="mapFocusButton" class="icon-button map-focus-button" type="button" aria-label="Expand the realm map" title="Expand the realm map" aria-pressed="false">
+                  <span class="map-focus-icon" aria-hidden="true"></span>
+                </button>
                 <button id="musicToggleButton" class="icon-button music-toggle" type="button" aria-label="Mute music" title="Mute music" aria-pressed="false">
                   <span class="music-icon" aria-hidden="true"></span>
                 </button>
@@ -202,8 +205,9 @@
                     <p class="eyebrow">Guild roster</p>
                     <h2>Adventurers</h2>
                   </div>
-                  <button id="recruitButton" class="secondary-button" type="button">Recruit 45G</button>
+                  <button id="recruitButton" class="secondary-button" type="button">Recruitment Locked</button>
                 </div>
+                <div id="recruitmentPanel" class="recruitment-panel"></div>
                 <div id="selectedSummary" class="selected-summary">Party 0/3</div>
                 <div id="adventurerDetail" class="adventurer-detail"></div>
                 <div id="rosterList" class="roster-list"></div>
@@ -268,6 +272,6 @@
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=14"></script>
+    <script src="game.js?v=15"></script>
   </body>
 </html>

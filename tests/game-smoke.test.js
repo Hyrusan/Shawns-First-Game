@@ -5,10 +5,21 @@ const test = require("node:test");
 const vm = require("node:vm");
 
 function makeElement() {
+  const classNames = new Set();
   return {
     append() {},
     addEventListener() {},
-    classList: { add() {}, remove() {}, toggle() {} },
+    classList: {
+      add(name) { classNames.add(name); },
+      contains(name) { return classNames.has(name); },
+      remove(name) { classNames.delete(name); },
+      toggle(name, force) {
+        const enabled = force === undefined ? !classNames.has(name) : Boolean(force);
+        if (enabled) classNames.add(name);
+        else classNames.delete(name);
+        return enabled;
+      }
+    },
     dataset: {},
     innerHTML: "",
     muted: false,
@@ -154,7 +165,7 @@ test("quirk-gated cache choices add loot to persistent Guild Stores", () => {
   assert.equal(result.outcomeLoot, "silverCharm");
 });
 
-test("version 9 saves gain encounter and inventory data without losing active missions", () => {
+test("version 9 saves gain current systems without losing active missions", () => {
   const now = Date.now();
   const context = createGameContext({
     version: 9,
@@ -189,12 +200,85 @@ test("version 9 saves gain encounter and inventory data without losing active mi
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 10);
+  assert.equal(result.version, 11);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
   assert.equal(result.encounterStatus, "waiting");
   assert.equal(result.enemyMaxHealth, 94);
+});
+
+test("new games begin with one founder and tavern notices produce a shortlist after one or two days", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    elements.founderName.value = "Jenny";
+    elements.founderClass.value = "warden";
+    elements.founderGender.value = "female";
+    createFounder();
+    const founderCount = state.adventurers.length;
+    const founderId = state.adventurers[0].id;
+    handleChapterMissionSuccess(missionDeck[0]);
+    const recruitmentIntroduced = state.recruitment.unlocked && state.chapter.stage === "recruitment" && currentChapterMomentId === "recruitment";
+    postRecruitmentNotice();
+    const travelDays = state.recruitment.order.readyDay - state.recruitment.order.postedDay;
+    const goldAfterNotice = state.gold;
+    state.day = state.recruitment.order.readyDay;
+    processRecruitmentArrivals();
+    const shortlistSize = state.recruitment.candidates.length;
+    const chosenId = state.recruitment.candidates[0].id;
+    hireRecruitmentCandidate(chosenId);
+    ({ founderCount, founderId, recruitmentIntroduced, travelDays, goldAfterNotice, shortlistSize,
+       rosterCount: state.adventurers.length, chosenJoined: state.adventurers.some((hero) => hero.id === chosenId),
+       stage: state.chapter.stage, candidatesRemaining: state.recruitment.candidates.length });
+  `);
+
+  assert.equal(result.founderCount, 1);
+  assert.ok(result.founderId);
+  assert.equal(result.recruitmentIntroduced, true);
+  assert.ok([1, 2].includes(result.travelDays));
+  assert.equal(result.goldAfterNotice, 35);
+  assert.equal(result.shortlistSize, 3);
+  assert.equal(result.rosterCount, 2);
+  assert.equal(result.chosenJoined, true);
+  assert.equal(result.stage, "buildBoard");
+  assert.equal(result.candidatesRemaining, 0);
+});
+
+test("named adventurers use matching male and female class sprite rows", () => {
+  const context = createGameContext();
+  const result = run(context, `({
+    maleMage: renderSprite({ classId: "spellwright", gender: "male", race: "Human", founder: false }),
+    femaleMage: renderSprite({ classId: "spellwright", gender: "female", race: "Human", founder: false }),
+    maleWarrior: getSpriteSlot({ classId: "warden", gender: "male", founder: false }),
+    femaleWarrior: getSpriteSlot({ classId: "warden", gender: "female", founder: false })
+  })`);
+
+  assert.match(result.maleMage, /slot-1 hero-atlas/);
+  assert.match(result.femaleMage, /slot-5 hero-atlas/);
+  assert.equal(result.maleWarrior, 0);
+  assert.equal(result.femaleWarrior, 4);
+});
+
+test("management views compact the map while quest views keep it expanded", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    setActiveView("quest");
+    const questExpanded = isMapExpanded();
+    const questClass = elements.commandLayout.classList.contains("map-focus");
+    setActiveView("adventurers");
+    const rosterCompact = !isMapExpanded();
+    const rosterClass = elements.commandLayout.classList.contains("management-focus");
+    toggleMapFocus();
+    ({ questExpanded, questClass, rosterCompact, rosterClass,
+       manualExpanded: isMapExpanded(), manualClass: elements.commandLayout.classList.contains("map-focus") });
+  `);
+
+  assert.equal(result.questExpanded, true);
+  assert.equal(result.questClass, true);
+  assert.equal(result.rosterCompact, true);
+  assert.equal(result.rosterClass, true);
+  assert.equal(result.manualExpanded, true);
+  assert.equal(result.manualClass, true);
 });
 
 test("encounter bonuses flow into final gold, fame, experience, and injury protection", () => {

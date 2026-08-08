@@ -11,6 +11,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Three-scene tavern prologue and guided Chapter One progression
 - Goblin quest chain culminating in the Barrow Hill chief
 - Male and female hero creation across four visual classes
+- Gender-consistent class sprites for every named adventurer
+- Tavern recruitment notices with travel time and three-candidate shortlists
 - Persistent adventurer profiles and two complementary sprite atlases
 - Positive and negative quirks with real quest effects
 - Natural class abilities, long-term potential, and Training Yard techniques
@@ -26,6 +28,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Timed realm events and animated mission dispatch
 - Local browser save data
 - Responsive desktop and mobile layouts
+- Contextual map and management workspace modes
 
 ## Running Locally
 

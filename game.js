@@ -1,5 +1,6 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 10;
+const SAVE_VERSION = 11;
+const RECRUITMENT_COST = 45;
 
 const classes = {
   warden: { label: "Warrior", primary: "str", secondary: "wit", stats: { str: 9, mag: 3, wit: 5, cha: 5 } },
@@ -93,6 +94,13 @@ const introScenes = [
 ];
 
 const chapterMoments = {
+  recruitment: {
+    eyebrow: "Mara's Next Bright Idea",
+    title: "Put The Word Out",
+    text: "One hero recovered the supplies, but Greenbank will need more than one pair of hands. Mara can post a paid notice in the tavern. Cover the travel costs now, wait a day or two, and choose who deserves a place at your table.",
+    button: "Visit The Tavern",
+    view: "adventurers"
+  },
   questBoard: {
     eyebrow: "Chapter One: Goblin Trouble",
     title: "A Noticeboard With Ambition",
@@ -576,6 +584,7 @@ let dispatchAnimations = [];
 let activeView = "guildhall";
 let selectedGuildRoomId = "tavernRoom";
 let selectedAdventurerId = null;
+let mapModeOverride = null;
 let toastTimer = null;
 const state = loadState();
 
@@ -600,6 +609,9 @@ const elements = {
   guildhallInterior: document.querySelector("#guildhallInterior"),
   guildhallRoomDetail: document.querySelector("#guildhallRoomDetail"),
   realmMap: document.querySelector("#realmMap"),
+  commandLayout: document.querySelector("#commandLayout"),
+  mapStage: document.querySelector("#mapStage"),
+  mapFocus: document.querySelector("#mapFocusButton"),
   mapStatus: document.querySelector("#mapStatus"),
   chapterObjective: document.querySelector("#chapterObjective"),
   eventMissionList: document.querySelector("#eventMissionList"),
@@ -621,6 +633,7 @@ const elements = {
   createFounder: document.querySelector("#createFounderButton"),
   randomFounder: document.querySelector("#randomFounderButton"),
   recruit: document.querySelector("#recruitButton"),
+  recruitmentPanel: document.querySelector("#recruitmentPanel"),
   rosterList: document.querySelector("#rosterList"),
   selectedSummary: document.querySelector("#selectedSummary"),
   adventurerDetail: document.querySelector("#adventurerDetail"),
@@ -646,7 +659,7 @@ elements.startGame.addEventListener("click", startIntro);
 elements.continueIntro.addEventListener("click", advanceIntro);
 elements.createFounder.addEventListener("click", createFounder);
 elements.randomFounder.addEventListener("click", randomiseFounder);
-elements.recruit.addEventListener("click", recruitAdventurer);
+elements.recruit.addEventListener("click", postRecruitmentNotice);
 elements.reset.addEventListener("click", resetGame);
 elements.nextDay.addEventListener("click", () => advanceDays(1));
 elements.scoutEvent.addEventListener("click", () => {
@@ -654,6 +667,7 @@ elements.scoutEvent.addEventListener("click", () => {
   render();
 });
 elements.musicToggle.addEventListener("click", toggleMapMusic);
+elements.mapFocus.addEventListener("click", toggleMapFocus);
 elements.closeEvent.addEventListener("click", closeEventDialog);
 elements.viewEvent.addEventListener("click", viewPopupEvent);
 elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
@@ -687,6 +701,12 @@ function defaultState() {
     activeMissions: [],
     eventMissions: [],
     inventory: {},
+    recruitment: {
+      unlocked: false,
+      order: null,
+      candidates: [],
+      hires: 0
+    },
     facilities: {
       tavern: 1,
       questBoard: 0,
@@ -715,7 +735,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -747,9 +767,17 @@ function loadState() {
       chapter: migratedChapter,
       eventMissions: saved.eventMissions || [],
       inventory: saved.inventory || {},
+      recruitment: {
+        ...fresh.recruitment,
+        ...(saved.recruitment || {})
+      },
       selectedIds: []
     };
     loaded.adventurers = (saved.adventurers || []).map((adventurer) => normaliseAdventurer(adventurer, loaded.day));
+    loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
+    if (!saved.recruitment) {
+      loaded.recruitment.unlocked = Boolean(loaded.founderCreated && !["tavern", "hero", "firstQuest"].includes(loaded.chapter.stage));
+    }
     const now = Date.now();
     loaded.activeMissions = (saved.activeMissions || []).map((activeMission) => {
       if (activeMission.startedAt && activeMission.endsAt) {
@@ -789,6 +817,7 @@ function resetGame() {
   activeView = "guildhall";
   selectedGuildRoomId = "tavernRoom";
   selectedAdventurerId = null;
+  mapModeOverride = null;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
   Object.assign(state, fresh);
@@ -1087,6 +1116,7 @@ function renderActiveView() {
 
   elements.dockButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.view === activeView);
+    button.classList.toggle("attention", button.dataset.view === "adventurers" && state.recruitment.candidates.length > 0);
   });
 
   elements.viewPanels.forEach((panel) => {
@@ -1098,7 +1128,9 @@ function renderActiveView() {
   if (state.founderCreated && activeView === "hero") {
     activeView = "adventurers";
     renderActiveView();
+    return;
   }
+  renderMapLayout();
 }
 
 function getViewMeta(view) {
@@ -1148,6 +1180,29 @@ function setActiveView(view) {
   }
   activeView = view;
   renderActiveView();
+}
+
+function isMapExpanded() {
+  if (mapModeOverride?.view === activeView) {
+    return mapModeOverride.expanded;
+  }
+  return ["quest", "events"].includes(activeView);
+}
+
+function toggleMapFocus() {
+  mapModeOverride = { view: activeView, expanded: !isMapExpanded() };
+  renderMapLayout();
+}
+
+function renderMapLayout() {
+  const expanded = isMapExpanded();
+  elements.commandLayout.classList.toggle("map-focus", expanded);
+  elements.commandLayout.classList.toggle("management-focus", !expanded);
+  elements.mapStage.classList.toggle("compact-map", !expanded);
+  elements.mapFocus.classList.toggle("expanded", expanded);
+  elements.mapFocus.setAttribute("aria-pressed", String(expanded));
+  elements.mapFocus.setAttribute("aria-label", expanded ? "Give more space to management" : "Expand the realm map");
+  elements.mapFocus.title = expanded ? "Give more space to management" : "Expand the realm map";
 }
 
 function renderGuildhallInterior() {
@@ -1251,8 +1306,20 @@ function renderRoster() {
     </div>
   `;
   const rosterFull = state.adventurers.length >= getRosterCapacity();
-  elements.recruit.disabled = !state.founderCreated || state.gold < 45 || rosterFull;
-  elements.recruit.textContent = rosterFull ? "Dormitory Needed" : "Recruit 45G";
+  const recruitmentLocked = !state.recruitment.unlocked;
+  const recruitmentWaiting = Boolean(state.recruitment.order);
+  const candidatesReady = state.recruitment.candidates.length > 0;
+  elements.recruit.disabled = recruitmentLocked || recruitmentWaiting || candidatesReady || state.gold < RECRUITMENT_COST || rosterFull;
+  elements.recruit.textContent = rosterFull
+    ? "Dormitory Needed"
+    : recruitmentLocked
+      ? "Recruitment Locked"
+      : recruitmentWaiting
+        ? `Applicants Day ${state.recruitment.order.readyDay}`
+        : candidatesReady
+          ? "Choose Applicant"
+          : `Post Notice ${RECRUITMENT_COST}G`;
+  renderRecruitmentPanel();
 
   if (state.adventurers.length === 0) {
     elements.rosterList.innerHTML = `<article class="facility-card"><p class="card-meta">Create a hero to open the roster.</p></article>`;
@@ -1309,6 +1376,72 @@ function renderRoster() {
     });
   });
   renderAdventurerDetail();
+}
+
+function renderRecruitmentPanel() {
+  const recruitment = state.recruitment;
+  const rosterFull = state.adventurers.length >= getRosterCapacity();
+  if (!recruitment.unlocked) {
+    elements.recruitmentPanel.innerHTML = `
+      <section class="recruitment-service locked">
+        <span class="recruitment-sign" aria-hidden="true">R</span>
+        <div><p class="eyebrow">Tavern recruitment</p><h3>Word has not spread yet</h3><p>Recover the stolen supplies and Mara will help attract more adventurers.</p></div>
+      </section>
+    `;
+    return;
+  }
+
+  if (recruitment.order) {
+    const totalDays = Math.max(1, recruitment.order.readyDay - recruitment.order.postedDay);
+    const elapsedDays = Math.max(0, state.day - recruitment.order.postedDay);
+    const progress = Math.min(100, Math.round((elapsedDays / totalDays) * 100));
+    const daysLeft = Math.max(0, recruitment.order.readyDay - state.day);
+    elements.recruitmentPanel.innerHTML = `
+      <section class="recruitment-waiting">
+        <div class="recruitment-waiting-copy">
+          <span class="recruitment-sign travelling" aria-hidden="true">R</span>
+          <div><p class="eyebrow">Notice posted</p><h3>Applicants are travelling</h3><p>${daysLeft} day${daysLeft === 1 ? "" : "s"} until Mara presents the shortlist.</p></div>
+        </div>
+        <div class="recruitment-progress"><i style="width:${progress}%"></i></div>
+        <button class="secondary-button" data-advance-recruitment type="button">Advance Day</button>
+      </section>
+    `;
+    elements.recruitmentPanel.querySelector("[data-advance-recruitment]")?.addEventListener("click", () => advanceDays(1));
+    return;
+  }
+
+  if (recruitment.candidates.length > 0) {
+    elements.recruitmentPanel.innerHTML = `
+      <section class="candidate-board">
+        <div class="candidate-board-heading"><div><p class="eyebrow">Mara's shortlist</p><h3>Choose One Adventurer</h3></div><span>Travel costs paid</span></div>
+        <div class="candidate-grid">
+          ${recruitment.candidates.map((candidate) => `
+            <article class="candidate-card">
+              <div class="candidate-sprite">${renderSprite(candidate)}</div>
+              <div class="candidate-name"><h4>${candidate.name}</h4><span>${candidate.gender === "female" ? "Female" : "Male"} ${candidate.race}</span></div>
+              <strong class="candidate-class">${classes[candidate.classId].label}</strong>
+              <div class="candidate-potential"><span>Potential</span>${renderPotential(candidate.potential)}</div>
+              <div class="candidate-quirks"><span class="positive">+ ${quirkCatalog[candidate.quirks.positive].name}</span><span class="negative">- ${quirkCatalog[candidate.quirks.negative].name}</span></div>
+              <button class="primary-button" data-hire-candidate="${candidate.id}" type="button" ${rosterFull ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `Recruit ${candidate.name}`}</button>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+    elements.recruitmentPanel.querySelectorAll("[data-hire-candidate]").forEach((button) => {
+      button.addEventListener("click", () => hireRecruitmentCandidate(button.dataset.hireCandidate));
+    });
+    return;
+  }
+
+  elements.recruitmentPanel.innerHTML = `
+    <section class="recruitment-service">
+      <span class="recruitment-sign" aria-hidden="true">R</span>
+      <div><p class="eyebrow">Tavern recruitment</p><h3>Post A Paid Notice</h3><p>Mara will find three applicants in one or two days. The ${RECRUITMENT_COST}G fee covers notices, food, and travel.</p></div>
+      <button class="primary-button" data-post-recruitment type="button" ${rosterFull || state.gold < RECRUITMENT_COST ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `${RECRUITMENT_COST}G`}</button>
+    </section>
+  `;
+  elements.recruitmentPanel.querySelector("[data-post-recruitment]")?.addEventListener("click", postRecruitmentNotice);
 }
 
 function renderAdventurerDetail() {
@@ -1906,8 +2039,12 @@ function renderTrainingCurriculum(adventurer) {
 
 function renderSprite(adventurer, extraClass = "") {
   const slot = getSpriteSlot(adventurer);
-  const atlasClass = adventurer.founder || adventurer.useHeroAtlas ? "hero-atlas" : "";
+  const atlasClass = usesGenderedSpriteAtlas(adventurer) ? "hero-atlas" : "";
   return `<span class="unit-sprite slot-${slot} ${atlasClass} ${extraClass}" aria-hidden="true"></span>`;
+}
+
+function usesGenderedSpriteAtlas(adventurer) {
+  return Boolean(adventurer.founder || adventurer.useHeroAtlas || ["male", "female"].includes(adventurer.gender));
 }
 
 function getSpriteSlot(adventurer) {
@@ -1918,7 +2055,7 @@ function getSpriteSlot(adventurer) {
     minstrel: 3,
     rookie: 0
   };
-  if (adventurer.founder || adventurer.useHeroAtlas) {
+  if (usesGenderedSpriteAtlas(adventurer)) {
     const genderRow = adventurer.gender === "female" ? 4 : 0;
     return (classSlots[adventurer.classId] ?? 0) + genderRow;
   }
@@ -1984,14 +2121,12 @@ function createFounder() {
   const gender = elements.founderGender.value || "male";
   const founder = makeAdventurer(name, classId, true, gender);
   state.adventurers.push(founder);
-  state.adventurers.push(makeRecruit(2));
-  state.adventurers.push(makeRecruit(3));
   selectedAdventurerId = founder.id;
   state.selectedIds = [founder.id];
   state.founderCreated = true;
   state.chapter.stage = "firstQuest";
   activeView = "quest";
-  addLog(`${name} answers Mara's call. Two tavern regulars volunteer to help with the goblin problem.`);
+  addLog(`${name} answers Mara's call as the Wayfarer's Rest's first and only adventurer.`);
   render();
   showToast("First job posted", `${name} is ready to recover the tavern supplies.`, "info");
 }
@@ -2004,29 +2139,80 @@ function randomiseFounder() {
   renderFounderPreview();
 }
 
-function recruitAdventurer() {
-  if (!state.founderCreated || state.gold < 45 || state.adventurers.length >= getRosterCapacity()) {
+function postRecruitmentNotice() {
+  if (!state.recruitment.unlocked || state.recruitment.order || state.recruitment.candidates.length > 0 || state.gold < RECRUITMENT_COST || state.adventurers.length >= getRosterCapacity()) {
     return;
   }
-  state.gold -= 45;
-  const recruit = makeRecruit(state.adventurers.length + 1);
-  state.adventurers.push(recruit);
-  selectedAdventurerId = recruit.id;
-  addLog(`${recruit.name} signs on after hearing the tavern stew is almost edible.`);
+  const travelDays = 1 + Math.floor(Math.random() * 2);
+  state.gold -= RECRUITMENT_COST;
+  state.recruitment.order = {
+    postedDay: state.day,
+    readyDay: state.day + travelDays
+  };
+  addLog(`Mara posts a recruitment notice and pays ${RECRUITMENT_COST}G in food and travel costs. Applicants should arrive in ${travelDays} day${travelDays === 1 ? "" : "s"}.`);
   render();
-  showToast("New recruit", `${recruit.name} the ${classes[recruit.classId].label} joined the guild.`, "success");
+  showToast("Recruitment notice posted", `Mara expects applicants by day ${state.recruitment.order.readyDay}.`, "info");
 }
 
-function makeRecruit(seed) {
+function makeRecruit(seed, nameOverride = "") {
   const classIds = ["warden", "spellwright", "ranger", "minstrel", "rookie"];
   const classId = classIds[Math.floor(Math.random() * classIds.length)];
-  const name = names[(Math.floor(Math.random() * names.length) + seed) % names.length];
+  const name = nameOverride || names[(Math.floor(Math.random() * names.length) + seed) % names.length];
   const recruit = makeAdventurer(name, classId, false);
   const tavernBonus = state.facilities.tavern - 1;
   Object.keys(recruit.stats).forEach((stat) => {
     recruit.stats[stat] += Math.floor(Math.random() * (2 + tavernBonus));
   });
   return recruit;
+}
+
+function makeRecruitmentCandidates() {
+  const usedNames = new Set(state.adventurers.map((adventurer) => adventurer.name));
+  const availableNames = names.filter((name) => !usedNames.has(name));
+  const candidates = [];
+  for (let index = 0; index < 3; index += 1) {
+    const poolIndex = availableNames.length ? Math.floor(Math.random() * availableNames.length) : -1;
+    const name = poolIndex >= 0 ? availableNames.splice(poolIndex, 1)[0] : `${pick(names)} ${state.day}`;
+    const candidate = makeRecruit(state.recruitment.hires + index + 1, name);
+    candidate.status = "candidate";
+    candidate.lifeLog = [{ day: state.day, text: `Travelled to the Wayfarer's Rest after seeing Mara's recruitment notice.` }];
+    candidates.push(candidate);
+  }
+  return candidates;
+}
+
+function processRecruitmentArrivals() {
+  if (!state.recruitment.order || state.day < state.recruitment.order.readyDay) {
+    return false;
+  }
+  state.recruitment.order = null;
+  state.recruitment.candidates = makeRecruitmentCandidates();
+  addLog("Three adventurers arrive at the tavern. Mara has prepared a shortlist for the Guildmaster.");
+  showToast("Applicants have arrived", "Visit the Adventurers panel and choose one recruit.", "success");
+  return true;
+}
+
+function hireRecruitmentCandidate(candidateId) {
+  if (state.adventurers.length >= getRosterCapacity()) {
+    return;
+  }
+  const candidate = state.recruitment.candidates.find((adventurer) => adventurer.id === candidateId);
+  if (!candidate) {
+    return;
+  }
+  candidate.status = "idle";
+  addLifeEvent(candidate, "Was chosen by the Guildmaster to join Guildstead.");
+  state.adventurers.push(candidate);
+  state.recruitment.candidates = [];
+  state.recruitment.hires += 1;
+  selectedAdventurerId = candidate.id;
+  addLog(`${candidate.name} the ${classes[candidate.classId].label} is chosen from Mara's tavern shortlist.`);
+  if (state.chapter.stage === "recruitment") {
+    state.chapter.stage = "buildBoard";
+    showChapterMoment("questBoard");
+  }
+  render();
+  showToast("Adventurer recruited", `${candidate.name} has joined the roster.`, "success");
 }
 
 function makeAdventurer(name, classId, founder, gender = null) {
@@ -2628,6 +2814,7 @@ function advanceDays(amount) {
   if (state.founderCreated && state.facilities.questBoard > 0 && state.day % 3 === 0 && state.eventMissions.length < 2) {
     scoutForEvent(true);
   }
+  processRecruitmentArrivals();
   render();
 }
 
@@ -2653,6 +2840,7 @@ function getChapterObjective() {
     tavern: { title: "Open the tavern", detail: "A quiet morning is about to become rather less quiet.", progress: 0 },
     hero: { title: "Choose your first hero", detail: "Find someone willing to investigate the goblin raid.", progress: 8 },
     firstQuest: { title: "Recover the stolen supplies", detail: "Select a party and follow the tracks along Greenbank Lane.", progress: 18 },
+    recruitment: { title: "Recruit a second adventurer", detail: "Post a 45G tavern notice, wait for applicants, then choose one.", progress: 27 },
     buildBoard: { title: "Build the Quest Board", detail: "Spend 55G to turn Mara's idea into a proper local service.", progress: 32 },
     localRequests: { title: `Complete local requests (${completed}/3)`, detail: "Help Greenbank and earn enough trust to expand the tavern.", progress: 38 + completed * 12 },
     expansion: { title: "Choose your first expansion", detail: "Build a Dormitory, Training Yard, or Kitchen.", progress: 78 },
@@ -2693,8 +2881,16 @@ function showChapterMoment(id) {
 
 function handleChapterMissionSuccess(mission) {
   if (mission.tutorial && state.chapter.stage === "firstQuest") {
-    state.chapter.stage = "buildBoard";
-    showChapterMoment("questBoard");
+    if (state.adventurers.length > 1) {
+      state.recruitment.unlocked = true;
+      state.chapter.stage = "buildBoard";
+      showChapterMoment("questBoard");
+      return;
+    }
+    state.chapter.stage = "recruitment";
+    state.recruitment.unlocked = true;
+    addLog("With the supplies safe, Mara suggests posting a paid recruitment notice in the tavern.");
+    showChapterMoment("recruitment");
     return;
   }
   if (mission.localRequest && !state.chapter.completedLocalMissions.includes(mission.id)) {

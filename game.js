@@ -572,6 +572,7 @@ let dispatchAnimations = [];
 let activeView = "guildhall";
 let selectedGuildRoomId = "tavernRoom";
 let selectedAdventurerId = null;
+let partyPickerMissionId = null;
 let mapModeOverride = null;
 let toastTimer = null;
 const state = loadState();
@@ -808,6 +809,7 @@ function resetGame() {
   activeView = "guildhall";
   selectedGuildRoomId = "tavernRoom";
   selectedAdventurerId = null;
+  partyPickerMissionId = null;
   mapModeOverride = null;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
@@ -1294,6 +1296,9 @@ function setActiveView(view) {
   if (!view) {
     return;
   }
+  if (view !== "quest") {
+    partyPickerMissionId = null;
+  }
   activeView = view;
   renderActiveView();
 }
@@ -1669,6 +1674,7 @@ function renderAdventurerDetail() {
 }
 
 function renderMissions() {
+  state.selectedIds = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle").slice(0, 3);
   const selectedParty = state.selectedIds.map(getAdventurer).filter((adventurer) => adventurer?.status === "idle");
   const partyMarkup = `
     <section class="party-tray">
@@ -1677,7 +1683,7 @@ function renderMissions() {
           <p class="eyebrow">Expedition party</p>
           <h3>${selectedParty.length ? `${selectedParty.length} adventurer${selectedParty.length === 1 ? "" : "s"} ready` : "No party selected"}</h3>
         </div>
-        <button class="ghost-button" data-open-roster type="button">Edit Party</button>
+        <button class="ghost-button" data-open-roster type="button">View Profiles</button>
       </div>
       <div class="party-slots">
         ${Array.from({ length: 3 }, (_, index) => {
@@ -1700,8 +1706,9 @@ function renderMissions() {
       const odds = selectedParty.length ? getMissionOdds(selectedParty, mission) : 0;
       const oddsTone = odds >= 75 ? "good" : odds >= 45 ? "fair" : "poor";
       const oddsLabel = odds >= 75 ? "Promising" : odds >= 45 ? "Risky" : "Dangerous";
+      const pickerOpen = partyPickerMissionId === mission.id && !locked && !active;
       return `
-        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${locked ? "locked" : ""}">
+        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
           <div class="mission-card-main">
             <div class="mission-title-row">
               <div>
@@ -1723,10 +1730,12 @@ function renderMissions() {
           </div>
           <div class="mission-action">
             ${!locked && !active && selectedParty.length ? `<span class="odds ${oddsTone}"><b>${odds}%</b>${oddsLabel}</span>` : ""}
-            <button class="primary-button" data-mission="${mission.id}" type="button" ${missionButtonDisabled(locked, active)}>
-              ${locked ? "Locked" : active ? "In progress" : selectedParty.length ? "Dispatch" : "Choose party"}
+            ${!locked && !active ? `<button class="secondary-button mission-party-button" data-compose-party="${mission.id}" type="button" aria-expanded="${pickerOpen}">${pickerOpen ? "Close party" : selectedParty.length ? "Change party" : "Choose party"}</button>` : ""}
+            <button class="primary-button" data-mission="${mission.id}" type="button" ${missionButtonDisabled(locked, active, selectedParty.length > 0)}>
+              ${locked ? "Locked" : active ? "In progress" : "Dispatch"}
             </button>
           </div>
+          ${pickerOpen ? renderQuestPartyPicker(mission) : ""}
         </article>
       `;
     })
@@ -1750,10 +1759,64 @@ function renderMissions() {
     .join("");
 
   elements.missionList.innerHTML = `${partyMarkup}${activeCards ? `<div class="active-expeditions">${activeCards}</div>` : ""}<div class="mission-deck">${missionCards}</div>`;
-  elements.missionList.querySelector("[data-open-roster]").addEventListener("click", () => setActiveView("adventurers"));
+  elements.missionList.querySelector("[data-open-roster]")?.addEventListener("click", () => setActiveView("adventurers"));
+  elements.missionList.querySelectorAll("[data-compose-party]").forEach((button) => {
+    button.addEventListener("click", () => {
+      partyPickerMissionId = partyPickerMissionId === button.dataset.composeParty ? null : button.dataset.composeParty;
+      renderMissions();
+      elements.missionList.querySelector(`[data-mission-card="${button.dataset.composeParty}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  });
+  elements.missionList.querySelectorAll("[data-quest-party]").forEach((button) => {
+    button.addEventListener("click", () => toggleAdventurer(button.dataset.questParty));
+  });
+  elements.missionList.querySelector("[data-clear-quest-party]")?.addEventListener("click", () => {
+    state.selectedIds = [];
+    render();
+  });
   elements.missionList.querySelectorAll("[data-mission]").forEach((button) => {
     button.addEventListener("click", () => startMission(button.dataset.mission));
   });
+}
+
+function renderQuestPartyPicker(mission) {
+  const selectedCount = state.selectedIds.length;
+  const partyFull = selectedCount >= 3;
+  const focusLabel = mission.focus.toUpperCase();
+  const options = state.adventurers.map((adventurer) => {
+    const selected = state.selectedIds.includes(adventurer.id);
+    const available = adventurer.status === "idle";
+    const disabled = !available || (partyFull && !selected);
+    const focusValue = adventurer.stats[mission.focus] || 0;
+    const fitLabel = focusValue >= 8 ? "Strong fit" : focusValue >= 6 ? "Good fit" : "Support";
+    const fitTone = focusValue >= 8 ? "strong-fit" : focusValue >= 6 ? "good-fit" : "support-fit";
+    const unavailableLabel = adventurer.status === "busy" ? "On quest" : "Injured";
+    const actionLabel = selected ? "Selected" : available ? partyFull ? "Party full" : "Add" : unavailableLabel;
+    return `
+      <button class="quest-party-option ${fitTone} ${selected ? "selected" : ""} ${available ? "available" : "unavailable"}" data-quest-party="${adventurer.id}" type="button" aria-pressed="${selected}" ${disabled ? "disabled" : ""}>
+        <span class="quest-party-sprite">${renderSprite(adventurer, "small")}</span>
+        <span class="quest-party-copy"><strong>${adventurer.name}</strong><small>${classes[adventurer.classId].label} | Lv ${adventurer.level}</small></span>
+        <span class="quest-party-fit"><b>${focusLabel} ${focusValue}</b><small>${available ? fitLabel : actionLabel}</small></span>
+        <span class="quest-party-state">${actionLabel}</span>
+      </button>
+    `;
+  }).join("");
+
+  return `
+    <section class="quest-party-picker" data-party-picker="${mission.id}" aria-label="Choose a party for ${mission.name}">
+      <header>
+        <div><span class="mission-kicker">Available adventurers</span><strong>${mission.name}</strong></div>
+        <span>${selectedCount}/3 selected</span>
+      </header>
+      <div class="quest-party-options">
+        ${options || `<p class="quest-party-empty">Create your founding adventurer before assembling a party.</p>`}
+      </div>
+      <footer>
+        <span>Quest focus: ${focusLabel}</span>
+        <button class="ghost-button" data-clear-quest-party type="button" ${selectedCount ? "" : "disabled"}>Clear</button>
+      </footer>
+    </section>
+  `;
 }
 
 function renderExpeditionWatch() {
@@ -2056,8 +2119,8 @@ function renderEventDialog() {
   elements.eventDialogText.textContent = `${eventMission.description} Location: ${eventMission.location}. Reward: ${eventMission.gold}G and ${eventMission.fame} fame.`;
 }
 
-function missionButtonDisabled(locked, active) {
-  if (locked || active || state.selectedIds.length === 0) {
+function missionButtonDisabled(locked, active, hasParty) {
+  if (locked || active || !hasParty) {
     return "disabled";
   }
   return "";
@@ -2611,6 +2674,7 @@ function startMission(missionId) {
   }
 
   state.selectedIds = [];
+  partyPickerMissionId = null;
   addLog(`${party.map((adventurer) => adventurer.name).join(", ")} set out for ${mission.name}.`);
   render();
   playDispatchAnimation(party, mission);

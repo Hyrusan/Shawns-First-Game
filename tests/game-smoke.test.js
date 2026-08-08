@@ -85,7 +85,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=20/);
+  assert.match(index, /styles\.css\?v=21/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -255,6 +255,47 @@ test("new games begin with one founder and tavern notices produce a shortlist af
   assert.equal(result.chosenJoined, true);
   assert.equal(result.stage, "buildBoard");
   assert.equal(result.candidatesRemaining, 0);
+});
+
+test("quest cards provide inline party selection with clear availability states", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const idleHero = makeAdventurer("Ready Hero", "warden", false, "female");
+    const busyHero = makeAdventurer("Road Hero", "ranger", false, "male");
+    const injuredHero = makeAdventurer("Resting Hero", "spellwright", false, "female");
+    idleHero.status = "idle";
+    busyHero.status = "busy";
+    injuredHero.status = "injured";
+    state.adventurers = [idleHero, busyHero, injuredHero];
+    state.founderCreated = true;
+    state.chapter.stage = "firstQuest";
+    state.selectedIds = [];
+    const emptyPicker = renderQuestPartyPicker(missionDeck[0]);
+    partyPickerMissionId = missionDeck[0].id;
+    activeView = "quest";
+    renderMissions();
+    const emptyBoard = elements.missionList.innerHTML;
+    const emptyDispatch = emptyBoard.match(/<button class="primary-button" data-mission="stolenSupplies"[^>]*>/)?.[0] || "";
+    state.selectedIds = [idleHero.id];
+    const selectedPicker = renderQuestPartyPicker(missionDeck[0]);
+    renderMissions();
+    const selectedBoard = elements.missionList.innerHTML;
+    const selectedDispatch = selectedBoard.match(/<button class="primary-button" data-mission="stolenSupplies"[^>]*>/)?.[0] || "";
+    ({ emptyPicker, selectedPicker, emptyBoard, selectedBoard, emptyDispatch, selectedDispatch,
+       idleId: idleHero.id, busyId: busyHero.id, injuredId: injuredHero.id });
+  `);
+
+  assert.match(result.emptyPicker, new RegExp(`data-quest-party="${result.idleId}"[^>]*aria-pressed="false"`));
+  assert.match(result.emptyPicker, new RegExp(`data-quest-party="${result.busyId}"[^>]*disabled`));
+  assert.match(result.emptyPicker, new RegExp(`data-quest-party="${result.injuredId}"[^>]*disabled`));
+  assert.match(result.emptyPicker, /On quest/);
+  assert.match(result.emptyPicker, /Injured/);
+  assert.match(result.emptyBoard, /data-compose-party="stolenSupplies"/);
+  assert.match(result.emptyBoard, /data-party-picker="stolenSupplies"/);
+  assert.match(result.emptyDispatch, /disabled/);
+  assert.match(result.selectedPicker, new RegExp(`data-quest-party="${result.idleId}"[^>]*aria-pressed="true"`));
+  assert.match(result.selectedPicker, /Selected/);
+  assert.doesNotMatch(result.selectedDispatch, /disabled/);
 });
 
 test("named adventurers use matching male and female class sprite rows", () => {

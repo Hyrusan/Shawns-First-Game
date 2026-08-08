@@ -18,6 +18,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Positive and negative quirks with real quest effects
 - Natural class abilities, long-term potential, and Training Yard techniques
 - Three-person expedition parties
+- Inline quest-party selection with availability and mission-fit indicators
 - Class-specific expedition battle animations
 - Real-time mission clocks that continue while managing other screens
 - Timed expedition encounters with class, ability, and quirk responses

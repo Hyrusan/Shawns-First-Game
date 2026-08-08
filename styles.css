@@ -1462,9 +1462,14 @@
 
   .mission-card {
     display: grid;
-    grid-template-columns: 1fr 86px;
+    grid-template-columns: 1fr 104px;
     gap: 9px;
     padding: 11px;
+  }
+
+  .mission-card.party-open {
+    border-color: #36625a;
+    box-shadow: 0 3px 0 #050708, inset 0 0 0 2px rgb(54 98 90 / 18%);
   }
 
   .mission-card.event {
@@ -1533,6 +1538,121 @@
   }
 
   .mission-action button { width: 100%; padding-inline: 6px; }
+
+  .mission-party-button {
+    min-height: 31px;
+    font-size: 0.56rem;
+  }
+
+  .quest-party-picker {
+    display: grid;
+    grid-column: 1 / -1;
+    gap: 9px;
+    margin: 2px -11px -11px;
+    padding: 11px;
+    border-top: 2px solid rgb(68 48 30 / 42%);
+    background:
+      linear-gradient(180deg, rgb(25 45 40 / 10%), transparent 55%),
+      rgb(99 66 39 / 7%);
+  }
+
+  .quest-party-picker > header,
+  .quest-party-picker > footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .quest-party-picker > header > div { display: grid; gap: 1px; min-width: 0; }
+  .quest-party-picker > header strong { overflow: hidden; color: #3d291c; font-size: 0.68rem; text-overflow: ellipsis; white-space: nowrap; }
+  .quest-party-picker > header > span {
+    flex: 0 0 auto;
+    padding: 4px 6px;
+    border: 1px solid #80603e;
+    border-radius: 3px;
+    background: #e4c584;
+    color: #4b3020;
+    font-size: 0.52rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .quest-party-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+    gap: 6px;
+  }
+
+  .quest-party-option {
+    position: relative;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-rows: 1fr auto;
+    min-width: 0;
+    min-height: 66px;
+    align-items: center;
+    gap: 1px 7px;
+    padding: 5px 7px 5px 4px;
+    overflow: hidden;
+    border: 1px solid #806442;
+    border-radius: 4px;
+    background: rgb(255 242 194 / 42%);
+    box-shadow: inset 3px 0 0 #8a7650;
+    color: #3e2a1d;
+    text-align: left;
+    text-shadow: none;
+  }
+
+  .quest-party-option:hover:not(:disabled) {
+    border-color: #466d5c;
+    background: #efd99f;
+    box-shadow: inset 3px 0 0 #4f7b65, 0 2px 0 rgb(55 31 17 / 18%);
+    translate: 0 -1px;
+  }
+
+  .quest-party-option.strong-fit { box-shadow: inset 3px 0 0 #467158; }
+  .quest-party-option.good-fit { box-shadow: inset 3px 0 0 #8a6f37; }
+  .quest-party-option.selected {
+    border-color: #315c49;
+    background: linear-gradient(135deg, #e3ddb0, #c6d5a6);
+    box-shadow: inset 5px 0 0 #3e7558, inset 0 0 0 1px rgb(49 92 73 / 18%);
+  }
+
+  .quest-party-option.unavailable {
+    opacity: 0.58;
+    filter: grayscale(0.62);
+  }
+
+  .quest-party-sprite {
+    display: grid;
+    grid-row: 1 / span 2;
+    width: 48px;
+    height: 58px;
+    place-items: end center;
+    overflow: hidden;
+  }
+
+  .quest-party-sprite .unit-sprite { width: 46px; }
+  .quest-party-copy { display: grid; min-width: 0; align-self: end; }
+  .quest-party-copy strong { overflow: hidden; font-size: 0.67rem; text-overflow: ellipsis; white-space: nowrap; }
+  .quest-party-copy small { overflow: hidden; color: #745239; font-size: 0.47rem; text-overflow: ellipsis; white-space: nowrap; }
+  .quest-party-fit { display: grid; justify-items: end; align-self: end; }
+  .quest-party-fit b { color: #3f5d4e; font-size: 0.55rem; }
+  .quest-party-fit small { color: #796043; font-size: 0.42rem; }
+  .quest-party-state {
+    align-self: start;
+    justify-self: end;
+    color: #7b593a;
+    font-size: 0.46rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .quest-party-option.selected .quest-party-state { color: #315c49; }
+  .quest-party-empty { grid-column: 1 / -1; padding: 8px; color: #6b5037; font-size: 0.6rem; }
+  .quest-party-picker > footer { color: #6d4f34; font-size: 0.52rem; font-weight: 900; text-transform: uppercase; }
+  .quest-party-picker > footer button { min-height: 28px; padding: 4px 9px; }
 
   .odds {
     display: grid;
@@ -2289,7 +2409,10 @@
     .founder-preview .unit-sprite { width: 76px; }
 
     .mission-card { grid-template-columns: 1fr; }
-    .mission-action { grid-template-columns: 1fr 1.5fr; align-items: center; }
+    .mission-action { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
+    .mission-action .odds { grid-column: 1 / -1; }
+    .quest-party-options { grid-template-columns: 1fr; }
+    .quest-party-picker > footer { align-items: flex-end; }
     .party-slots { gap: 4px; }
     .party-slot.filled { grid-template-columns: 40px 1fr; }
     .party-slot .unit-sprite { width: 36px; }

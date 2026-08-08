@@ -98,7 +98,6 @@ Each adventurer should have:
 | --- | --- |
 | Name | Edric |
 | Age | 19 |
-| Race | Human |
 | Class | Warrior |
 | Origin | Arrived with a rusty sword |
 | Traits | Brave 5, Greedy 1, Lazy 2, Loyal 5 |

@@ -12,6 +12,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Goblin quest chain culminating in the Barrow Hill chief
 - Male and female hero creation across four visual classes
 - Gender-consistent class sprites for every named adventurer
+- Human adventurer cast while distinctive fantasy-race artwork is deferred
 - Tavern recruitment notices with travel time and three-candidate shortlists
 - Persistent adventurer profiles and two complementary sprite atlases
 - Positive and negative quirks with real quest effects

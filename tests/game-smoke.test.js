@@ -83,7 +83,7 @@ test("a timed encounter exposes the founder's class response and records the cho
   const context = createGameContext();
   const result = run(context, `
     state.adventurers = [{
-      id: "founder", name: "Jenny", gender: "female", race: "Human", classId: "warden", founder: true,
+      id: "founder", name: "Jenny", gender: "female", classId: "warden", founder: true,
       level: 1, xp: 0, status: "busy", recovery: 0, potential: 5,
       stats: { str: 9, mag: 3, wit: 5, cha: 5 }, traits: {},
       quirks: { positive: "dauntless", negative: "homesick" }, abilities: ["shieldBash"], lifeLog: []
@@ -113,7 +113,7 @@ test("an ignored encounter automatically uses the cautious party response", () =
   const context = createGameContext();
   const result = run(context, `
     state.adventurers = [{
-      id: "mage", name: "Mira", gender: "female", race: "Elf", classId: "spellwright", founder: false,
+      id: "mage", name: "Mira", gender: "female", classId: "spellwright", founder: false,
       level: 1, xp: 0, status: "busy", recovery: 0, potential: 3,
       stats: { str: 3, mag: 9, wit: 7, cha: 4 }, traits: {},
       quirks: { positive: "quickStudy", negative: "stubborn" }, abilities: ["emberBolt"], lifeLog: []
@@ -141,7 +141,7 @@ test("quirk-gated cache choices add loot to persistent Guild Stores", () => {
   const context = createGameContext();
   const result = run(context, `
     state.adventurers = [{
-      id: "ranger", name: "Elowen", gender: "female", race: "Elf", classId: "ranger", founder: false,
+      id: "ranger", name: "Elowen", gender: "female", classId: "ranger", founder: false,
       level: 2, xp: 0, status: "busy", recovery: 0, potential: 4,
       stats: { str: 6, mag: 4, wit: 10, cha: 5 }, traits: {},
       quirks: { positive: "keenEye", negative: "frail" }, abilities: ["aimedShot"], lifeLog: []
@@ -200,7 +200,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 11);
+  assert.equal(result.version, 12);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -247,8 +247,8 @@ test("new games begin with one founder and tavern notices produce a shortlist af
 test("named adventurers use matching male and female class sprite rows", () => {
   const context = createGameContext();
   const result = run(context, `({
-    maleMage: renderSprite({ classId: "spellwright", gender: "male", race: "Human", founder: false }),
-    femaleMage: renderSprite({ classId: "spellwright", gender: "female", race: "Human", founder: false }),
+    maleMage: renderSprite({ classId: "spellwright", gender: "male", founder: false }),
+    femaleMage: renderSprite({ classId: "spellwright", gender: "female", founder: false }),
     maleWarrior: getSpriteSlot({ classId: "warden", gender: "male", founder: false }),
     femaleWarrior: getSpriteSlot({ classId: "warden", gender: "female", founder: false })
   })`);
@@ -257,6 +257,48 @@ test("named adventurers use matching male and female class sprite rows", () => {
   assert.match(result.femaleMage, /slot-5 hero-atlas/);
   assert.equal(result.maleWarrior, 0);
   assert.equal(result.femaleWarrior, 4);
+});
+
+test("legacy race data is removed from characters and never rendered", () => {
+  const legacyAdventurer = {
+    id: "seren", name: "Seren", gender: "female", race: "Lizardfolk", classId: "rookie", founder: false,
+    level: 1, xp: 0, status: "idle", recovery: 0, potential: 4, age: 27,
+    stats: { str: 5, mag: 4, wit: 5, cha: 5 }, traits: {},
+    quirks: { positive: "hearty", negative: "stubborn" }, abilities: ["luckySwing"], lifeLog: []
+  };
+  const legacyCandidate = {
+    ...legacyAdventurer,
+    id: "mira", name: "Mira", race: "Elf", classId: "spellwright", status: "candidate"
+  };
+  const context = createGameContext({
+    version: 11,
+    screen: "game",
+    day: 2,
+    adventurers: [legacyAdventurer],
+    recruitment: { unlocked: true, order: null, candidates: [legacyCandidate], hires: 0 },
+    facilities: { tavern: 1, questBoard: 0, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "recruitment", completedLocalMissions: [], charterEarned: false },
+    log: [],
+    founderCreated: true
+  });
+  const result = run(context, `
+    selectedAdventurerId = "seren";
+    renderRoster();
+    ({ version: state.version,
+       heroHasRace: Object.hasOwn(state.adventurers[0], "race"),
+       candidateHasRace: Object.hasOwn(state.recruitment.candidates[0], "race"),
+       rosterMarkup: elements.rosterList.innerHTML,
+       candidateMarkup: elements.recruitmentPanel.innerHTML,
+       profileMarkup: elements.adventurerDetail.innerHTML });
+  `);
+
+  assert.equal(result.version, 12);
+  assert.equal(result.heroHasRace, false);
+  assert.equal(result.candidateHasRace, false);
+  assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
+  assert.doesNotMatch(result.candidateMarkup, /Lizardfolk|Elf/);
+  assert.doesNotMatch(result.profileMarkup, /Lizardfolk|Elf/);
+  assert.match(result.profileMarkup, /Female Rookie \| Level 1/);
 });
 
 test("management views compact the map while quest views keep it expanded", () => {
@@ -345,7 +387,7 @@ test("encounter bonuses flow into final gold, fame, experience, and injury prote
   const context = createGameContext();
   const result = run(context, `
     state.adventurers = [{
-      id: "founder", name: "Jenny", gender: "female", race: "Human", classId: "warden", founder: true,
+      id: "founder", name: "Jenny", gender: "female", classId: "warden", founder: true,
       level: 1, xp: 0, status: "busy", recovery: 0, potential: 5,
       stats: { str: 9, mag: 3, wit: 5, cha: 5 }, traits: {},
       quirks: { positive: "quickStudy", negative: "homesick" }, abilities: ["shieldBash"], lifeLog: []

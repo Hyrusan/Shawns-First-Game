@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 11;
+const SAVE_VERSION = 12;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -524,18 +524,6 @@ const names = [
   "Ludo"
 ];
 
-const races = [
-  { name: "Human", note: "Adaptable and quick to settle into guild life." },
-  { name: "Elf", note: "Patient, observant, and fond of long plans." },
-  { name: "Dwarf", note: "Stubborn in the best possible way." },
-  { name: "Halfling", note: "Cheerful, lucky, and sharper than they look." },
-  { name: "Orc", note: "Direct, loyal, and hard to knock over." },
-  { name: "Lizardfolk", note: "Calm under pressure and excellent in bad weather." },
-  { name: "Tiefling", note: "Dramatic flair, clever instincts, dangerous smile." },
-  { name: "Fairy", note: "Tiny, quick, and entirely too confident." },
-  { name: "Angel", note: "A rare soul with an inconvenient sense of duty." }
-];
-
 const favouriteFoods = [
   "fresh bread",
   "mushroom stew",
@@ -738,7 +726,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1363,7 +1351,7 @@ function renderGuildhallInterior() {
       return `
         <button class="guild-room ${room.id} built ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
           <span class="room-label">${room.label}</span>
-          <span class="room-scene">${renderSprite({ classId: room.occupant, race: "Human", name: room.label }, "small")}</span>
+          <span class="room-scene">${renderSprite({ classId: room.occupant, name: room.label }, "small")}</span>
           <span class="room-furniture" aria-hidden="true"></span>
           <span class="room-glow" aria-hidden="true"></span>
           <span class="room-level-chip">Lv ${level}</span>
@@ -1481,7 +1469,7 @@ function renderRoster() {
                 <h3>${adventurer.name}</h3>
                 <span class="badge">${statusText}</span>
               </div>
-              <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${adventurer.race} ${classes[adventurer.classId].label} | Age ${adventurer.age}</p>
+              <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${classes[adventurer.classId].label} | Age ${adventurer.age}</p>
               <div class="quirk-peek">
                 <span class="positive">+ ${quirkCatalog[adventurer.quirks.positive].name}</span>
                 <span class="negative">- ${quirkCatalog[adventurer.quirks.negative].name}</span>
@@ -1557,7 +1545,7 @@ function renderRecruitmentPanel() {
           ${recruitment.candidates.map((candidate) => `
             <article class="candidate-card">
               <div class="candidate-sprite">${renderSprite(candidate)}</div>
-              <div class="candidate-name"><h4>${candidate.name}</h4><span>${candidate.gender === "female" ? "Female" : "Male"} ${candidate.race}</span></div>
+              <div class="candidate-name"><h4>${candidate.name}</h4><span>${candidate.gender === "female" ? "Female" : "Male"}</span></div>
               <strong class="candidate-class">${classes[candidate.classId].label}</strong>
               <div class="candidate-potential"><span>Potential</span>${renderPotential(candidate.potential)}</div>
               <div class="candidate-quirks"><span class="positive">+ ${quirkCatalog[candidate.quirks.positive].name}</span><span class="negative">- ${quirkCatalog[candidate.quirks.negative].name}</span></div>
@@ -1596,7 +1584,6 @@ function renderAdventurerDetail() {
     return;
   }
 
-  const race = races.find((item) => item.name === adventurer.race);
   const xpProgress = Math.round((adventurer.xp / xpForNext(adventurer.level)) * 100);
   const history = (adventurer.lifeLog || [])
     .slice(0, 5)
@@ -1610,7 +1597,7 @@ function renderAdventurerDetail() {
         <div>
           <p class="eyebrow">${adventurer.founder ? "Founder" : "Guild Adventurer"}</p>
           <h3>${adventurer.name}</h3>
-          <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${adventurer.race} ${classes[adventurer.classId].label} | Level ${adventurer.level} | ${adventurer.status}</p>
+          <p class="card-meta">${adventurer.gender === "female" ? "Female" : "Male"} ${classes[adventurer.classId].label} | Level ${adventurer.level} | ${adventurer.status}</p>
           <div class="xp-line"><span>Experience</span><strong>${adventurer.xp}/${xpForNext(adventurer.level)}</strong></div>
           <div class="progress-track slim"><div class="progress-fill" style="width:${xpProgress}%"></div></div>
           <div class="potential-line">
@@ -1639,8 +1626,6 @@ function renderAdventurerDetail() {
           <strong>${adventurer.origin}</strong>
         </div>
       </div>
-
-      <p class="profile-note">${race?.note || "A curious soul with a future to write."}</p>
 
       <section class="character-section">
         <div class="section-line-heading">
@@ -2198,16 +2183,6 @@ function getSpriteSlot(adventurer) {
     const genderRow = adventurer.gender === "female" ? 4 : 0;
     return (classSlots[adventurer.classId] ?? 0) + genderRow;
   }
-  const raceSlots = {
-    Dwarf: 4,
-    Angel: 5,
-    Orc: 6,
-    Tiefling: 7,
-    Lizardfolk: 7
-  };
-  if (raceSlots[adventurer.race] !== undefined) {
-    return raceSlots[adventurer.race];
-  }
   return adventurer.classId === "rookie" ? 4 : classSlots[adventurer.classId] ?? 0;
 }
 
@@ -2248,7 +2223,7 @@ function renderFounderPreview() {
   const gender = elements.founderGender.value || "male";
   const name = cleanName(elements.founderName.value) || "Your Hero";
   updateCreatorSelectionState();
-  elements.founderPreview.innerHTML = `${renderSprite({ classId, gender, race: "Human", name, founder: true })}<span>${gender === "female" ? "Female" : "Male"} ${classes[classId].label}</span>`;
+  elements.founderPreview.innerHTML = `${renderSprite({ classId, gender, name, founder: true })}<span>${gender === "female" ? "Female" : "Male"} ${classes[classId].label}</span>`;
 }
 
 function createFounder() {
@@ -2373,7 +2348,6 @@ function makeAdventurer(name, classId, founder, gender = null) {
 }
 
 function makeIdentity(name, classId, founder, day, gender = null) {
-  const race = founder ? races[0] : pick(races);
   const origin = founder
     ? "Answered Mara's call when goblins threatened the Wayfarer's Rest"
     : pick(origins);
@@ -2383,7 +2357,6 @@ function makeIdentity(name, classId, founder, day, gender = null) {
     : `${origin} and joined Guildstead as a ${className}.`;
 
   return {
-    race: race.name,
     gender: gender || (Math.random() > 0.5 ? "female" : "male"),
     age: founder ? 19 : 18 + Math.floor(Math.random() * 15),
     favouriteFood: pick(favouriteFoods),
@@ -2402,12 +2375,12 @@ function normaliseAdventurer(adventurer, day) {
   const legacyFounderGender = ["spellwright", "ranger"].includes(classId) ? "female" : "male";
   const gender = adventurer.gender || (adventurer.founder ? legacyFounderGender : (Math.random() > 0.5 ? "female" : "male"));
   const identity = makeIdentity(adventurer.name || "Adventurer", classId, Boolean(adventurer.founder), day || 1, gender);
+  const { race: _legacyRace, ...savedAdventurer } = adventurer;
   const normalised = {
-    ...adventurer,
+    ...savedAdventurer,
     name: adventurer.name || "Adventurer",
     classId,
     gender,
-    race: adventurer.race || identity.race,
     age: adventurer.age || identity.age,
     favouriteFood: adventurer.favouriteFood || identity.favouriteFood,
     dream: adventurer.dream || identity.dream,

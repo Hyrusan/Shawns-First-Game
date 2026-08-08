@@ -29,21 +29,6 @@
 | Hard | Save the Moon Abbey | West Abbey | Charm | Major reputation |
 | Hard | Duel the Fallen Knight | Crownspine Mountains | Strength | Rival event |
 
-## Fantasy Races
-
-| Race | Bonus | Personality Lean |
-| --- | --- | --- |
-| Human | Learns a little faster | Flexible |
-| Elf | Magic and wit bonus | Patient |
-| Dwarf | Strength and loyalty bonus | Stubborn |
-| Halfling | Charm and luck bonus | Cheerful |
-| Orc | Strength bonus | Bold |
-| Goblin | Wit and scavenging bonus | Mischievous |
-| Lizardfolk | Injury resistance | Calm |
-| Tiefling | Magic and risk bonus | Ambitious |
-| Fairy | Charm and magic bonus | Fickle |
-| Angel | Loyalty and healing bonus | Dutiful |
-
 ## Personality Traits
 
 | Trait | Low | High |

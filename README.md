@@ -16,6 +16,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Tavern recruitment notices with travel time and three-candidate shortlists
 - Persistent adventurer profiles and two complementary sprite atlases
 - Positive and negative quirks with real quest effects
+- Choice-driven Tavern Life events that shape gold, experience, traits, and character history
+- Persistent friendships and rivalries with visible expedition chemistry bonuses
 - Timed Training Yard drills and teachable techniques with potential-based capacity
 - Three-person expedition parties
 - Inline quest-party selection with availability and mission-fit indicators
@@ -60,7 +62,7 @@ The latest version from `main` is automatically published through GitHub Pages:
 - `game.js`: simulation state, rendering, missions, facilities, and saves
 - `assets/`: generated sprites, the Western March map, and the map theme
 - `docs/`: design direction, visual references, and content seeds
-- `tests/`: deterministic gameplay smoke tests for progression, training, saves, and expeditions
+- `tests/`: deterministic gameplay smoke tests for progression, training, relationships, saves, and expeditions
 
 ## Testing
 
@@ -72,4 +74,4 @@ node --test tests\game-smoke.test.js
 
 ## Status
 
-Guildstead is an evolving playable prototype. Story content, relationships, equipment, region progression, and generational adventurer systems are planned for later development.
+Guildstead is an evolving playable prototype. More story content, equipment, region progression, deeper relationships, and generational adventurer systems are planned for later development.

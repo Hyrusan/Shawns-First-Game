@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=23">
+    <link rel="stylesheet" href="styles.css?v=25">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -196,6 +196,7 @@
               </section>
 
               <section class="view-panel active" data-panel="guildhall">
+                <div id="tavernEventPanel" class="tavern-event-panel hidden" aria-live="polite"></div>
                 <div id="guildhallInterior" class="guildhall-interior" aria-label="Guildhall interior management view"></div>
                 <div id="guildhallRoomDetail" class="guildhall-room-detail"></div>
               </section>
@@ -272,8 +273,23 @@
       </div>
     </section>
 
+    <section id="tavernLifeDialog" class="event-dialog tavern-life-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="tavernLifeTitle">
+      <div class="event-panel tavern-life-panel">
+        <div id="tavernLifeArt" class="tavern-life-art" aria-hidden="true"></div>
+        <div class="event-copy tavern-life-copy">
+          <p id="tavernLifeEyebrow" class="eyebrow">Tavern Life</p>
+          <h2 id="tavernLifeTitle">A Moment At The Tavern</h2>
+          <p id="tavernLifeText"></p>
+          <div id="tavernLifeChoices" class="tavern-life-choices"></div>
+          <div class="event-actions tavern-life-actions">
+            <button id="closeTavernLifeButton" class="secondary-button" type="button">Decide Later</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=23"></script>
+    <script src="game.js?v=25"></script>
   </body>
 </html>

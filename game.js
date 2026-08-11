@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 13;
+const SAVE_VERSION = 14;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -134,6 +134,272 @@ const chapterMoments = {
     text: "With the Barrow Hill goblins defeated, the Western March finally has a recognised adventurers' guild. The Wayfarer's Rest is now Guildstead Hall, and its next chapter is yours to build.",
     button: "Raise the Guild Banner",
     view: "guildhall"
+  }
+};
+
+const tavernLifeEvents = {
+  sharedMeal: {
+    eyebrow: "Tavern Life",
+    mark: "Supper",
+    title: "A Table For Two",
+    description: "The rush has finally eased. {a} and {b} claim the table nearest the hearth, but neither seems quite sure how to begin the conversation.",
+    participantCount: 2,
+    minHeroes: 2,
+    choices: [
+      {
+        id: "houseMeal",
+        label: "Put On A House Meal",
+        note: "12G | A generous supper builds a stronger friendship.",
+        cost: 12,
+        relationship: 3,
+        xp: 3,
+        traits: { loyal: 1 },
+        outcome: "Mara brings out the good plates. By the empty bowls, {a} and {b} are already trading favourite stories."
+      },
+      {
+        id: "swapStories",
+        label: "Encourage Their Stories",
+        note: "A warm conversation builds curiosity and trust.",
+        relationship: 2,
+        xp: 2,
+        traits: { curious: 1 },
+        outcome: "One story becomes five. {a} and {b} discover they have more in common than either expected."
+      },
+      {
+        id: "helpMara",
+        label: "Ask Them To Help Mara",
+        note: "+8G | Shared work creates a modest bond.",
+        gold: 8,
+        relationship: 1,
+        traits: { loyal: 1 },
+        outcome: "They spend the evening clearing tables together. Mara gains two useful hands, and {a} and {b} find an easy rhythm."
+      }
+    ]
+  },
+  sparringChallenge: {
+    eyebrow: "Tavern Life",
+    mark: "Challenge",
+    title: "A Friendly Challenge",
+    description: "A boast from {a} has turned into a challenge from {b}. Chairs are being moved, wagers are appearing, and Mara is looking directly at you.",
+    participantCount: 2,
+    minHeroes: 2,
+    choices: [
+      {
+        id: "supervise",
+        label: "Supervise The Match",
+        note: "8G | Safe equipment, useful practice and a stronger bond.",
+        cost: 8,
+        relationship: 2,
+        xp: 5,
+        traits: { brave: 1 },
+        outcome: "With proper rules in place, the match is fierce, fair, and only slightly expensive in broken crockery."
+      },
+      {
+        id: "cheer",
+        label: "Let The Tavern Cheer",
+        note: "+1 fame | Pride rises alongside a new rivalry.",
+        fame: 1,
+        relationship: -3,
+        xp: 3,
+        traits: { proud: 1 },
+        outcome: "The common room roars with every exchange. {a} and {b} finish grinning, but neither intends to forget the score."
+      },
+      {
+        id: "coolIt",
+        label: "Cool Things Down",
+        note: "A quiet end keeps the peace, though neither hero is impressed.",
+        relationship: -1,
+        traits: { loyal: 1 },
+        outcome: "You call time before the furniture becomes involved. Peace returns, accompanied by two deeply unconvinced looks."
+      }
+    ]
+  },
+  trainingRivalry: {
+    eyebrow: "Training Yard",
+    mark: "Rivals",
+    title: "One More Round",
+    description: "The yard should have closed an hour ago, but {a} and {b} are still trying to outdo one another beneath the lanterns.",
+    participantCount: 2,
+    minHeroes: 2,
+    requiresFacility: "trainingYard",
+    choices: [
+      {
+        id: "jointDrill",
+        label: "Set A Joint Drill",
+        note: "10G | Good coaching turns competition into teamwork.",
+        cost: 10,
+        relationship: 3,
+        xp: 6,
+        traits: { loyal: 1 },
+        outcome: "You give them a challenge that can only be solved together. The rivalry survives, but now it has respect beneath it."
+      },
+      {
+        id: "keepScore",
+        label: "Keep An Official Score",
+        note: "+1 fame | Strong experience, stronger rivalry.",
+        fame: 1,
+        relationship: -3,
+        xp: 7,
+        traits: { proud: 1 },
+        outcome: "Mara produces a chalkboard. By midnight, half the tavern knows the score and both heroes demand a rematch."
+      },
+      {
+        id: "sendToBed",
+        label: "Send Them To Bed",
+        note: "Small experience gain with no further drama.",
+        xp: 2,
+        outcome: "The lanterns go out and the yard finally falls quiet. Neither hero admits to being relieved."
+      }
+    ]
+  },
+  spellbook: {
+    eyebrow: "A Curious Find",
+    mark: "Tome",
+    title: "The Book Beneath The Bar",
+    description: "{a} has found a rain-warped spellbook wedged beneath an old shelf. {b} is already peering over their shoulder as faint letters appear across the page.",
+    participantCount: 2,
+    minHeroes: 1,
+    anchorClass: "spellwright",
+    choices: [
+      {
+        id: "restoreBook",
+        label: "Pay To Restore It",
+        note: "30G | {a} gains +1 MAG.",
+        cost: 30,
+        stat: { id: "mag", amount: 1, target: 0 },
+        relationship: 1,
+        outcome: "A bookbinder saves the surviving pages. {a} spends the next evening filling the margins with excited notes."
+      },
+      {
+        id: "studyTogether",
+        label: "Study It Together",
+        note: "8G | Experience, curiosity and friendship.",
+        cost: 8,
+        relationship: 2,
+        xp: 6,
+        traits: { curious: 1 },
+        outcome: "The pair puzzle over the faded script until the fire burns low, testing every theory that does not threaten the roof."
+      },
+      {
+        id: "shelveIt",
+        label: "Keep It For Later",
+        note: "No cost | A sensible decision, according to Mara.",
+        traits: { loyal: 1 },
+        outcome: "The spellbook is wrapped, labelled, and placed somewhere considerably less flammable."
+      }
+    ]
+  },
+  homesickLetter: {
+    eyebrow: "A Quiet Evening",
+    mark: "Letter",
+    title: "A Long Way From Home",
+    description: "Mara finds {a} sitting alone with an unfinished letter. {b} lingers nearby, unsure whether company would help.",
+    participantCount: 2,
+    minHeroes: 1,
+    anchorQuirk: "homesick",
+    choices: [
+      {
+        id: "comfortMeal",
+        label: "Cook A Familiar Meal",
+        note: "10G | Comfort, loyalty and a warmer friendship.",
+        cost: 10,
+        relationship: 2,
+        xp: 3,
+        traits: { loyal: 1 },
+        outcome: "The recipe is imperfect, but the smell is close enough. {a} talks late into the evening instead of sitting alone."
+      },
+      {
+        id: "sendLetter",
+        label: "Send The Letter",
+        note: "3G | A thoughtful gesture builds loyalty.",
+        cost: 3,
+        xp: 3,
+        traits: { loyal: 1 },
+        outcome: "You add the letter to the morning post. {a} seems lighter before the courier has even left."
+      },
+      {
+        id: "keepBusy",
+        label: "Give Them A Useful Task",
+        note: "+6G | Bravery rises, but the evening stays distant.",
+        gold: 6,
+        traits: { brave: 1, loyal: -1 },
+        outcome: "Work fills the silence. By closing time the shelves shine, though the letter remains unfinished."
+      }
+    ]
+  },
+  minstrelNight: {
+    eyebrow: "Tavern Life",
+    mark: "Music",
+    title: "A Song For Guildstead",
+    description: "{a} tests a new melody by the hearth. {b} starts tapping along, and soon the whole room is waiting for the next verse.",
+    participantCount: 2,
+    minHeroes: 1,
+    anchorClass: "minstrel",
+    choices: [
+      {
+        id: "properPerformance",
+        label: "Make It A Proper Show",
+        note: "15G | +2 fame and a strong shared memory.",
+        cost: 15,
+        fame: 2,
+        relationship: 2,
+        xp: 4,
+        traits: { proud: 1 },
+        outcome: "Candles are lit and the doors stay open late. By the final chorus, even Mara is singing."
+      },
+      {
+        id: "openFloor",
+        label: "Open The Floor",
+        note: "+1 fame | Everyone joins in and friendship grows.",
+        fame: 1,
+        relationship: 2,
+        traits: { curious: 1 },
+        outcome: "The polished song becomes a cheerful mess of improvised verses. Nobody performs it well, which appears to be the point."
+      },
+      {
+        id: "quietSong",
+        label: "Keep It For The Guild",
+        note: "Experience and loyalty, with no crowd required.",
+        xp: 4,
+        relationship: 1,
+        traits: { loyal: 1 },
+        outcome: "The doors close and the last verse belongs only to the guild. It is the one everyone remembers."
+      }
+    ]
+  },
+  restlessEvening: {
+    eyebrow: "Tavern Life",
+    mark: "Evening",
+    title: "Too Restless To Sit Still",
+    description: "With no expedition tonight, {a} paces the common room looking for something useful to do. Mara slides a list of possibilities across the bar.",
+    participantCount: 1,
+    minHeroes: 1,
+    choices: [
+      {
+        id: "practice",
+        label: "Practise By The Hearth",
+        note: "A focused evening grants experience and bravery.",
+        xp: 6,
+        traits: { brave: 1 },
+        outcome: "{a} turns an empty corner into a practice space and keeps at it until closing time."
+      },
+      {
+        id: "helpMara",
+        label: "Help Mara Close Up",
+        note: "+8G | A practical evening builds loyalty.",
+        gold: 8,
+        traits: { loyal: 1 },
+        outcome: "The work is hardly heroic, but the tavern closes early and Mara quietly adds extra coin to the guild purse."
+      },
+      {
+        id: "tellStories",
+        label: "Entertain The Regulars",
+        note: "+1 fame | Curiosity grows with every embellished detail.",
+        fame: 1,
+        traits: { curious: 1 },
+        outcome: "By the third telling, the puddle is a raging river and the goblin has become at least eight feet tall. The regulars approve."
+      }
+    ]
   }
 };
 
@@ -588,6 +854,7 @@ let selectedAdventurerId = null;
 let partyPickerMissionId = null;
 let mapModeOverride = null;
 let toastTimer = null;
+let tavernLifeDialogOpen = false;
 const state = loadState();
 
 const elements = {
@@ -610,6 +877,7 @@ const elements = {
   facilityList: document.querySelector("#facilityList"),
   guildhallInterior: document.querySelector("#guildhallInterior"),
   guildhallRoomDetail: document.querySelector("#guildhallRoomDetail"),
+  tavernEventPanel: document.querySelector("#tavernEventPanel"),
   realmMap: document.querySelector("#realmMap"),
   contextScene: document.querySelector("#contextScene"),
   contextEyebrow: document.querySelector("#contextEyebrow"),
@@ -658,6 +926,13 @@ const elements = {
   chapterDialogTitle: document.querySelector("#chapterDialogTitle"),
   chapterDialogText: document.querySelector("#chapterDialogText"),
   chapterDialogButton: document.querySelector("#chapterDialogButton"),
+  tavernLifeDialog: document.querySelector("#tavernLifeDialog"),
+  tavernLifeArt: document.querySelector("#tavernLifeArt"),
+  tavernLifeEyebrow: document.querySelector("#tavernLifeEyebrow"),
+  tavernLifeTitle: document.querySelector("#tavernLifeTitle"),
+  tavernLifeText: document.querySelector("#tavernLifeText"),
+  tavernLifeChoices: document.querySelector("#tavernLifeChoices"),
+  closeTavernLife: document.querySelector("#closeTavernLifeButton"),
   toastRail: document.querySelector("#toastRail")
 };
 
@@ -677,6 +952,7 @@ elements.mapFocus.addEventListener("click", toggleMapFocus);
 elements.closeEvent.addEventListener("click", closeEventDialog);
 elements.viewEvent.addEventListener("click", viewPopupEvent);
 elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
+elements.closeTavernLife.addEventListener("click", closeTavernLifeEvent);
 elements.founderName.addEventListener("input", renderFounderPreview);
 elements.founderClassOptions.forEach((button) => {
   button.addEventListener("click", () => selectFounderClass(button.dataset.founderClass));
@@ -707,6 +983,12 @@ function defaultState() {
     selectedIds: [],
     activeMissions: [],
     trainingJobs: [],
+    relationships: {},
+    tavernLife: {
+      active: null,
+      resolved: [],
+      lastEventDay: 0
+    },
     eventMissions: [],
     inventory: {},
     recruitment: {
@@ -743,7 +1025,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -783,6 +1065,8 @@ function loadState() {
       selectedIds: []
     };
     loaded.adventurers = (saved.adventurers || []).map((adventurer) => normaliseAdventurer(adventurer, loaded.day));
+    loaded.relationships = normaliseRelationships(saved.relationships, loaded.adventurers);
+    loaded.tavernLife = normaliseTavernLife(saved.tavernLife, loaded.adventurers);
     loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
     loaded.trainingJobs = (saved.trainingJobs || [])
       .map(normaliseTrainingJob)
@@ -837,6 +1121,7 @@ function resetGame() {
   selectedAdventurerId = null;
   partyPickerMissionId = null;
   mapModeOverride = null;
+  tavernLifeDialogOpen = false;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
   Object.assign(state, fresh);
@@ -882,6 +1167,7 @@ function render() {
 
   renderRooms();
   renderFacilities();
+  renderTavernEventPanel();
   renderGuildhallInterior();
   renderMap();
   renderRoster();
@@ -891,6 +1177,7 @@ function render() {
   renderLog();
   renderStores();
   renderEventDialog();
+  renderTavernLifeDialog();
   renderChapterDialog();
   renderChapterProgress();
   renderActiveView();
@@ -942,9 +1229,10 @@ function renderScreens() {
   const introOpen = state.screen === "intro";
   const eventOpen = Boolean(currentPopupEventId);
   const chapterOpen = Boolean(currentChapterMomentId);
+  const tavernLifeOpen = Boolean(tavernLifeDialogOpen && state.tavernLife.active);
   elements.titleScreen.classList.toggle("hidden", !titleOpen);
   elements.introScene.classList.toggle("hidden", !introOpen);
-  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen);
+  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen || tavernLifeOpen);
 }
 
 function renderIntroScene() {
@@ -1133,8 +1421,12 @@ function getContextSceneMeta(view) {
 function renderLivingTavern(sceneMeta) {
   const heroesAtHome = state.adventurers.filter((adventurer) => ["idle", "injured"].includes(adventurer.status));
   const applicants = activeView === "adventurers" ? state.recruitment.candidates.slice(0, 2) : [];
+  const storyParticipantIds = new Set(state.tavernLife.active?.participantIds || []);
   const people = [
-    ...heroesAtHome.slice(0, Math.max(1, 5 - applicants.length)).map((adventurer) => ({ adventurer, role: adventurer.status === "injured" ? "Resting" : "Off duty" })),
+    ...heroesAtHome
+      .sort((a, b) => Number(storyParticipantIds.has(b.id)) - Number(storyParticipantIds.has(a.id)))
+      .slice(0, Math.max(1, 5 - applicants.length))
+      .map((adventurer) => ({ adventurer, role: storyParticipantIds.has(adventurer.id) ? "Story" : adventurer.status === "injured" ? "Resting" : "Off duty" })),
     ...applicants.map((adventurer) => ({ adventurer, role: "Applicant" }))
   ].slice(0, 5);
   const tavernLevel = state.facilities.tavern || 1;
@@ -1172,7 +1464,7 @@ function renderContextPatron(adventurer, index, role) {
   const activities = ["Sharing a meal", "Trading stories", "Studying notices", "Warming by the fire", "Helping Mara"];
   const activity = role === "Applicant" ? "Waiting for a decision" : adventurer.status === "injured" ? "Recovering" : activities[index % activities.length];
   return `
-    <span class="context-patron patron-${index} ${role === "Applicant" ? "applicant" : ""} ${adventurer.status === "injured" ? "resting" : ""}" title="${adventurer.name}: ${activity}">
+    <span class="context-patron patron-${index} ${role === "Applicant" ? "applicant" : ""} ${role === "Story" ? "story" : ""} ${adventurer.status === "injured" ? "resting" : ""}" title="${adventurer.name}: ${activity}">
       ${renderSprite(adventurer, "context-sprite")}
       <span class="patron-label"><strong>${adventurer.name}</strong><small>${role}</small></span>
     </span>
@@ -1269,7 +1561,9 @@ function renderActiveView() {
 
   elements.dockButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.view === activeView);
-    button.classList.toggle("attention", button.dataset.view === "adventurers" && state.recruitment.candidates.length > 0);
+    const needsAttention = (button.dataset.view === "adventurers" && state.recruitment.candidates.length > 0)
+      || (button.dataset.view === "guildhall" && Boolean(state.tavernLife.active));
+    button.classList.toggle("attention", needsAttention);
   });
 
   elements.viewPanels.forEach((panel) => {
@@ -1371,6 +1665,84 @@ function renderMapLayout() {
     : contextual ? "View the realm map" : "Return to the tavern interior";
   elements.mapFocus.setAttribute("aria-label", action);
   elements.mapFocus.title = action;
+}
+
+function renderTavernEventPanel() {
+  if (!elements.tavernEventPanel) {
+    return;
+  }
+  const active = state.tavernLife.active;
+  const story = getTavernLifeStory(active);
+  elements.tavernEventPanel.classList.toggle("hidden", !story);
+  if (!story) {
+    elements.tavernEventPanel.innerHTML = "";
+    return;
+  }
+  const names = story.participants.map((adventurer) => adventurer.name).join(" & ");
+  elements.tavernEventPanel.innerHTML = `
+    <section class="tavern-story-callout">
+      <span class="tavern-story-mark" aria-hidden="true">${story.template.mark}</span>
+      <div class="tavern-story-faces" aria-hidden="true">
+        ${story.participants.map((adventurer) => renderSprite(adventurer, "small")).join("")}
+      </div>
+      <div class="tavern-story-copy">
+        <p class="eyebrow">A moment at the tavern | Day ${active.day}</p>
+        <h3>${story.template.title}</h3>
+        <span>${names || "Mara"} ${story.participants.length === 1 ? "needs" : "need"} the Guildmaster's attention.</span>
+      </div>
+      <button class="primary-button" data-open-tavern-story type="button">See What Happened</button>
+    </section>
+  `;
+  elements.tavernEventPanel.querySelector("[data-open-tavern-story]")?.addEventListener("click", openTavernLifeEvent);
+}
+
+function renderTavernLifeDialog() {
+  const story = getTavernLifeStory(state.tavernLife.active);
+  const visible = Boolean(story && tavernLifeDialogOpen);
+  elements.tavernLifeDialog.classList.toggle("hidden", !visible);
+  if (!visible) {
+    return;
+  }
+
+  elements.tavernLifeEyebrow.textContent = `${story.template.eyebrow} | Day ${state.tavernLife.active.day}`;
+  elements.tavernLifeTitle.textContent = story.template.title;
+  elements.tavernLifeText.textContent = formatTavernLifeText(story.template.description, story.participants);
+  elements.tavernLifeArt.innerHTML = `
+    <span class="tavern-life-vignette" aria-hidden="true"></span>
+    <span class="tavern-life-caption">${story.template.mark}</span>
+    <span class="tavern-life-cast" aria-hidden="true">
+      ${story.participants.map((adventurer, index) => `<span class="tavern-life-hero story-hero-${index}">${renderSprite(adventurer, "context-sprite")}</span>`).join("")}
+    </span>
+  `;
+  elements.tavernLifeChoices.innerHTML = story.template.choices.map((choice) => {
+    const disabled = (choice.cost || 0) > state.gold;
+    const note = formatTavernLifeText(choice.note, story.participants);
+    return `
+      <button data-tavern-choice="${choice.id}" type="button" ${disabled ? "disabled" : ""}>
+        <span class="choice-mark" aria-hidden="true">${choice.cost ? `${choice.cost}G` : choice.gold ? `+${choice.gold}G` : "+"}</span>
+        <span><strong>${choice.label}</strong><small>${disabled ? `Needs ${choice.cost}G. ` : ""}${note}</small></span>
+      </button>
+    `;
+  }).join("");
+  elements.tavernLifeChoices.querySelectorAll("[data-tavern-choice]").forEach((button) => {
+    button.addEventListener("click", () => resolveTavernLifeChoice(button.dataset.tavernChoice));
+  });
+}
+
+function openTavernLifeEvent() {
+  if (!state.tavernLife.active) {
+    return;
+  }
+  currentPopupEventId = null;
+  currentChapterMomentId = null;
+  tavernLifeDialogOpen = true;
+  activeView = "guildhall";
+  render();
+}
+
+function closeTavernLifeEvent() {
+  tavernLifeDialogOpen = false;
+  render();
 }
 
 function renderGuildhallInterior() {
@@ -1762,6 +2134,8 @@ function renderAdventurerDetail() {
 
       ${renderTrainingCurriculum(adventurer)}
 
+      ${renderRelationships(adventurer)}
+
       <div class="section-line-heading personality-heading">
         <p class="eyebrow">Personality</p>
         <span>Life at the guild shapes these traits</span>
@@ -1779,6 +2153,13 @@ function renderAdventurerDetail() {
 
   elements.adventurerDetail.querySelectorAll("[data-start-training]").forEach((button) => {
     button.addEventListener("click", () => startTraining(adventurer.id, button.dataset.trainingKind, button.dataset.startTraining));
+  });
+  elements.adventurerDetail.querySelectorAll("[data-view-relationship]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedAdventurerId = button.dataset.viewRelationship;
+      renderRoster();
+      elements.adventurerDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
   });
 }
 
@@ -2664,6 +3045,273 @@ function pick(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
+function getRelationshipKey(firstId, secondId) {
+  return [firstId, secondId].sort().join("::");
+}
+
+function normaliseRelationships(savedRelationships, adventurers) {
+  const knownIds = new Set(adventurers.map((adventurer) => adventurer.id));
+  const normalised = {};
+  Object.entries(savedRelationships || {}).forEach(([key, savedRelationship]) => {
+    const [firstId, secondId] = key.split("::");
+    if (!firstId || !secondId || firstId === secondId || !knownIds.has(firstId) || !knownIds.has(secondId)) {
+      return;
+    }
+    const relationship = typeof savedRelationship === "number" ? { score: savedRelationship } : savedRelationship || {};
+    normalised[getRelationshipKey(firstId, secondId)] = {
+      score: Math.max(-10, Math.min(10, Number(relationship.score) || 0)),
+      moments: Array.isArray(relationship.moments) ? relationship.moments.slice(0, 8) : []
+    };
+  });
+  return normalised;
+}
+
+function normaliseTavernLife(savedTavernLife, adventurers) {
+  const knownIds = new Set(adventurers.map((adventurer) => adventurer.id));
+  const saved = savedTavernLife || {};
+  const active = saved.active
+    && tavernLifeEvents[saved.active.templateId]
+    && Array.isArray(saved.active.participantIds)
+    && saved.active.participantIds.length > 0
+    && saved.active.participantIds.every((id) => knownIds.has(id))
+      ? {
+          id: saved.active.id || `tavern-${crypto.randomUUID()}`,
+          templateId: saved.active.templateId,
+          participantIds: saved.active.participantIds,
+          day: Math.max(1, Number(saved.active.day) || 1)
+        }
+      : null;
+  return {
+    active,
+    resolved: Array.isArray(saved.resolved) ? saved.resolved.slice(0, 20) : [],
+    lastEventDay: Math.max(0, Number(saved.lastEventDay) || 0)
+  };
+}
+
+function getRelationship(firstId, secondId) {
+  if (!firstId || !secondId || firstId === secondId) {
+    return { score: 0, moments: [] };
+  }
+  return state.relationships[getRelationshipKey(firstId, secondId)] || { score: 0, moments: [] };
+}
+
+function adjustRelationship(firstId, secondId, amount, moment) {
+  if (!firstId || !secondId || firstId === secondId || !amount) {
+    return 0;
+  }
+  const key = getRelationshipKey(firstId, secondId);
+  const relationship = state.relationships[key] || { score: 0, moments: [] };
+  relationship.score = Math.max(-10, Math.min(10, relationship.score + amount));
+  if (moment) {
+    relationship.moments.unshift({ day: state.day, text: moment });
+    relationship.moments = relationship.moments.slice(0, 8);
+  }
+  state.relationships[key] = relationship;
+  return relationship.score;
+}
+
+function getRelationshipTier(score) {
+  if (score >= 6) {
+    return { label: "Close friends", tone: "close", power: 2 };
+  }
+  if (score >= 2) {
+    return { label: "Friends", tone: "friends", power: 1 };
+  }
+  if (score <= -6) {
+    return { label: "Rivals", tone: "rivals", power: -2 };
+  }
+  if (score <= -3) {
+    return { label: "Tense", tone: "tense", power: -1 };
+  }
+  return { label: "Acquaintances", tone: "neutral", power: 0 };
+}
+
+function getRelationshipPartyPower(party) {
+  let power = 0;
+  for (let firstIndex = 0; firstIndex < party.length; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < party.length; secondIndex += 1) {
+      power += getRelationshipTier(getRelationship(party[firstIndex].id, party[secondIndex].id).score).power;
+    }
+  }
+  return power;
+}
+
+function renderRelationships(adventurer) {
+  const bonds = state.adventurers
+    .filter((other) => other.id !== adventurer.id)
+    .map((other) => ({ other, relationship: state.relationships[getRelationshipKey(adventurer.id, other.id)] }))
+    .filter((bond) => bond.relationship)
+    .sort((a, b) => Math.abs(b.relationship.score) - Math.abs(a.relationship.score));
+  const content = bonds.length
+    ? bonds.map(({ other, relationship }) => {
+        const tier = getRelationshipTier(relationship.score);
+        const position = Math.round(((relationship.score + 10) / 20) * 100);
+        const powerText = tier.power ? `${tier.power > 0 ? "+" : ""}${tier.power} party power together` : "No party effect yet";
+        return `
+          <button class="relationship-row ${tier.tone}" data-view-relationship="${other.id}" type="button">
+            <span class="relationship-sprite">${renderSprite(other, "small")}</span>
+            <span class="relationship-copy"><strong>${other.name}</strong><small>${tier.label} | ${powerText}</small></span>
+            <span class="relationship-score">${relationship.score > 0 ? "+" : ""}${relationship.score}</span>
+            <span class="relationship-meter" aria-label="Relationship ${relationship.score} from minus 10 to 10"><i style="left:${position}%"></i></span>
+          </button>
+        `;
+      }).join("")
+    : `<p class="relationship-empty">Bonds form through the choices you make during Tavern Life events.</p>`;
+  return `
+    <section class="character-section relationship-section">
+      <div class="section-line-heading">
+        <p class="eyebrow">Relationships</p>
+        <span>Friendship and rivalry affect party power</span>
+      </div>
+      <div class="relationship-list">${content}</div>
+    </section>
+  `;
+}
+
+function getTavernLifeStory(active) {
+  if (!active) {
+    return null;
+  }
+  const template = tavernLifeEvents[active.templateId];
+  const participants = (active.participantIds || []).map(getAdventurer).filter(Boolean);
+  return template && participants.length ? { active, template, participants } : null;
+}
+
+function formatTavernLifeText(text, participants) {
+  const firstName = participants[0]?.name || "Mara";
+  const secondName = participants[1]?.name || "Mara";
+  return String(text || "").replaceAll("{a}", firstName).replaceAll("{b}", secondName);
+}
+
+function getEligibleTavernLifeTemplates(idleHeroes) {
+  return Object.entries(tavernLifeEvents).filter(([, template]) => {
+    if (idleHeroes.length < template.minHeroes) {
+      return false;
+    }
+    if (template.requiresFacility && (state.facilities[template.requiresFacility] || 0) < 1) {
+      return false;
+    }
+    if (template.anchorClass && !idleHeroes.some((adventurer) => adventurer.classId === template.anchorClass)) {
+      return false;
+    }
+    if (template.anchorQuirk && !idleHeroes.some((adventurer) => Object.values(adventurer.quirks || {}).includes(template.anchorQuirk))) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function pickTavernLifeParticipants(template, idleHeroes) {
+  let anchorPool = idleHeroes;
+  if (template.anchorClass) {
+    anchorPool = idleHeroes.filter((adventurer) => adventurer.classId === template.anchorClass);
+  } else if (template.anchorQuirk) {
+    anchorPool = idleHeroes.filter((adventurer) => Object.values(adventurer.quirks || {}).includes(template.anchorQuirk));
+  }
+  const first = pick(anchorPool);
+  const participants = first ? [first] : [];
+  if (template.participantCount > 1) {
+    const companions = idleHeroes.filter((adventurer) => adventurer.id !== first?.id);
+    if (companions.length) {
+      participants.push(pick(companions));
+    }
+  }
+  return participants;
+}
+
+function createTavernLifeEvent(templateId, participantIds = null, openDialog = true) {
+  if (state.tavernLife.active || !tavernLifeEvents[templateId]) {
+    return false;
+  }
+  const template = tavernLifeEvents[templateId];
+  const idleHeroes = state.adventurers.filter((adventurer) => adventurer.status === "idle");
+  const participants = participantIds
+    ? participantIds.map(getAdventurer).filter((adventurer) => adventurer?.status === "idle")
+    : pickTavernLifeParticipants(template, idleHeroes);
+  if (participants.length < template.minHeroes) {
+    return false;
+  }
+  const active = {
+    id: `tavern-${crypto.randomUUID()}`,
+    templateId,
+    participantIds: participants.map((adventurer) => adventurer.id),
+    day: state.day
+  };
+  state.tavernLife.active = active;
+  state.tavernLife.lastEventDay = state.day;
+  tavernLifeDialogOpen = Boolean(openDialog && !currentPopupEventId && !currentChapterMomentId);
+  addLog(`Tavern Life: ${template.title} begins with ${participants.map((adventurer) => adventurer.name).join(" and ")}.`);
+  return active;
+}
+
+function maybeCreateTavernEvent(force = false, preferredTemplateId = null) {
+  if (state.tavernLife.active || !state.founderCreated) {
+    return false;
+  }
+  const idleHeroes = state.adventurers.filter((adventurer) => adventurer.status === "idle");
+  if (!idleHeroes.length) {
+    return false;
+  }
+  const daysSinceLastEvent = state.day - state.tavernLife.lastEventDay;
+  const firstStory = state.tavernLife.resolved.length === 0 && state.tavernLife.lastEventDay === 0;
+  if (!force && !firstStory && (daysSinceLastEvent < 2 || Math.random() > 0.62)) {
+    return false;
+  }
+  let eligible = getEligibleTavernLifeTemplates(idleHeroes);
+  if (idleHeroes.length > 1) {
+    const socialEvents = eligible.filter(([, template]) => template.participantCount > 1);
+    eligible = socialEvents.length ? socialEvents : eligible;
+  }
+  const preferred = eligible.find(([id]) => id === preferredTemplateId);
+  const selected = preferred || pick(eligible);
+  return selected ? createTavernLifeEvent(selected[0]) : false;
+}
+
+function resolveTavernLifeChoice(choiceId) {
+  const story = getTavernLifeStory(state.tavernLife.active);
+  const choice = story?.template.choices.find((item) => item.id === choiceId);
+  if (!story || !choice || state.gold < (choice.cost || 0)) {
+    return false;
+  }
+  state.gold -= choice.cost || 0;
+  state.gold += choice.gold || 0;
+  state.fame += choice.fame || 0;
+  story.participants.forEach((adventurer) => {
+    if (choice.xp) {
+      grantXp(adventurer, choice.xp);
+    }
+    Object.entries(choice.traits || {}).forEach(([trait, amount]) => {
+      adventurer.traits[trait] = Math.max(1, Math.min(5, (adventurer.traits[trait] || 1) + amount));
+    });
+  });
+  if (choice.stat) {
+    const target = story.participants[choice.stat.target || 0];
+    if (target?.stats[choice.stat.id] !== undefined) {
+      target.stats[choice.stat.id] += choice.stat.amount;
+    }
+  }
+  const outcome = formatTavernLifeText(choice.outcome, story.participants);
+  if (story.participants.length > 1 && choice.relationship) {
+    adjustRelationship(story.participants[0].id, story.participants[1].id, choice.relationship, outcome);
+  }
+  story.participants.forEach((adventurer) => addLifeEvent(adventurer, outcome));
+  state.tavernLife.resolved.unshift({
+    id: story.active.id,
+    templateId: story.active.templateId,
+    participantIds: story.active.participantIds,
+    choiceId,
+    outcome,
+    day: state.day
+  });
+  state.tavernLife.resolved = state.tavernLife.resolved.slice(0, 20);
+  state.tavernLife.active = null;
+  tavernLifeDialogOpen = false;
+  addLog(outcome);
+  render();
+  showToast("Tavern story resolved", outcome, choice.relationship < 0 ? "info" : "success");
+  return true;
+}
+
 function getNaturalAbilityIds(classId, level) {
   return (classAbilityTracks[classId] || [])
     .filter((id) => abilityCatalog[id].level <= level);
@@ -3129,7 +3777,7 @@ function getPartyPower(party, mission) {
     state.facilities.kitchen * 2 +
     state.facilities.dormitory +
     state.facilities.tavern;
-  return Math.floor(statPower / 3 + facilityPower);
+  return Math.floor(statPower / 3 + facilityPower) + getRelationshipPartyPower(party);
 }
 
 function grantXp(adventurer, amount) {
@@ -3286,14 +3934,17 @@ function advanceDays(amount) {
   } else {
     addLog(`A steady day brings in ${stipend}G from odd jobs and room hire.`);
   }
-  if (state.founderCreated && state.facilities.questBoard > 0 && state.day % 3 === 0 && state.eventMissions.length < 2) {
+  const recruitmentArrived = processRecruitmentArrivals();
+  const tavernEventCreated = !recruitmentArrived && maybeCreateTavernEvent();
+  if (!tavernEventCreated && state.founderCreated && state.facilities.questBoard > 0 && state.day % 3 === 0 && state.eventMissions.length < 2) {
     scoutForEvent(true);
   }
-  processRecruitmentArrivals();
   render();
   if (completedTraining.length > 0) {
     const names = completedTraining.map((job) => getAdventurer(job.adventurerId)?.name).filter(Boolean);
     showToast("Training complete", `${names.join(", ")} ${names.length === 1 ? "is" : "are"} ready for duty.`, "success");
+  } else if (tavernEventCreated) {
+    showToast("A Tavern story begins", "Something is happening back at the Wayfarer's Rest.", "info");
   }
 }
 

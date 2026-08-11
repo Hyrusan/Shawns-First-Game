@@ -85,7 +85,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=23/);
+  assert.match(index, /styles\.css\?v=25/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -96,7 +96,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=23/);
+  assert.match(index, /game\.js\?v=25/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -224,7 +224,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 13);
+  assert.equal(result.version, 14);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -336,7 +336,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 13);
+  assert.equal(result.version, 14);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -493,7 +493,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 13);
+  assert.equal(result.version, 14);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -618,4 +618,142 @@ test("encounter bonuses flow into final gold, fame, experience, and injury prote
   assert.equal(result.xp, 18);
   assert.equal(result.protectedStatus, "idle");
   assert.equal(result.protectedRecovery, 0);
+});
+
+test("Tavern Life choices create persistent bonds, history, and profile UI", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const first = makeAdventurer("Alden", "warden", true, "male");
+    const second = makeAdventurer("Mira", "spellwright", false, "female");
+    state.adventurers = [first, second];
+    state.founderCreated = true;
+    state.gold = 100;
+    selectedAdventurerId = first.id;
+    const created = createTavernLifeEvent("sharedMeal", [first.id, second.id], true);
+    renderTavernEventPanel();
+    renderTavernLifeDialog();
+    const callout = elements.tavernEventPanel.innerHTML;
+    const dialog = elements.tavernLifeChoices.innerHTML;
+    resolveTavernLifeChoice("houseMeal");
+    selectedAdventurerId = first.id;
+    renderAdventurerDetail();
+    const relationship = getRelationship(first.id, second.id);
+    ({ created: Boolean(created), callout, dialog, gold: state.gold, firstXp: first.xp, secondXp: second.xp,
+       score: relationship.score, active: state.tavernLife.active, resolved: state.tavernLife.resolved.length,
+       firstHistory: first.lifeLog[0].text, secondHistory: second.lifeLog[0].text,
+       profile: elements.adventurerDetail.innerHTML });
+  `);
+
+  assert.equal(result.created, true);
+  assert.match(result.callout, /A Table For Two/);
+  assert.match(result.callout, /Alden &amp; Mira|Alden & Mira/);
+  assert.match(result.dialog, /Put On A House Meal/);
+  assert.equal(result.gold, 88);
+  assert.equal(result.firstXp, 3);
+  assert.equal(result.secondXp, 3);
+  assert.equal(result.score, 3);
+  assert.equal(result.active, null);
+  assert.equal(result.resolved, 1);
+  assert.match(result.firstHistory, /good plates/);
+  assert.match(result.secondHistory, /good plates/);
+  assert.match(result.profile, /Relationships/);
+  assert.match(result.profile, /Mira/);
+  assert.match(result.profile, /Friends \| \+1 party power together/);
+});
+
+test("friendships and rivalries symmetrically modify expedition power within limits", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const first = makeAdventurer("Alden", "warden", true, "male");
+    const second = makeAdventurer("Mira", "spellwright", false, "female");
+    state.adventurers = [first, second];
+    const mission = missionDeck[0];
+    const baseline = getPartyPower([first, second], mission);
+    adjustRelationship(first.id, second.id, 99, "Became inseparable.");
+    const friendshipScore = getRelationship(second.id, first.id).score;
+    const friendshipPower = getPartyPower([first, second], mission);
+    adjustRelationship(second.id, first.id, -99, "A legendary disagreement.");
+    const rivalryScore = getRelationship(first.id, second.id).score;
+    const rivalryPower = getPartyPower([first, second], mission);
+    ({ baseline, friendshipScore, friendshipPower, rivalryScore, rivalryPower,
+       keyForward: getRelationshipKey(first.id, second.id), keyReverse: getRelationshipKey(second.id, first.id) });
+  `);
+
+  assert.equal(result.friendshipScore, 10);
+  assert.equal(result.friendshipPower, result.baseline + 2);
+  assert.equal(result.rivalryScore, -10);
+  assert.equal(result.rivalryPower, result.baseline - 2);
+  assert.equal(result.keyForward, result.keyReverse);
+});
+
+test("the first eligible day guarantees a Tavern Life event before an automatic realm event", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.screen = "game";
+    advanceDays(1);
+    ({ day: state.day, activeTemplate: state.tavernLife.active?.templateId,
+       activeDay: state.tavernLife.active?.day, dialogOpen: tavernLifeDialogOpen,
+       lastEventDay: state.tavernLife.lastEventDay, realmEvents: state.eventMissions.length });
+  `);
+
+  assert.equal(result.day, 2);
+  assert.ok(["homesickLetter", "restlessEvening"].includes(result.activeTemplate));
+  assert.equal(result.activeDay, 2);
+  assert.equal(result.dialogOpen, true);
+  assert.equal(result.lastEventDay, 2);
+  assert.equal(result.realmEvents, 0);
+});
+
+test("version 13 saves gain relationship and Tavern Life defaults without losing heroes", () => {
+  const context = createGameContext({
+    version: 13,
+    screen: "game",
+    day: 6,
+    gold: 160,
+    fame: 8,
+    adventurers: [{
+      id: "legacy-founder", name: "Jenny", gender: "female", classId: "ranger", founder: true,
+      level: 2, xp: 4, status: "idle", recovery: 0, potential: 5,
+      stats: { str: 7, mag: 4, wit: 10, cha: 5 }, traits: {}, trainingStats: {},
+      quirks: { positive: "keenEye", negative: "homesick" }, abilities: ["aimedShot"], lifeLog: []
+    }],
+    activeMissions: [],
+    trainingJobs: [],
+    eventMissions: [],
+    recruitment: { unlocked: true, order: null, candidates: [], hires: 0 },
+    facilities: { tavern: 2, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: [], charterEarned: false },
+    log: [],
+    founderCreated: true,
+    musicMuted: true
+  });
+  const result = run(context, `({
+    version: state.version,
+    heroName: state.adventurers[0].name,
+    relationshipKeys: Object.keys(state.relationships).length,
+    activeStory: state.tavernLife.active,
+    resolvedStories: state.tavernLife.resolved.length,
+    lastEventDay: state.tavernLife.lastEventDay
+  })`);
+
+  assert.equal(result.version, 14);
+  assert.equal(result.heroName, "Jenny");
+  assert.equal(result.relationshipKeys, 0);
+  assert.equal(result.activeStory, null);
+  assert.equal(result.resolvedStories, 0);
+  assert.equal(result.lastEventDay, 0);
+});
+
+test("the Tavern Life interface ships its painted scene and responsive controls", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+  assert.match(index, /id="tavernEventPanel"/);
+  assert.match(index, /id="tavernLifeDialog"/);
+  assert.match(styles, /\.tavern-life-art[\s\S]*url\("assets\/tavern-interior-v1\.webp"\)/);
+  assert.match(styles, /\.relationship-list/);
+  assert.match(styles, /@media \(max-width: 560px\)[\s\S]*\.tavern-life-choices button/);
 });

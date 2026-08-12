@@ -85,7 +85,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=25/);
+  assert.match(index, /styles\.css\?v=28/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -96,7 +96,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=25/);
+  assert.match(index, /game\.js\?v=28/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -756,4 +756,34 @@ test("the Tavern Life interface ships its painted scene and responsive controls"
   assert.match(styles, /\.tavern-life-art[\s\S]*url\("assets\/tavern-interior-v1\.webp"\)/);
   assert.match(styles, /\.relationship-list/);
   assert.match(styles, /@media \(max-width: 560px\)[\s\S]*\.tavern-life-choices button/);
+});
+
+test("painted facility emblems replace letter badges and false room occupants", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const atlas = path.join(__dirname, "..", "assets", "facility-icons-v1.webp");
+  const context = createGameContext();
+  const result = run(context, `
+    state.screen = "game";
+    state.founderCreated = true;
+    state.facilities = { tavern: 1, questBoard: 1, dormitory: 1, trainingYard: 1, kitchen: 1, workshop: 1 };
+    renderRooms();
+    renderFacilities();
+    renderGuildhallInterior();
+    renderMap();
+    ({ roomGrid: elements.roomGrid.innerHTML, facilityList: elements.facilityList.innerHTML,
+       guildhall: elements.guildhallInterior.innerHTML, detail: elements.guildhallRoomDetail.innerHTML,
+       map: elements.realmMap.innerHTML });
+  `);
+
+  assert.ok(fs.existsSync(atlas));
+  assert.ok(fs.statSync(atlas).size > 300_000);
+  assert.match(styles, /url\("assets\/facility-icons-v1\.webp"\)/);
+  assert.match(styles, /\.facility-emblem\.emblem-tavern[\s\S]*\.facility-emblem\.emblem-workshop/);
+  assert.match(result.roomGrid, /facility-emblem emblem-tavern room-icon/);
+  assert.match(result.facilityList, /facility-emblem emblem-questBoard facility-icon/);
+  assert.match(result.guildhall, /facility-emblem emblem-dormitory guild-room-emblem/);
+  assert.match(result.detail, /facility-emblem emblem-tavern room-detail-icon/);
+  assert.match(result.map, /facility-emblem emblem-trainingYard map-facility-emblem/);
+  assert.match(result.map, /facility-emblem emblem-tavern map-guild-emblem/);
+  assert.doesNotMatch(result.guildhall, /room-scene/);
 });

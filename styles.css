@@ -5239,6 +5239,267 @@
 }
 
 @layer management {
+  .facility-emblem {
+    display: block;
+    flex: 0 0 auto;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 5px;
+    background-color: #071516;
+    background-image: url("assets/facility-icons-v1.webp");
+    background-repeat: no-repeat;
+    background-size: 300% 200%;
+    box-shadow: 0 3px 0 rgb(18 10 7 / 48%), 0 8px 16px rgb(10 8 6 / 20%);
+  }
+
+  .facility-emblem.emblem-tavern { background-position: 0 0; }
+  .facility-emblem.emblem-questBoard { background-position: 50% 0; }
+  .facility-emblem.emblem-dormitory { background-position: 100% 0; }
+  .facility-emblem.emblem-trainingYard { background-position: 0 100%; }
+  .facility-emblem.emblem-kitchen { background-position: 50% 100%; }
+  .facility-emblem.emblem-workshop { background-position: 100% 100%; }
+
+  .room-icon {
+    position: absolute;
+    top: 7px;
+    left: 7px;
+    z-index: 3;
+    width: 42px;
+    border: 0;
+    background-color: #071516;
+  }
+
+  .room-decoration {
+    right: 8px;
+    top: 10px;
+    width: 48px;
+    height: 40px;
+    opacity: 0.55;
+  }
+
+  .room-name {
+    top: 10px;
+    right: 57px;
+    bottom: auto;
+    left: 57px;
+    overflow: hidden;
+    max-width: none;
+    color: #2b1b11;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .room-level {
+    top: 32px;
+    right: auto;
+    bottom: auto;
+    left: 57px;
+  }
+
+  .facility-card {
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 11px;
+  }
+
+  .facility-icon {
+    width: 58px;
+    border: 0;
+    background-color: #071516;
+    color: transparent;
+  }
+
+  .facility-card.available .facility-icon {
+    animation: facility-emblem-ready 2.4s ease-in-out infinite;
+  }
+
+  .facility-card.locked .facility-icon,
+  .room.locked .room-icon {
+    filter: saturate(0.25) brightness(0.68);
+  }
+
+  @keyframes facility-emblem-ready {
+    50% { filter: brightness(1.1); box-shadow: 0 3px 0 rgb(18 10 7 / 48%), 0 0 18px rgb(223 170 70 / 32%); }
+  }
+
+  .map-building {
+    width: 43px;
+    height: 43px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    clip-path: none;
+  }
+
+  .map-building::before { display: none; }
+
+  .map-facility-emblem {
+    width: 43px;
+    border-radius: 6px;
+    filter: drop-shadow(0 3px 2px rgb(20 12 8 / 52%));
+  }
+
+  .map-guild,
+  .map-guild.tavern-map {
+    width: 47px;
+    height: 47px;
+  }
+
+  .map-guild .map-town,
+  .map-guild.tavern-map .map-town {
+    display: block;
+    width: 47px;
+    height: 47px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    box-shadow: none;
+    filter: none;
+  }
+
+  .map-guild .map-town::after,
+  .map-guild.chartered .map-town::after {
+    display: none;
+    content: none;
+  }
+
+  .map-guild-emblem {
+    width: 47px;
+    border-radius: 7px;
+    filter: drop-shadow(0 3px 2px rgb(20 12 8 / 56%));
+  }
+
+  .map-guild .map-town > i,
+  .map-guild.tavern-map .map-town > i {
+    display: none;
+  }
+
+  .guild-room-emblem {
+    position: absolute;
+    bottom: 13px;
+    left: 9%;
+    z-index: 4;
+    width: 78px;
+    border-radius: 7px;
+    filter: drop-shadow(0 5px 3px rgb(20 10 6 / 45%));
+    transition: filter 160ms ease, scale 160ms ease;
+  }
+
+  .guild-room:hover:not(:disabled) .guild-room-emblem {
+    filter: brightness(1.08) drop-shadow(0 7px 4px rgb(20 10 6 / 48%));
+    scale: 1.03;
+  }
+
+  .guild-room.selected .guild-room-emblem {
+    box-shadow: 0 3px 0 rgb(18 10 7 / 48%), 0 0 20px rgb(240 189 84 / 25%);
+  }
+
+  .guild-room.has-occupant .guild-room-emblem {
+    right: 10%;
+    bottom: 19px;
+    left: auto;
+    width: 58px;
+    opacity: 0.82;
+  }
+
+  .guild-room.has-occupant .room-scene {
+    left: 14%;
+  }
+
+  .guild-room.empty-room {
+    display: block;
+    padding: 0;
+  }
+
+  .guild-room.empty-room .guild-room-emblem {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    width: 70px;
+    opacity: 0.52;
+    translate: -50% -50%;
+  }
+
+  .guild-room.empty-room.available .guild-room-emblem {
+    filter: saturate(0.7) brightness(0.88);
+  }
+
+  .guild-room.empty-room.locked .guild-room-emblem {
+    filter: grayscale(0.72) brightness(0.58);
+  }
+
+  .empty-room-sigil {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 27px);
+    z-index: 6;
+    width: 28px;
+    font-size: 0.82rem;
+    translate: -50% -50%;
+  }
+
+  .empty-room-copy {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    z-index: 7;
+    max-width: none;
+    padding: 3px 5px;
+    border-radius: 3px;
+    background: rgb(15 22 20 / 84%);
+    color: #d1bd8a;
+  }
+
+  .room-detail-card {
+    grid-template-columns: 62px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .room-detail-icon {
+    width: 62px;
+    border: 0;
+    background-color: #071516;
+  }
+}
+
+@layer responsive {
+  @media (max-width: 720px) {
+    .facility-card {
+      grid-template-columns: 52px minmax(0, 1fr);
+    }
+
+    .facility-card > button {
+      grid-column: 1 / -1;
+      width: 100%;
+    }
+
+    .facility-icon { width: 52px; }
+    .room-detail-card { grid-template-columns: 52px minmax(0, 1fr); }
+    .room-detail-icon { width: 52px; }
+    .room-detail-card > button { grid-column: 1 / -1; width: 100%; }
+
+    .guild-room-emblem { width: 64px; }
+    .guild-room.empty-room .guild-room-emblem { width: 60px; }
+  }
+
+  @media (max-width: 480px) {
+    .room-icon { width: 34px; }
+    .room-decoration { width: 39px; height: 32px; }
+    .room-name { right: 42px; left: 48px; }
+    .room-level { top: 29px; left: 48px; }
+    .guild-room-emblem { width: 55px; }
+    .guild-room.has-occupant .guild-room-emblem { width: 45px; }
+    .guild-room.empty-room .guild-room-emblem { width: 52px; }
+    .empty-room-sigil { left: calc(50% + 20px); width: 24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .facility-card.available .facility-icon { animation: none; }
+  }
+}
+
+@layer management {
   .tavern-event-panel.hidden {
     display: none;
   }

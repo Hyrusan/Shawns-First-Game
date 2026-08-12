@@ -1255,7 +1255,7 @@ function renderRooms() {
       const built = level > 0;
       return `
         <article class="room room-${facility.id} ${built ? "built" : unlocked ? "available" : "locked"}" style="grid-column:${facility.gridColumn};grid-row:${facility.gridRow};--room-colour:${facility.colour}">
-          <span class="room-icon">${facility.icon}</span>
+          ${renderFacilityEmblem(facility.id, "room-icon")}
           <span class="room-name">${facility.name}</span>
           <span class="room-level">${built ? `Level ${level}` : unlocked ? "Available" : "Locked"}</span>
           <span class="room-decoration" aria-hidden="true"></span>
@@ -1276,7 +1276,7 @@ function renderFacilities() {
       const levelPips = Array.from({ length: 5 }, (_, index) => `<i class="${index < level ? "filled" : ""}"></i>`).join("");
       return `
         <article class="facility-card ${built ? "built" : unlocked ? "available" : "locked"}">
-          <span class="facility-icon" style="--facility-colour:${facility.colour}" aria-hidden="true">${facility.icon}</span>
+          ${renderFacilityEmblem(facility.id, "facility-icon")}
           <div class="facility-copy">
             <div class="facility-title">
               <h3>${facility.name}</h3>
@@ -1303,7 +1303,7 @@ function renderMap() {
     .filter((facility) => facility.id !== "tavern" && state.facilities[facility.id] > 0)
     .map((facility) => `
       <button class="map-facility facility-${facility.id}" data-map-view="facilities" style="left:${facility.mapLeft};top:${facility.mapTop};--marker-colour:${facility.colour}" type="button" aria-label="${facility.name}, level ${state.facilities[facility.id]}">
-        <span class="map-building" aria-hidden="true"><i>${facility.icon}</i></span>
+        <span class="map-building" aria-hidden="true">${renderFacilityEmblem(facility.id, "map-facility-emblem")}</span>
         <span class="map-label">${facility.name}<b>Lv ${state.facilities[facility.id]}</b></span>
       </button>
     `)
@@ -1356,7 +1356,7 @@ function renderMap() {
     <span class="region-label region-hollow">Darkhollow</span>
     <span class="map-compass" aria-hidden="true">N<i></i></span>
     <button class="map-guild ${state.chapter.charterEarned ? "chartered" : "tavern-map"}" data-map-view="guildhall" type="button">
-      <div class="map-town" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="map-town" aria-hidden="true">${renderFacilityEmblem("tavern", "map-guild-emblem")}<i></i><i></i><i></i></div>
       <span class="map-label">${getVenueName()}<b>${state.chapter.charterEarned ? `Guild Rank ${getRank()}` : "Roadside Tavern"}</b></span>
     </button>
     ${facilityMarkers}
@@ -1758,15 +1758,17 @@ function renderGuildhallInterior() {
         return `
           <button class="guild-room ${room.id} empty-room ${unlocked ? "available" : "locked"} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
             <span class="room-label">${room.label}</span>
+            ${renderFacilityEmblem(room.facilityId, "guild-room-emblem")}
             <span class="empty-room-sigil" aria-hidden="true">${unlocked ? "+" : "?"}</span>
             <span class="empty-room-copy">${unlocked ? "Ready to build" : getFacilityUnlockText(room.facilityId)}</span>
           </button>
         `;
       }
       return `
-        <button class="guild-room ${room.id} built ${roomTrainingJobs.length ? "training-active" : ""} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
+        <button class="guild-room ${room.id} built ${trainee ? "has-occupant" : ""} ${roomTrainingJobs.length ? "training-active" : ""} ${selected ? "selected" : ""}" data-guild-room="${room.id}" type="button">
           <span class="room-label">${room.label}</span>
-          <span class="room-scene">${renderSprite(trainee || { classId: room.occupant, name: room.label }, "small")}</span>
+          ${renderFacilityEmblem(room.facilityId, "guild-room-emblem")}
+          ${trainee ? `<span class="room-scene">${renderSprite(trainee, "small")}</span>` : ""}
           <span class="room-furniture" aria-hidden="true"></span>
           <span class="room-glow" aria-hidden="true"></span>
           ${roomTrainingJobs.length ? `<span class="room-training-sparks" aria-hidden="true"><i></i><i></i><i></i></span>` : ""}
@@ -1805,7 +1807,7 @@ function renderGuildRoomDetail() {
     : "The yard is ready for its next trainee.";
   elements.guildhallRoomDetail.innerHTML = `
     <article class="room-detail-card">
-      <span class="room-detail-icon" aria-hidden="true">${room.label.slice(0, 1)}</span>
+      ${renderFacilityEmblem(room.facilityId, "room-detail-icon")}
       <div class="room-detail-copy">
         <p class="eyebrow">${built ? "Selected room" : "Construction space"}</p>
         <h3>${room.name} ${built ? `<span>Level ${level}</span>` : ""}</h3>
@@ -2760,6 +2762,11 @@ function renderSprite(adventurer, extraClass = "") {
   const slot = getSpriteSlot(adventurer);
   const atlasClass = usesGenderedSpriteAtlas(adventurer) ? "hero-atlas" : "";
   return `<span class="unit-sprite slot-${slot} ${atlasClass} ${extraClass}" aria-hidden="true"></span>`;
+}
+
+function renderFacilityEmblem(facilityId, extraClass = "") {
+  const validId = facilities.some((facility) => facility.id === facilityId) ? facilityId : "tavern";
+  return `<span class="facility-emblem emblem-${validId} ${extraClass}" aria-hidden="true"></span>`;
 }
 
 function usesGenderedSpriteAtlas(adventurer) {

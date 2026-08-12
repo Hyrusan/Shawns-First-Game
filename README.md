@@ -28,6 +28,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Recoverable curios stored in the Guild Stores ledger
 - Mission odds, rewards, injuries, experience, and levelling
 - Room construction, blueprint unlocks, and facility upgrades
+- Hand-painted facility emblems across the Hall, build screens, and world map
 - Official guild charter milestone and evolving tavern presentation
 - Timed realm events and animated mission dispatch
 - Local browser save data

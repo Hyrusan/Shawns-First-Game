@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 14;
+const SAVE_VERSION = 15;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -484,6 +484,122 @@ const facilities = [
   }
 ];
 
+const facilityOrderCatalog = [
+  {
+    id: "hostTravellers",
+    facilityId: "tavern",
+    mark: "G",
+    title: "Host Travellers",
+    description: "Give the best tables to passing merchants and turn hospitality into coin.",
+    outcome: "Earns 12G plus 4G per Tavern level tonight.",
+    effect: "goldIncome"
+  },
+  {
+    id: "heroesTable",
+    facilityId: "tavern",
+    mark: "H",
+    title: "Heroes' Table",
+    description: "Set aside a proper supper so the adventurers can unwind together.",
+    outcome: "Available heroes gain experience and friendship.",
+    effect: "heroSupper",
+    requiresIdle: 1
+  },
+  {
+    id: "gatherRumours",
+    facilityId: "questBoard",
+    mark: "!",
+    title: "Gather Rumours",
+    description: "Pay a runner to follow whispers of trouble beyond Greenbank.",
+    outcome: "Reveals a new timed realm event tonight.",
+    effect: "realmEvent"
+  },
+  {
+    id: "featureContract",
+    facilityId: "questBoard",
+    mark: "Q",
+    title: "Feature A Contract",
+    description: "Give the next expedition pride of place on Mara's noticeboard.",
+    outcome: "Adds 18G plus 4G per Board level to the next quest reward.",
+    effect: "questGold"
+  },
+  {
+    id: "recoveryRound",
+    facilityId: "dormitory",
+    mark: "+",
+    title: "Recovery Round",
+    description: "Fresh linens, hot water, and a firm instruction to stay in bed.",
+    outcome: "Cuts recovery time for every injured adventurer.",
+    effect: "recovery",
+    requiresInjured: 1
+  },
+  {
+    id: "sharedQuarters",
+    facilityId: "dormitory",
+    mark: "2",
+    title: "Shared Quarters",
+    description: "Pair two available heroes on the evening room rota.",
+    outcome: "Builds a stronger bond between two adventurers.",
+    effect: "bond",
+    requiresIdle: 2
+  },
+  {
+    id: "openPractice",
+    facilityId: "trainingYard",
+    mark: "X",
+    title: "Open Practice",
+    description: "Run a lively group drill for everyone currently at the guild.",
+    outcome: "Every available hero gains experience tonight.",
+    effect: "idleXp",
+    requiresIdle: 1
+  },
+  {
+    id: "tacticalBriefing",
+    facilityId: "trainingYard",
+    mark: "T",
+    title: "Tactical Briefing",
+    description: "Study routes, monsters, and escape plans before anyone departs.",
+    outcome: "Adds power to the next expedition.",
+    effect: "questPower"
+  },
+  {
+    id: "packProvisions",
+    facilityId: "kitchen",
+    mark: "P",
+    title: "Pack Provisions",
+    description: "Prepare trail food, tonics, and one morale-saving sweet bun.",
+    outcome: "Adds a larger power bonus to the next expedition.",
+    effect: "provisions"
+  },
+  {
+    id: "heartySupper",
+    facilityId: "kitchen",
+    mark: "S",
+    title: "Hearty Supper",
+    description: "Serve a restorative house meal to every adventurer at home.",
+    outcome: "Available heroes gain experience and friendship.",
+    effect: "heroSupper",
+    requiresIdle: 1
+  },
+  {
+    id: "sharpenGear",
+    facilityId: "workshop",
+    mark: "W",
+    title: "Sharpen Gear",
+    description: "Inspect weapons, tighten straps, and remove avoidable surprises.",
+    outcome: "Adds workshop power to the next expedition.",
+    effect: "workshopPower"
+  },
+  {
+    id: "repairKits",
+    facilityId: "workshop",
+    mark: "+",
+    title: "Pack Repair Kits",
+    description: "Prepare splints, tools, and emergency supplies for the road.",
+    outcome: "Prevents one injury if the next expedition fails.",
+    effect: "injuryShield"
+  }
+];
+
 const guildRooms = [
   {
     id: "tavernRoom",
@@ -887,6 +1003,7 @@ const elements = {
   mapFocus: document.querySelector("#mapFocusButton"),
   mapStatus: document.querySelector("#mapStatus"),
   chapterObjective: document.querySelector("#chapterObjective"),
+  guildActionBar: document.querySelector("#guildActionBar"),
   eventMissionList: document.querySelector("#eventMissionList"),
   scoutEvent: document.querySelector("#scoutEventButton"),
   musicToggle: document.querySelector("#musicToggleButton"),
@@ -944,7 +1061,7 @@ elements.recruit.addEventListener("click", postRecruitmentNotice);
 elements.reset.addEventListener("click", resetGame);
 elements.nextDay.addEventListener("click", () => advanceDays(1));
 elements.scoutEvent.addEventListener("click", () => {
-  scoutForEvent(true);
+  scoutForEvent(true, true);
   render();
 });
 elements.musicToggle.addEventListener("click", toggleMapMusic);
@@ -989,6 +1106,16 @@ function defaultState() {
       resolved: [],
       lastEventDay: 0
     },
+    guildActions: {
+      day: 1,
+      spent: 0,
+      orders: []
+    },
+    guildPreparations: {
+      nextQuestPower: 0,
+      nextQuestGoldBonus: 0,
+      nextQuestInjuryShield: 0
+    },
     eventMissions: [],
     inventory: {},
     recruitment: {
@@ -1025,7 +1152,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1067,6 +1194,8 @@ function loadState() {
     loaded.adventurers = (saved.adventurers || []).map((adventurer) => normaliseAdventurer(adventurer, loaded.day));
     loaded.relationships = normaliseRelationships(saved.relationships, loaded.adventurers);
     loaded.tavernLife = normaliseTavernLife(saved.tavernLife, loaded.adventurers);
+    loaded.guildActions = normaliseGuildActions(saved.guildActions, loaded.day);
+    loaded.guildPreparations = normaliseGuildPreparations(saved.guildPreparations);
     loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
     loaded.trainingJobs = (saved.trainingJobs || [])
       .map(normaliseTrainingJob)
@@ -1105,6 +1234,29 @@ function saveState() {
   } catch {
     // The demo should remain playable even if browser storage is unavailable.
   }
+}
+
+function normaliseGuildActions(savedActions, day) {
+  const sameDay = Number(savedActions?.day) === Number(day);
+  const validOrders = sameDay && Array.isArray(savedActions?.orders)
+    ? savedActions.orders.filter((queuedOrder, index, orders) => {
+        const order = facilityOrderCatalog.find((item) => item.id === queuedOrder?.orderId);
+        return order && orders.findIndex((item) => item?.facilityId === queuedOrder.facilityId) === index;
+      })
+    : [];
+  return {
+    day,
+    spent: sameDay ? Math.max(0, Number(savedActions.spent) || 0) : 0,
+    orders: validOrders
+  };
+}
+
+function normaliseGuildPreparations(savedPreparations) {
+  return {
+    nextQuestPower: Math.min(24, Math.max(0, Number(savedPreparations?.nextQuestPower) || 0)),
+    nextQuestGoldBonus: Math.min(80, Math.max(0, Number(savedPreparations?.nextQuestGoldBonus) || 0)),
+    nextQuestInjuryShield: Math.min(1, Math.max(0, Number(savedPreparations?.nextQuestInjuryShield) || 0))
+  };
 }
 
 function resetGame() {
@@ -1165,6 +1317,7 @@ function render() {
   elements.rankProgress.style.width = `${getRankProgress()}%`;
   elements.creatorPanel.classList.toggle("hidden", state.founderCreated);
 
+  renderGuildActions();
   renderRooms();
   renderFacilities();
   renderTavernEventPanel();
@@ -1266,6 +1419,7 @@ function renderRooms() {
 }
 
 function renderFacilities() {
+  const noGuildActions = getGuildActionsRemaining() < 1;
   elements.facilityList.innerHTML = facilities
     .map((facility) => {
       const level = state.facilities[facility.id];
@@ -1283,10 +1437,11 @@ function renderFacilities() {
               <span class="facility-levels" aria-label="${built ? `Level ${level} of 5` : "Not built"}">${levelPips}</span>
             </div>
             <p class="card-meta">${facility.effect}</p>
+            ${unlocked && !maxed ? `<p class="facility-action-cost">Uses 1 Guild Action</p>` : ""}
             ${!built ? `<p class="facility-requirement">${getFacilityUnlockText(facility.id)}</p>` : ""}
           </div>
-          <button class="${built ? "secondary-button" : "primary-button"}" data-upgrade="${facility.id}" type="button" ${!unlocked || maxed || state.gold < cost ? "disabled" : ""}>
-            ${!unlocked ? "Locked" : maxed ? "Max level" : built ? `${cost}G` : `Build ${cost}G`}
+          <button class="${built ? "secondary-button" : "primary-button"}" data-upgrade="${facility.id}" type="button" ${!unlocked || maxed || state.gold < cost || noGuildActions ? "disabled" : ""}>
+            ${!unlocked ? "Locked" : maxed ? "Max level" : noGuildActions ? "No actions" : built ? `${cost}G` : `Build ${cost}G`}
           </button>
         </article>
       `;
@@ -1816,14 +1971,54 @@ function renderGuildRoomDetail() {
       </div>
       ${built
         ? `<button class="primary-button" data-room-action="${room.targetView}" type="button">${room.action}</button>`
-        : `<button class="primary-button" data-build-room="${room.facilityId}" type="button" ${!unlocked || state.gold < cost ? "disabled" : ""}>${unlocked ? `Build ${cost}G` : "Locked"}</button>`}
+        : `<button class="primary-button" data-build-room="${room.facilityId}" type="button" ${!unlocked || state.gold < cost || getGuildActionsRemaining() < 1 ? "disabled" : ""}>${unlocked ? getGuildActionsRemaining() < 1 ? "No actions" : `Build ${cost}G` : "Locked"}</button>`}
     </article>
+    ${built ? renderFacilityOrders(room.facilityId) : ""}
   `;
 
   const action = elements.guildhallRoomDetail.querySelector("[data-room-action]");
   action?.addEventListener("click", () => setActiveView(action.dataset.roomAction));
   const buildAction = elements.guildhallRoomDetail.querySelector("[data-build-room]");
   buildAction?.addEventListener("click", () => upgradeFacility(buildAction.dataset.buildRoom));
+  elements.guildhallRoomDetail.querySelectorAll("[data-facility-order]").forEach((button) => {
+    button.addEventListener("click", () => queueFacilityOrder(button.dataset.facilityOrder));
+  });
+}
+
+function renderFacilityOrders(facilityId) {
+  const orders = facilityOrderCatalog.filter((order) => order.facilityId === facilityId);
+  const queued = getQueuedFacilityOrder(facilityId);
+  const facility = facilities.find((item) => item.id === facilityId);
+  return `
+    <section class="facility-orders">
+      <div class="facility-orders-heading">
+        <div><p class="eyebrow">Today's room orders</p><h3>${facility?.name || "Facility"} Duties</h3></div>
+        <span>${queued ? "Resolves at End Day" : "Choose one for 1 action"}</span>
+      </div>
+      <div class="facility-order-grid">
+        ${orders.map((order) => {
+          const lockReason = getFacilityOrderAvailability(order);
+          const isQueued = queued?.orderId === order.id;
+          return `
+            <article class="facility-order-card ${isQueued ? "queued" : ""}">
+              <span class="facility-order-mark" aria-hidden="true">${order.mark}</span>
+              <div class="facility-order-copy">
+                <h4>${order.title}</h4>
+                <p>${order.description}</p>
+                <small>${isQueued ? "Order issued. " : ""}${order.outcome}</small>
+              </div>
+              <div class="facility-order-action">
+                <span class="order-action-cost"><i aria-hidden="true"></i>1</span>
+                <button class="${isQueued ? "ghost-button" : "secondary-button"}" data-facility-order="${order.id}" type="button" ${lockReason ? "disabled" : ""}>
+                  ${isQueued ? "Queued" : lockReason || "Issue Order"}
+                </button>
+              </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
 }
 
 function selectGuildRoom(roomId) {
@@ -1859,7 +2054,8 @@ function renderRoster() {
   const recruitmentLocked = !state.recruitment.unlocked;
   const recruitmentWaiting = Boolean(state.recruitment.order);
   const candidatesReady = state.recruitment.candidates.length > 0;
-  elements.recruit.disabled = recruitmentLocked || recruitmentWaiting || candidatesReady || state.gold < RECRUITMENT_COST || rosterFull;
+  const noGuildActions = getGuildActionsRemaining() < 1;
+  elements.recruit.disabled = recruitmentLocked || recruitmentWaiting || candidatesReady || state.gold < RECRUITMENT_COST || rosterFull || noGuildActions;
   elements.recruit.textContent = rosterFull
     ? "Dormitory Needed"
     : recruitmentLocked
@@ -1868,7 +2064,9 @@ function renderRoster() {
         ? `Applicants Day ${state.recruitment.order.readyDay}`
         : candidatesReady
           ? "Choose Applicant"
-          : `Post Notice ${RECRUITMENT_COST}G`;
+          : noGuildActions
+            ? "No Guild Actions"
+            : `Post Notice ${RECRUITMENT_COST}G`;
   renderRecruitmentPanel();
 
   if (state.adventurers.length === 0) {
@@ -2187,6 +2385,13 @@ function renderMissions() {
       </div>
     </section>
   `;
+  const preparationSummary = getPreparationSummary();
+  const preparationMarkup = preparationSummary.length ? `
+    <section class="quest-preparation">
+      <span class="quest-preparation-mark" aria-hidden="true">P</span>
+      <div><p class="eyebrow">Next expedition prepared</p><strong>${preparationSummary.join(" | ")}</strong><small>These bonuses are used when the next party departs.</small></div>
+    </section>
+  ` : "";
 
   const allMissions = [...missionDeck.filter((mission) => isMissionVisible(mission)), ...state.eventMissions];
   const missionCards = allMissions
@@ -2250,7 +2455,7 @@ function renderMissions() {
     })
     .join("");
 
-  elements.missionList.innerHTML = `${partyMarkup}${activeCards ? `<div class="active-expeditions">${activeCards}</div>` : ""}<div class="mission-deck">${missionCards}</div>`;
+  elements.missionList.innerHTML = `${partyMarkup}${preparationMarkup}${activeCards ? `<div class="active-expeditions">${activeCards}</div>` : ""}<div class="mission-deck">${missionCards}</div>`;
   elements.missionList.querySelector("[data-open-roster]")?.addEventListener("click", () => setActiveView("adventurers"));
   elements.missionList.querySelectorAll("[data-compose-party]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -2709,13 +2914,14 @@ function renderTrainingCurriculum(adventurer) {
   }
 
   const slotsFull = getActiveTrainingJobs().length >= getTrainingSlotCount();
+  const noGuildActions = getGuildActionsRemaining() < 1;
   const drillRows = Object.values(trainingDrills).map((drill) => {
     const full = completedDrills >= drillCapacity;
     const duration = getTrainingDuration(adventurer, "stat", drill.stat);
-    const disabled = full || slotsFull || state.gold < drill.cost || adventurer.status !== "idle";
+    const disabled = full || slotsFull || state.gold < drill.cost || adventurer.status !== "idle" || noGuildActions;
     const buttonText = full
       ? "Drill limit"
-      : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : `${drill.cost}G / ${duration}d`;
+      : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${drill.cost}G / ${duration}d`;
     return `
       <div class="training-row stat-drill ${full ? "locked" : ""}">
         <span class="ability-sigil" aria-hidden="true">${drill.mark.slice(0, 1)}</span>
@@ -2731,10 +2937,10 @@ function renderTrainingCurriculum(adventurer) {
     const levelLocked = trainingLevel < ability.trainingLevel;
     const full = learned >= capacity && !known;
     const duration = getTrainingDuration(adventurer, "ability", id);
-    const disabled = known || levelLocked || full || slotsFull || state.gold < ability.cost || adventurer.status !== "idle";
+    const disabled = known || levelLocked || full || slotsFull || state.gold < ability.cost || adventurer.status !== "idle" || noGuildActions;
     const buttonText = known
       ? "Learned"
-      : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : `${ability.cost}G / ${duration}d`;
+      : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${ability.cost}G / ${duration}d`;
     return `
       <div class="training-row ${known ? "known" : ""} ${levelLocked ? "locked" : ""}">
         <span class="ability-sigil" aria-hidden="true">T</span>
@@ -2857,6 +3063,9 @@ function randomiseFounder() {
 
 function postRecruitmentNotice() {
   if (!state.recruitment.unlocked || state.recruitment.order || state.recruitment.candidates.length > 0 || state.gold < RECRUITMENT_COST || state.adventurers.length >= getRosterCapacity()) {
+    return;
+  }
+  if (!spendGuildAction("a recruitment notice")) {
     return;
   }
   const travelDays = 1 + Math.floor(Math.random() * 2);
@@ -3509,6 +3718,9 @@ function startTraining(adventurerId, kind, targetId) {
   if (state.gold < cost) {
     return;
   }
+  if (!spendGuildAction("training")) {
+    return;
+  }
   const duration = getTrainingDuration(adventurer, kind, targetId);
   const job = {
     id: crypto.randomUUID(),
@@ -3590,6 +3802,8 @@ function startMission(missionId) {
   }
 
   const party = partyIds.map(getAdventurer).filter(Boolean);
+  const preparation = normaliseGuildPreparations(state.guildPreparations);
+  const preparationSummary = getPreparationSummary();
   party.forEach((adventurer) => {
     adventurer.status = "busy";
     addLifeEvent(adventurer, `Set out for ${mission.name}.`);
@@ -3611,12 +3825,14 @@ function startMission(missionId) {
     encounterTriggerAt: Math.max(5, Math.floor(duration * (mission.tutorial ? 0.24 : 0.3))),
     enemyMaxHealth: Math.max(80, mission.difficulty + 70),
     encounterDamage: 0,
-    powerBonus: 0,
-    goldBonus: 0,
+    powerBonus: preparation.nextQuestPower,
+    goldBonus: preparation.nextQuestGoldBonus,
     fameBonus: 0,
     xpBonus: 0,
-    injuryShield: 0
+    injuryShield: preparation.nextQuestInjuryShield,
+    preparationSummary
   });
+  state.guildPreparations = normaliseGuildPreparations(null);
 
   if (mission.isEvent) {
     state.eventMissions = state.eventMissions.filter((eventMission) => eventMission.id !== mission.id);
@@ -3628,6 +3844,9 @@ function startMission(missionId) {
   state.selectedIds = [];
   partyPickerMissionId = null;
   addLog(`${party.map((adventurer) => adventurer.name).join(", ")} set out for ${mission.name}.`);
+  if (preparationSummary.length) {
+    addLog(`Expedition preparation used: ${preparationSummary.join(", ")}.`);
+  }
   render();
   playDispatchAnimation(party, mission);
   showToast("Expedition departed", `${party.map((adventurer) => adventurer.name).join(", ")} set out for ${mission.location}.`, "info");
@@ -3807,6 +4026,161 @@ function grantXp(adventurer, amount) {
   }
 }
 
+function getQueuedFacilityOrder(facilityId) {
+  syncGuildActionDay();
+  return state.guildActions.orders.find((queuedOrder) => queuedOrder.facilityId === facilityId) || null;
+}
+
+function getFacilityOrderAvailability(order) {
+  if (!order || (state.facilities[order.facilityId] || 0) < 1) {
+    return "Room Locked";
+  }
+  const queued = getQueuedFacilityOrder(order.facilityId);
+  if (queued) {
+    return queued.orderId === order.id ? "Queued" : "Room Busy";
+  }
+  if (getGuildActionsRemaining() < 1) {
+    return "No Actions";
+  }
+  const idleCount = state.adventurers.filter((adventurer) => adventurer.status === "idle").length;
+  if (order.requiresIdle && idleCount < order.requiresIdle) {
+    return `Needs ${order.requiresIdle} Hero${order.requiresIdle === 1 ? "" : "es"}`;
+  }
+  const injuredCount = state.adventurers.filter((adventurer) => adventurer.status === "injured").length;
+  if (order.requiresInjured && injuredCount < order.requiresInjured) {
+    return "No Injuries";
+  }
+  if (order.effect === "realmEvent" && state.eventMissions.length >= 3) {
+    return "Event Board Full";
+  }
+  const preparations = normaliseGuildPreparations(state.guildPreparations);
+  if (["questPower", "provisions", "workshopPower"].includes(order.effect) && preparations.nextQuestPower >= 24) {
+    return "Power Prepared";
+  }
+  if (order.effect === "questGold" && preparations.nextQuestGoldBonus >= 80) {
+    return "Reward Prepared";
+  }
+  if (order.effect === "injuryShield" && preparations.nextQuestInjuryShield >= 1) {
+    return "Kit Ready";
+  }
+  return "";
+}
+
+function queueFacilityOrder(orderId) {
+  const order = facilityOrderCatalog.find((item) => item.id === orderId);
+  if (!order || getFacilityOrderAvailability(order)) {
+    return false;
+  }
+  if (!spendGuildAction(order.title)) {
+    return false;
+  }
+  state.guildActions.orders.push({
+    orderId: order.id,
+    facilityId: order.facilityId,
+    queuedDay: state.day,
+    participantIds: state.adventurers.filter((adventurer) => adventurer.status === "idle").map((adventurer) => adventurer.id),
+    patientIds: state.adventurers.filter((adventurer) => adventurer.status === "injured").map((adventurer) => adventurer.id)
+  });
+  addLog(`${order.title} is assigned in the ${facilities.find((facility) => facility.id === order.facilityId)?.name}.`);
+  render();
+  showToast("Room order issued", `${order.title} will resolve when you end the day.`, "info");
+  return true;
+}
+
+function resolveFacilityOrders() {
+  syncGuildActionDay();
+  const queuedOrders = [...state.guildActions.orders];
+  state.guildActions.orders = [];
+  return queuedOrders
+    .map((queuedOrder) => ({ queuedOrder, order: facilityOrderCatalog.find((order) => order.id === queuedOrder.orderId) }))
+    .filter(({ order }) => Boolean(order))
+    .map(({ order, queuedOrder }) => resolveFacilityOrder(order, queuedOrder));
+}
+
+function resolveFacilityOrder(order, queuedOrder = {}) {
+  const level = Math.max(1, state.facilities[order.facilityId] || 1);
+  const orderedHeroes = (queuedOrder.participantIds || []).map(getAdventurer).filter(Boolean);
+  const idleHeroes = orderedHeroes.length ? orderedHeroes : state.adventurers.filter((adventurer) => adventurer.status === "idle");
+  state.guildPreparations = normaliseGuildPreparations(state.guildPreparations);
+  let result = "The order is complete.";
+
+  if (order.effect === "goldIncome") {
+    const amount = 12 + level * 4;
+    state.gold += amount;
+    result = `Hospitality brings in ${amount}G.`;
+  } else if (order.effect === "heroSupper") {
+    const xp = 2 + level;
+    idleHeroes.forEach((adventurer) => {
+      grantXp(adventurer, xp);
+      addLifeEvent(adventurer, `Joined the ${order.title} at the guild.`);
+    });
+    if (idleHeroes.length > 1) {
+      adjustRelationship(idleHeroes[0].id, idleHeroes[1].id, 1, `${order.title} gave them an easy evening together.`);
+    }
+    result = `${idleHeroes.length} available hero${idleHeroes.length === 1 ? " gains" : "es gain"} ${xp} experience${idleHeroes.length > 1 ? " and a little friendship" : ""}.`;
+  } else if (order.effect === "realmEvent") {
+    const created = scoutForEvent(true, false);
+    if (created) {
+      result = "A fresh realm event is pinned to the map.";
+    } else {
+      state.gold += 10;
+      result = "The roads are quiet, but the runner returns 10G in unused expenses.";
+    }
+  } else if (order.effect === "questGold") {
+    const amount = 18 + level * 4;
+    const before = state.guildPreparations.nextQuestGoldBonus;
+    state.guildPreparations.nextQuestGoldBonus = Math.min(80, before + amount);
+    result = `The next successful expedition will earn ${state.guildPreparations.nextQuestGoldBonus - before}G extra.`;
+  } else if (order.effect === "recovery") {
+    const seconds = 8 + level * 2;
+    const orderedPatients = (queuedOrder.patientIds || []).map(getAdventurer).filter((adventurer) => adventurer?.status === "injured");
+    const injuredHeroes = orderedPatients.length ? orderedPatients : state.adventurers.filter((adventurer) => adventurer.status === "injured");
+    injuredHeroes.forEach((adventurer) => {
+      adventurer.recovery = Math.max(0, adventurer.recovery - seconds);
+      if (adventurer.recovery === 0) {
+        adventurer.status = "idle";
+        addLifeEvent(adventurer, "Recovered early after a dedicated Dormitory recovery round.");
+      }
+    });
+    result = `${injuredHeroes.length} injured hero${injuredHeroes.length === 1 ? " recovers" : "es recover"} up to ${seconds} seconds sooner.`;
+  } else if (order.effect === "bond") {
+    if (idleHeroes.length > 1) {
+      adjustRelationship(idleHeroes[0].id, idleHeroes[1].id, 2, "Shared quarters turned a quiet evening into a lasting story.");
+      result = `${idleHeroes[0].name} and ${idleHeroes[1].name} grow closer.`;
+    } else {
+      result = "The room rota is postponed because too few adventurers are available.";
+    }
+  } else if (order.effect === "idleXp") {
+    const xp = 3 + level;
+    idleHeroes.forEach((adventurer) => {
+      grantXp(adventurer, xp);
+      addLifeEvent(adventurer, `Joined the ${order.title} session.`);
+    });
+    result = `${idleHeroes.length} available hero${idleHeroes.length === 1 ? " gains" : "es gain"} ${xp} experience.`;
+  } else if (order.effect === "questPower") {
+    const amount = 2 + level;
+    const before = state.guildPreparations.nextQuestPower;
+    state.guildPreparations.nextQuestPower = Math.min(24, before + amount);
+    result = `The next expedition gains ${state.guildPreparations.nextQuestPower - before} power from its briefing.`;
+  } else if (order.effect === "provisions") {
+    const amount = 4 + level * 2;
+    const before = state.guildPreparations.nextQuestPower;
+    state.guildPreparations.nextQuestPower = Math.min(24, before + amount);
+    result = `Packed provisions add ${state.guildPreparations.nextQuestPower - before} power to the next expedition.`;
+  } else if (order.effect === "workshopPower") {
+    const amount = 4 + level * 2;
+    const before = state.guildPreparations.nextQuestPower;
+    state.guildPreparations.nextQuestPower = Math.min(24, before + amount);
+    result = `Serviced equipment adds ${state.guildPreparations.nextQuestPower - before} power to the next expedition.`;
+  } else if (order.effect === "injuryShield") {
+    state.guildPreparations.nextQuestInjuryShield = 1;
+    result = "The next expedition can prevent one injury after a failed quest.";
+  }
+
+  addLog(`${order.title} complete: ${result}`);
+  return { orderId: order.id, title: order.title, result };
+}
+
 function upgradeFacility(id) {
   const facility = facilities.find((item) => item.id === id);
   if (!facility) {
@@ -3815,6 +4189,9 @@ function upgradeFacility(id) {
   const current = state.facilities[id] || 0;
   const cost = upgradeCost(facility);
   if (!isFacilityUnlocked(id) || current >= 5 || state.gold < cost) {
+    return;
+  }
+  if (!spendGuildAction(current === 0 ? "construction" : "a facility upgrade")) {
     return;
   }
   state.gold -= cost;
@@ -3836,20 +4213,23 @@ function upgradeFacility(id) {
   showToast(built ? "New room built" : "Facility improved", `${facility.name} is now level ${state.facilities[id]}.`, "success");
 }
 
-function scoutForEvent(force = false) {
+function scoutForEvent(force = false, useGuildAction = false) {
   if (!state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3) {
-    return;
+    return false;
   }
   if (!force && Math.random() > 0.55) {
     addLog("The scouts report quiet roads across Jenny's realm.");
     render();
-    return;
+    return false;
   }
   const available = eventMissionDeck.filter((template) => {
     return !state.eventMissions.some((eventMission) => eventMission.templateId === template.templateId);
   });
   if (available.length === 0) {
-    return;
+    return false;
+  }
+  if (useGuildAction && !spendGuildAction("realm scouting")) {
+    return false;
   }
   const template = available[Math.floor(Math.random() * available.length)];
   const eventMission = {
@@ -3863,6 +4243,7 @@ function scoutForEvent(force = false) {
   state.eventMissions.push(eventMission);
   currentPopupEventId = eventMission.id;
   addLog(`A realm event appears: ${eventMission.name} at ${eventMission.location}.`);
+  return true;
 }
 
 function expireEvents() {
@@ -3928,7 +4309,16 @@ function upgradeCost(facility) {
 }
 
 function advanceDays(amount) {
+  syncGuildActionDay();
+  const unusedActions = getGuildActionsRemaining();
+  const administrationIncome = unusedActions * 2;
+  const completedOrders = resolveFacilityOrders();
+  if (administrationIncome > 0) {
+    state.gold += administrationIncome;
+    addLog(`${unusedActions} unused Guild Action${unusedActions === 1 ? "" : "s"} handle routine administration and earn ${administrationIncome}G.`);
+  }
   state.day += amount;
+  state.guildActions = normaliseGuildActions(null, state.day);
   checkBirthdays();
   const completedTraining = processTrainingCompletions(false);
   expireEvents();
@@ -3944,10 +4334,12 @@ function advanceDays(amount) {
   const recruitmentArrived = processRecruitmentArrivals();
   const tavernEventCreated = !recruitmentArrived && maybeCreateTavernEvent();
   if (!tavernEventCreated && state.founderCreated && state.facilities.questBoard > 0 && state.day % 3 === 0 && state.eventMissions.length < 2) {
-    scoutForEvent(true);
+    scoutForEvent(true, false);
   }
   render();
-  if (completedTraining.length > 0) {
+  if (completedOrders.length > 0) {
+    showToast("Room orders complete", completedOrders.map((order) => order.title).join(", "), "success");
+  } else if (completedTraining.length > 0) {
     const names = completedTraining.map((job) => getAdventurer(job.adventurerId)?.name).filter(Boolean);
     showToast("Training complete", `${names.join(", ")} ${names.length === 1 ? "is" : "are"} ready for duty.`, "success");
   } else if (tavernEventCreated) {
@@ -4143,6 +4535,85 @@ function getRosterCapacity() {
   return Math.min(12, 3 + state.facilities.dormitory * 3);
 }
 
+function getGuildActionCapacity(rank = getRank()) {
+  const allowances = { F: 3, D: 4, C: 5, B: 6, A: 7, S: 8 };
+  return allowances[rank] || 3;
+}
+
+function syncGuildActionDay() {
+  if (!state.guildActions || state.guildActions.day !== state.day) {
+    state.guildActions = normaliseGuildActions(null, state.day);
+  }
+}
+
+function getGuildActionsRemaining() {
+  syncGuildActionDay();
+  return Math.max(0, getGuildActionCapacity() - state.guildActions.spent);
+}
+
+function spendGuildAction(label) {
+  syncGuildActionDay();
+  if (getGuildActionsRemaining() < 1) {
+    showToast("No Guild Actions left", `End the day before assigning ${label.toLowerCase()}.`, "danger");
+    return false;
+  }
+  state.guildActions.spent += 1;
+  return true;
+}
+
+function getPreparationSummary() {
+  const preparation = normaliseGuildPreparations(state.guildPreparations);
+  const summary = [];
+  if (preparation.nextQuestPower > 0) {
+    summary.push(`+${preparation.nextQuestPower} next-quest power`);
+  }
+  if (preparation.nextQuestGoldBonus > 0) {
+    summary.push(`+${preparation.nextQuestGoldBonus}G next reward`);
+  }
+  if (preparation.nextQuestInjuryShield > 0) {
+    summary.push(`${preparation.nextQuestInjuryShield} injury kit${preparation.nextQuestInjuryShield === 1 ? "" : "s"} ready`);
+  }
+  return summary;
+}
+
+function renderGuildActions() {
+  if (!elements.guildActionBar) {
+    return;
+  }
+  syncGuildActionDay();
+  const capacity = getGuildActionCapacity();
+  const remaining = getGuildActionsRemaining();
+  const queuedOrders = state.guildActions.orders
+    .map((queuedOrder) => facilityOrderCatalog.find((order) => order.id === queuedOrder.orderId)?.title)
+    .filter(Boolean);
+  const preparations = getPreparationSummary();
+  const commitments = [
+    ...queuedOrders.map((title) => `<span class="action-commitment order">${title}</span>`),
+    ...preparations.map((description) => `<span class="action-commitment prepared">${description}</span>`)
+  ].join("");
+  const seals = Array.from({ length: capacity }, (_, index) => `
+    <span class="guild-action-seal ${index < state.guildActions.spent ? "spent" : "available"}" aria-label="Action ${index + 1} ${index < state.guildActions.spent ? "spent" : "available"}"><i></i></span>
+  `).join("");
+
+  elements.guildActionBar.innerHTML = `
+    <div class="guild-action-summary">
+      <span class="guild-action-crest" aria-hidden="true">G</span>
+      <div><p class="eyebrow">Guildmaster Actions</p><strong>${remaining} of ${capacity} available</strong><small>Rank ${getRank()} allowance</small></div>
+    </div>
+    <div class="guild-action-seals" aria-label="${remaining} of ${capacity} Guild Actions available">${seals}</div>
+    <div class="action-commitments">${commitments}</div>
+  `;
+
+  elements.nextDay.textContent = "End Day";
+  elements.nextDay.title = remaining > 0
+    ? `${remaining} unused Guild Action${remaining === 1 ? "" : "s"} will become routine administration income.`
+    : "Resolve today's orders and begin the next day.";
+  elements.nextDay.classList.toggle("ready", remaining === 0 || queuedOrders.length > 0);
+  const scoutingUnavailable = !state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3;
+  elements.scoutEvent.disabled = scoutingUnavailable || remaining < 1;
+  elements.scoutEvent.textContent = remaining < 1 ? "No Actions" : "Scout Event";
+}
+
 function getRank() {
   if (state.fame >= 90) {
     return "B";
@@ -4185,7 +4656,7 @@ function getMissionOdds(party, mission) {
   if (mission.guaranteedSuccess) {
     return 100;
   }
-  const power = getPartyPower(party, mission);
+  const power = getPartyPower(party, mission) + normaliseGuildPreparations(state.guildPreparations).nextQuestPower;
   const requiredRoll = mission.difficulty - power - getPartyRollBonus(party);
   if (requiredRoll <= 0) {
     return 100;

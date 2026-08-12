@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=28">
+    <link rel="stylesheet" href="styles.css?v=29">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -118,11 +118,12 @@
                 <button id="musicToggleButton" class="icon-button music-toggle" type="button" aria-label="Mute music" title="Mute music" aria-pressed="false">
                   <span class="music-icon" aria-hidden="true"></span>
                 </button>
-                <button id="nextDayButton" class="icon-button" type="button" title="Advance one day">Next Day</button>
+                <button id="nextDayButton" class="icon-button end-day-button" type="button" title="Resolve orders and begin the next day">End Day</button>
                 <button id="scoutEventButton" class="secondary-button" type="button">Scout Event</button>
               </div>
             </div>
             <div id="chapterObjective" class="chapter-objective"></div>
+            <div id="guildActionBar" class="guild-action-bar" aria-live="polite"></div>
             <div id="contextScene" class="context-scene hidden" aria-label="Living view of the Wayfarer's Rest"></div>
             <div id="realmMap" class="map-canvas" aria-label="Interactive guild and realm map"></div>
             <div class="map-footer">
@@ -290,6 +291,6 @@
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=28"></script>
+    <script src="game.js?v=29"></script>
   </body>
 </html>

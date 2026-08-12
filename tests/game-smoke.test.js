@@ -21,6 +21,7 @@ function makeElement() {
       }
     },
     dataset: {},
+    getBoundingClientRect() { return { width: 900, height: 600 }; },
     innerHTML: "",
     muted: false,
     pause() {},
@@ -85,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=28/);
+  assert.match(index, /styles\.css\?v=29/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -96,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=28/);
+  assert.match(index, /game\.js\?v=29/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -224,7 +225,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 14);
+  assert.equal(result.version, 15);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -336,7 +337,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 14);
+  assert.equal(result.version, 15);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -493,7 +494,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 14);
+  assert.equal(result.version, 15);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -739,7 +740,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 14);
+  assert.equal(result.version, 15);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -756,6 +757,116 @@ test("the Tavern Life interface ships its painted scene and responsive controls"
   assert.match(styles, /\.tavern-life-art[\s\S]*url\("assets\/tavern-interior-v1\.webp"\)/);
   assert.match(styles, /\.relationship-list/);
   assert.match(styles, /@media \(max-width: 560px\)[\s\S]*\.tavern-life-choices button/);
+});
+
+test("Guild Rank increases the daily action allowance while quest dispatch remains free", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.chapter.stage = "firstQuest";
+    state.fame = 0;
+    const rankF = { rank: getRank(), capacity: getGuildActionCapacity() };
+    spendGuildAction("first duty");
+    spendGuildAction("second duty");
+    spendGuildAction("third duty");
+    const blockedFourth = spendGuildAction("fourth duty");
+    state.fame = 18;
+    const rankD = { rank: getRank(), capacity: getGuildActionCapacity(), remaining: getGuildActionsRemaining() };
+    spendGuildAction("rank bonus duty");
+    state.selectedIds = [founder.id];
+    const spentBeforeDispatch = state.guildActions.spent;
+    startMission("stolenSupplies");
+    ({ rankF, blockedFourth, rankD, spentBeforeDispatch, spentAfterDispatch: state.guildActions.spent,
+       activeMissions: state.activeMissions.length, capacities: [0, 18, 48, 90].map((fame) => { state.fame = fame; return getGuildActionCapacity(); }) });
+  `);
+
+  assert.deepEqual({ ...result.rankF }, { rank: "F", capacity: 3 });
+  assert.equal(result.blockedFourth, false);
+  assert.deepEqual({ ...result.rankD }, { rank: "D", capacity: 4, remaining: 1 });
+  assert.equal(result.spentAfterDispatch, result.spentBeforeDispatch);
+  assert.equal(result.activeMissions, 1);
+  assert.deepEqual([...result.capacities], [3, 4, 5, 6]);
+});
+
+test("facility orders resolve at End Day and prepare exactly the next expedition", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    const companion = makeAdventurer("Alden", "warden", false, "male");
+    state.adventurers = [founder, companion];
+    state.founderCreated = true;
+    state.chapter.stage = "firstQuest";
+    state.fame = 18;
+    state.gold = 100;
+    state.facilities = { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 1, kitchen: 0, workshop: 1 };
+    const hostQueued = queueFacilityOrder("hostTravellers");
+    const boardQueued = queueFacilityOrder("featureContract");
+    const duplicateBoard = queueFacilityOrder("gatherRumours");
+    const trainingQueued = queueFacilityOrder("tacticalBriefing");
+    const workshopQueued = queueFacilityOrder("repairKits");
+    renderGuildActions();
+    const actionMarkup = elements.guildActionBar.innerHTML;
+    selectedGuildRoomId = "questBoard";
+    renderGuildhallInterior();
+    const roomMarkup = elements.guildhallRoomDetail.innerHTML;
+    const spentBeforeEnd = state.guildActions.spent;
+    advanceDays(1);
+    const prepared = { ...state.guildPreparations };
+    const goldAfterEnd = state.gold;
+    const remainingAfterEnd = getGuildActionsRemaining();
+    state.selectedIds = [founder.id];
+    startMission("stolenSupplies");
+    const active = state.activeMissions[0];
+    ({ hostQueued, boardQueued, duplicateBoard, trainingQueued, workshopQueued, actionMarkup, roomMarkup,
+       spentBeforeEnd, goldAfterEnd, remainingAfterEnd, prepared,
+       activeBonuses: { power: active.powerBonus, gold: active.goldBonus, shield: active.injuryShield },
+       preparationsAfterDispatch: { ...state.guildPreparations }, spentAfterDispatch: state.guildActions.spent,
+       preparationCaps: normaliseGuildPreparations({ nextQuestPower: 999, nextQuestGoldBonus: 999, nextQuestInjuryShield: 4 }) });
+  `);
+
+  assert.equal(result.hostQueued, true);
+  assert.equal(result.boardQueued, true);
+  assert.equal(result.duplicateBoard, false);
+  assert.equal(result.trainingQueued, true);
+  assert.equal(result.workshopQueued, true);
+  assert.equal(result.spentBeforeEnd, 4);
+  assert.match(result.actionMarkup, /4 of 4|0 of 4 available/);
+  assert.match(result.actionMarkup, /Host Travellers/);
+  assert.match(result.roomMarkup, /Feature A Contract/);
+  assert.match(result.roomMarkup, /Gather Rumours/);
+  assert.equal(result.goldAfterEnd, 129);
+  assert.equal(result.remainingAfterEnd, 4);
+  assert.deepEqual({ ...result.prepared }, { nextQuestPower: 3, nextQuestGoldBonus: 22, nextQuestInjuryShield: 1 });
+  assert.deepEqual({ ...result.activeBonuses }, { power: 3, gold: 22, shield: 1 });
+  assert.deepEqual({ ...result.preparationsAfterDispatch }, { nextQuestPower: 0, nextQuestGoldBonus: 0, nextQuestInjuryShield: 0 });
+  assert.equal(result.spentAfterDispatch, 0);
+  assert.deepEqual({ ...result.preparationCaps }, { nextQuestPower: 24, nextQuestGoldBonus: 80, nextQuestInjuryShield: 1 });
+});
+
+test("version 14 saves migrate to a fresh rank-scaled action day", () => {
+  const context = createGameContext({
+    version: 14,
+    screen: "game",
+    day: 5,
+    gold: 120,
+    fame: 20,
+    adventurers: [],
+    activeMissions: [],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: [], charterEarned: false },
+    log: [],
+    founderCreated: true
+  });
+  const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
+    remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
+
+  assert.equal(result.version, 15);
+  assert.equal(result.actionDay, 5);
+  assert.equal(result.remaining, 4);
+  assert.equal(result.capacity, 4);
+  assert.deepEqual({ ...result.preparations }, { nextQuestPower: 0, nextQuestGoldBonus: 0, nextQuestInjuryShield: 0 });
 });
 
 test("painted facility emblems replace letter badges and false room occupants", () => {

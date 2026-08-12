@@ -18,6 +18,10 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Positive and negative quirks with real quest effects
 - Choice-driven Tavern Life events that shape gold, experience, traits, and character history
 - Persistent friendships and rivalries with visible expedition chemistry bonuses
+- Rank-scaled Guildmaster Actions that make each in-game day a set of meaningful choices
+- End Day resolution with room orders, unused-action administration, and a fresh daily allowance
+- Two distinct orders for every facility, including income, recovery, relationships, scouting, and group training
+- Persistent expedition preparation from briefings, provisions, promoted contracts, and repair kits
 - Timed Training Yard drills and teachable techniques with potential-based capacity
 - Three-person expedition parties
 - Inline quest-party selection with availability and mission-fit indicators

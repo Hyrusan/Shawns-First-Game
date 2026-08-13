@@ -1603,7 +1603,6 @@ const elements = {
   closeMorningReport: document.querySelector("#closeMorningReportButton"),
   expeditionReportDialog: document.querySelector("#expeditionReportDialog"),
   expeditionReportSheet: document.querySelector("#expeditionReportSheet"),
-  expeditionReportSeal: document.querySelector("#expeditionReportSeal"),
   expeditionReportEyebrow: document.querySelector("#expeditionReportEyebrow"),
   expeditionReportTitle: document.querySelector("#expeditionReportTitle"),
   expeditionReportDate: document.querySelector("#expeditionReportDate"),
@@ -2374,7 +2373,7 @@ function renderMap() {
   const requestMarkers = state.greenbank.requests
     .map((request) => `
       <button class="map-request" data-map-view="quest" style="left:${request.marker.left};top:${request.marker.top}" type="button" aria-label="${request.name} at ${request.location}">
-        <span class="request-pin">Q</span>
+        <span class="request-pin" aria-hidden="true"></span>
         <span class="map-label">${request.name}<b>Until day ${request.expiresDay}</b></span>
       </button>
     `)
@@ -2487,7 +2486,7 @@ function renderLivingTavern(sceneMeta) {
     <section class="living-tavern scene-${activeView} venue-level-${tavernLevel} ${state.chapter.charterEarned ? "chartered" : ""}">
       <div class="tavern-wall" aria-hidden="true">
         <span class="tavern-window"><i></i></span>
-        <span class="tavern-banner">${state.chapter.charterEarned ? "G" : "W"}</span>
+        <span class="tavern-banner" aria-hidden="true"></span>
         <span class="tavern-shelf"><i></i><i></i><i></i></span>
         ${Array.from({ length: detailCount }, (_, index) => `<i class="venue-detail detail-${index + 1}"></i>`).join("")}
       </div>
@@ -2496,7 +2495,7 @@ function renderLivingTavern(sceneMeta) {
       <div class="tavern-table table-near" aria-hidden="true"><i></i></div>
       <div class="tavern-table table-far" aria-hidden="true"><i></i></div>
       ${activeView === "log" ? `<div class="ledger-desk" aria-hidden="true"><i></i><b></b></div>` : ""}
-      ${activeView === "adventurers" && state.recruitment.unlocked ? `<div class="recruitment-table" aria-hidden="true"><span>R</span><i></i></div>` : ""}
+      ${activeView === "adventurers" && state.recruitment.unlocked ? `<div class="recruitment-table" aria-hidden="true"><i></i></div>` : ""}
       <div class="context-patrons">
         ${people.map((person, index) => renderContextPatron(person.adventurer, index, person.role)).join("")}
       </div>
@@ -2729,7 +2728,6 @@ function renderGreenbankNews() {
   elements.greenbankNewsPanel.innerHTML = `
     <section class="greenbank-bulletin ${threatTone}">
       <div class="bulletin-masthead">
-        <span class="bulletin-mark" aria-hidden="true">N</span>
         <div><p class="eyebrow">Greenbank Morning Post</p><strong>${latest?.headline || "The village waits for news"}</strong>${seasonFocus ? `<small class="season-focus-note">${seasonFocusCatalog[seasonFocus.id].name} | ${seasonFocus.endsDay - state.day + 1} days</small>` : ""}</div>
       </div>
       <div class="village-pulse">
@@ -2776,15 +2774,14 @@ function renderChronicleArchive() {
   elements.chronicleArchive.innerHTML = `
     <div class="chronicle-archive-heading">
       <div><p class="eyebrow">Guildstead Chronicle</p><h3>The Guild Record</h3><span>Weekly editions and season reviews, filed by Mara.</span></div>
-      ${activeFocus ? `<span class="archive-focus"><b>${seasonFocusCatalog[activeFocus.id].mark}</b><span>Current focus<strong>${seasonFocusCatalog[activeFocus.id].name}</strong></span></span>` : `<span class="archive-count"><b>${reports.length}</b> editions</span>`}
+      ${activeFocus ? `<span class="archive-focus"><span>Current focus<strong>${seasonFocusCatalog[activeFocus.id].name}</strong></span></span>` : `<span class="archive-count"><b>${reports.length}</b> editions</span>`}
     </div>
     ${reports.length ? `<div class="chronicle-edition-list">${reports.slice(0, 10).map((report) => `
       <button class="chronicle-edition ${report.kind}" data-open-chronicle="${report.id}" type="button">
-        <span class="edition-mark" aria-hidden="true">${report.kind === "seasonal" ? "S" : `W${report.week}`}</span>
         <span><small>${report.kind === "seasonal" ? "Season review" : `Week ${report.week}`} | ${report.season}, Year ${report.year}</small><strong>${report.title}</strong><em>${report.metrics.missionsCompleted} quests | ${report.metrics.netGold >= 0 ? "+" : ""}${report.metrics.netGold}G${report.standout ? ` | ${report.standout.name}` : ""}</em></span>
         <i aria-hidden="true">&rsaquo;</i>
       </button>
-    `).join("")}</div>` : `<div class="chronicle-empty"><span aria-hidden="true">C</span><div><strong>The first edition is still being written</strong><p>Mara will file a Chronicle after Guildstead's first seven days.</p></div></div>`}
+    `).join("")}</div>` : `<div class="chronicle-empty"><div><strong>The first edition is still being written</strong><p>Mara will file a Chronicle after Guildstead's first seven days.</p></div></div>`}
     <section class="expedition-archive">
       <div class="expedition-archive-heading">
         <div><p class="eyebrow">Expedition archive</p><h3>Field Reports</h3><span>Party returns, rewards and hard-earned lessons.</span></div>
@@ -2792,11 +2789,10 @@ function renderChronicleArchive() {
       </div>
       ${expeditionReports.length ? `<div class="expedition-archive-list">${expeditionReports.slice(0, 12).map((report) => `
         <button class="expedition-archive-entry ${report.success ? "success" : "retreat"} ${unreadExpeditions.has(report.id) ? "unread" : ""}" data-open-expedition-report="${report.id}" type="button">
-          <span class="expedition-entry-mark" aria-hidden="true">${report.success ? "V" : "!"}</span>
           <span><small>Day ${report.day} | ${report.mission.location}${unreadExpeditions.has(report.id) ? " | New report" : ""}</small><strong>${report.mission.name}</strong><em>${report.heroes.map((hero) => hero.name).join(", ")} | +${report.rewards.gold}G | +${report.rewards.fame} fame</em></span>
           <i aria-hidden="true">&rsaquo;</i>
         </button>
-      `).join("")}</div>` : `<div class="chronicle-empty expedition-empty"><span aria-hidden="true">R</span><div><strong>No parties have returned yet</strong><p>The first completed expedition will be filed here automatically.</p></div></div>`}
+      `).join("")}</div>` : `<div class="chronicle-empty expedition-empty"><div><strong>No parties have returned yet</strong><p>The first completed expedition will be filed here automatically.</p></div></div>`}
     </section>
   `;
   elements.chronicleArchive.querySelectorAll("[data-open-chronicle]").forEach((button) => {
@@ -2868,8 +2864,8 @@ function renderMorningReport() {
       </div>
       <div class="report-column notices">
         <p class="eyebrow">Guild notices</p>
-        ${(report.notices || []).map((notice) => `<p><span aria-hidden="true">${notice.mark || "+"}</span>${notice.text}</p>`).join("") || `<p><span aria-hidden="true">G</span>No special notices today.</p>`}
-        ${(report.newRequests || []).length ? `<h3>New on the Quest Board</h3>${report.newRequests.map((name) => `<p><span aria-hidden="true">Q</span>${name}</p>`).join("")}` : ""}
+        ${(report.notices || []).map((notice) => `<p>${notice.text}</p>`).join("") || `<p>No special notices today.</p>`}
+        ${(report.newRequests || []).length ? `<h3>New on the Quest Board</h3>${report.newRequests.map((name) => `<p>${name}</p>`).join("")}` : ""}
       </div>
     </section>
   `;
@@ -2888,7 +2884,6 @@ function renderChronicleReport(report) {
   return `
     <section class="chronicle-lead ${report.kind}">
       <div><p class="eyebrow">${report.kind === "seasonal" ? "Four weeks in review" : `Days ${report.startDay}-${report.endDay}`}</p><h3>${report.summary}</h3></div>
-      <span class="chronicle-seal" aria-hidden="true">${report.kind === "seasonal" ? "S" : `W${report.week}`}</span>
     </section>
     <section class="report-lead chronicle-metrics">
       <div class="report-pulse-card confidence"><span>Quests completed</span><strong>${metrics.missionsCompleted}</strong><small>${metrics.missionsFailed} difficult retreat${metrics.missionsFailed === 1 ? "" : "s"}</small></div>
@@ -2898,8 +2893,8 @@ function renderChronicleReport(report) {
     <section class="chronicle-story-grid">
       <article class="standout-adventurer">
         <p class="eyebrow">Adventurer of the ${report.kind === "seasonal" ? "season" : "week"}</p>
-        <div class="standout-body">
-          ${standoutHero ? renderSprite(standoutHero, "small") : `<span class="standout-placeholder" aria-hidden="true">A</span>`}
+        <div class="standout-body ${standoutHero ? "" : "no-portrait"}">
+          ${standoutHero ? renderSprite(standoutHero, "small") : ""}
           <div><h3>${standout?.name || "The Guild Roster"}</h3><span>${standout ? `${classes[standout.classId]?.label || "Adventurer"} | Level ${standout.level}` : "Everyone kept the guild moving"}</span><p>${standout?.quests ? `${standout.quests} expedition${standout.quests === 1 ? "" : "s"}` : "Steady guild duty"}${standout?.training ? ` and ${standout.training} training completion${standout.training === 1 ? "" : "s"}` : ""}.</p></div>
         </div>
       </article>
@@ -2920,13 +2915,13 @@ function renderChronicleReport(report) {
 function renderSeasonFocusChoices(report) {
   const selected = report.focusId ? seasonFocusCatalog[report.focusId] : null;
   if (selected) {
-    return `<section class="season-focus-selected"><span>${selected.mark}</span><div><p class="eyebrow">Next season's focus</p><h3>${selected.name}</h3><p>${selected.benefit}</p></div></section>`;
+    return `<section class="season-focus-selected"><div><p class="eyebrow">Next season's focus</p><h3>${selected.name}</h3><p>${selected.benefit}</p></div></section>`;
   }
   return `
     <section class="season-focus-choice">
       <div><p class="eyebrow">The Guildmaster's decision</p><h3>Choose Guildstead's Focus For The Next Season</h3><span>This is optional, but the chosen benefit lasts for 28 days.</span></div>
       <div class="season-focus-grid">${Object.entries(seasonFocusCatalog).map(([id, focus]) => `
-        <button data-season-focus="${id}" type="button"><b>${focus.mark}</b><strong>${focus.name}</strong><small>${focus.description}</small><em>${focus.benefit}</em></button>
+        <button data-season-focus="${id}" type="button"><strong>${focus.name}</strong><small>${focus.description}</small><em>${focus.benefit}</em></button>
       `).join("")}</div>
     </section>
   `;
@@ -3215,7 +3210,6 @@ function renderGuildhallInterior() {
 
   elements.guildhallInterior.innerHTML = `
     <div class="guildhall-roof">
-      <span class="guildhall-crest">G</span>
       <span>${getVenueName()}</span>
       <i class="roof-window" aria-hidden="true"></i>
     </div>
@@ -3287,7 +3281,6 @@ function renderFacilityOrders(facilityId) {
           const isQueued = queued?.orderId === order.id;
           return `
             <article class="facility-order-card ${isQueued ? "queued" : ""}">
-              <span class="facility-order-mark" aria-hidden="true">${order.mark}</span>
               <div class="facility-order-copy">
                 <h4>${order.title}</h4>
                 <p>${order.description}</p>
@@ -3320,7 +3313,6 @@ function renderWorkshopCrafting() {
           const disabled = !affordable || getGuildActionsRemaining() < 1;
           return `
             <article class="crafting-card">
-              <span class="crafting-mark" aria-hidden="true">${recipe.mark}</span>
               <div><h4>${recipe.name}</h4><p>${recipe.description}</p><small>${formatMaterials(recipe.cost)}</small></div>
               <button class="secondary-button" data-craft-equipment="${id}" type="button" ${disabled ? "disabled" : ""}>${getGuildActionsRemaining() < 1 ? "No Actions" : affordable ? "Craft" : "Needs Materials"}</button>
             </article>
@@ -3445,7 +3437,6 @@ function renderRecruitmentPanel() {
   if (!recruitment.unlocked) {
     elements.recruitmentPanel.innerHTML = `
       <section class="recruitment-service locked">
-        <span class="recruitment-sign" aria-hidden="true">R</span>
         <div><p class="eyebrow">Tavern recruitment</p><h3>Word has not spread yet</h3><p>Recover the stolen supplies and Mara will help attract more adventurers.</p></div>
       </section>
     `;
@@ -3460,7 +3451,6 @@ function renderRecruitmentPanel() {
     elements.recruitmentPanel.innerHTML = `
       <section class="recruitment-waiting">
         <div class="recruitment-waiting-copy">
-          <span class="recruitment-sign travelling" aria-hidden="true">R</span>
           <div><p class="eyebrow">Notice posted</p><h3>Applicants are travelling</h3><p>${daysLeft} day${daysLeft === 1 ? "" : "s"} until Mara presents the shortlist.</p></div>
         </div>
         <div class="recruitment-progress"><i style="width:${progress}%"></i></div>
@@ -3497,7 +3487,6 @@ function renderRecruitmentPanel() {
 
   elements.recruitmentPanel.innerHTML = `
     <section class="recruitment-service">
-      <span class="recruitment-sign" aria-hidden="true">R</span>
       <div><p class="eyebrow">Tavern recruitment</p><h3>Post A Paid Notice</h3><p>Mara will find three applicants in one or two days. The ${recruitmentCost}G fee covers notices, food, and travel.</p></div>
       <button class="primary-button" data-post-recruitment type="button" ${rosterFull || state.gold < recruitmentCost ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `${recruitmentCost}G`}</button>
     </section>
@@ -3521,7 +3510,6 @@ function renderTrainingPanel() {
   if (level < 1) {
     elements.trainingPanel.innerHTML = `
       <section class="training-overview blueprint">
-        <span class="training-sign" aria-hidden="true">T</span>
         <div><p class="eyebrow">First expansion</p><h3>Build The Training Yard</h3><p>Mara's plans will turn the old yard into a place for drills, techniques, and visible character growth.</p></div>
         <button class="primary-button" data-open-training-build type="button">Open Plans</button>
       </section>
@@ -3690,11 +3678,11 @@ function renderEquipmentSection(adventurer) {
     <section class="character-section equipment-section">
       <div class="section-line-heading"><p class="eyebrow">Equipment</p><span>One crafted item per adventurer</span></div>
       ${equippedRecipe ? `
-        <div class="equipped-item"><span>${equippedRecipe.mark}</span><div><strong>${equippedRecipe.name}</strong><small>${equippedRecipe.description}</small></div><button class="ghost-button" data-unequip-item type="button">Remove</button></div>
+        <div class="equipped-item"><div><strong>${equippedRecipe.name}</strong><small>${equippedRecipe.description}</small></div><button class="ghost-button" data-unequip-item type="button">Remove</button></div>
       ` : `<p class="system-empty">No equipment assigned. Workshop gear can be equipped here.</p>`}
       ${available.length ? `<div class="available-equipment">${available.map((item) => {
         const recipe = equipmentCatalog[item.recipeId];
-        return `<button data-equip-item="${item.id}" type="button"><span>${recipe.mark}</span><strong>${recipe.name}</strong><small>${recipe.description}</small></button>`;
+        return `<button data-equip-item="${item.id}" type="button"><strong>${recipe.name}</strong><small>${recipe.description}</small></button>`;
       }).join("")}</div>` : ""}
     </section>
   `;
@@ -3760,7 +3748,6 @@ function renderMissions() {
   const preparationSummary = getPreparationSummary();
   const preparationMarkup = preparationSummary.length ? `
     <section class="quest-preparation">
-      <span class="quest-preparation-mark" aria-hidden="true">P</span>
       <div><p class="eyebrow">Next expedition prepared</p><strong>${preparationSummary.join(" | ")}</strong><small>These bonuses are used when the next party departs.</small></div>
     </section>
   ` : "";
@@ -3881,11 +3868,9 @@ function renderGoblinCampaignPanel() {
       </header>
       <div class="campaign-resources">
         <div class="campaign-resource intel">
-          <span class="campaign-resource-mark" aria-hidden="true">I</span>
           <div><strong>Goblin Intel <b>${intel}/4</b></strong><small>Unlocks safer routes into the chief's camp.</small><i style="--campaign-progress:${intel * 25}%"></i></div>
         </div>
         <div class="campaign-resource support">
-          <span class="campaign-resource-mark" aria-hidden="true">S</span>
           <div><strong>Village Support <b>${support}/4</b></strong><small>Brings Greenbank's people into the final battle.</small><i style="--campaign-progress:${support * 25}%"></i></div>
         </div>
       </div>
@@ -4031,7 +4016,6 @@ function renderExpeditionReturnTray() {
   }
   const partyNames = latest.heroes.map((hero) => hero.name).join(", ");
   elements.expeditionReturnTray.innerHTML = `
-    <span class="return-tray-seal ${latest.success ? "success" : "retreat"}" aria-hidden="true">${latest.success ? "V" : "!"}</span>
     <div class="return-tray-copy">
       <span class="mission-kicker">Party returned${unreadReports.length > 1 ? ` | ${unreadReports.length} reports waiting` : ""}</span>
       <strong>${latest.mission.name}</strong>
@@ -4073,8 +4057,6 @@ function renderExpeditionReportDialog() {
   const confidenceTone = report.village.confidenceDelta > 0 ? "good" : report.village.confidenceDelta < 0 ? "bad" : "steady";
   const signed = (value) => `${value > 0 ? "+" : ""}${value}`;
   elements.expeditionReportSheet.className = `expedition-report-sheet ${report.success ? "success" : "retreat"}`;
-  elements.expeditionReportSeal.className = `expedition-report-seal ${report.success ? "success" : "retreat"}`;
-  elements.expeditionReportSeal.textContent = report.success ? "V" : "!";
   elements.expeditionReportEyebrow.textContent = report.success ? "Contract Completed" : "Difficult Retreat";
   elements.expeditionReportTitle.textContent = report.mission.name;
   elements.expeditionReportDate.textContent = `Day ${report.day}`;
@@ -4091,10 +4073,10 @@ function renderExpeditionReportDialog() {
       </div>
     </section>
     <section class="expedition-reward-strip">
-      <article class="${report.success ? "success" : "retreat"}"><span aria-hidden="true">${report.success ? "V" : "!"}</span><div><small>Outcome</small><strong>${report.success ? "Victory" : "Retreat"}</strong></div></article>
-      <article><span aria-hidden="true">G</span><div><small>Gold returned</small><strong>+${report.rewards.gold}G</strong></div></article>
-      <article><span aria-hidden="true">F</span><div><small>Fame earned</small><strong>+${report.rewards.fame}</strong></div></article>
-      <article><span aria-hidden="true">S</span><div><small>Guild stores</small><strong>${materials || loot?.name || "No new supplies"}</strong></div></article>
+      <article class="${report.success ? "success" : "retreat"}"><div><small>Outcome</small><strong>${report.success ? "Victory" : "Retreat"}</strong></div></article>
+      <article><div><small>Gold returned</small><strong>+${report.rewards.gold}G</strong></div></article>
+      <article><div><small>Fame earned</small><strong>+${report.rewards.fame}</strong></div></article>
+      <article><div><small>Guild stores</small><strong>${materials || loot?.name || "No new supplies"}</strong></div></article>
     </section>
     <section class="expedition-report-section">
       <div class="expedition-section-heading"><div><p class="eyebrow">Party Progress</p><h3>Adventurer Results</h3></div><span>${report.heroes.length} returned</span></div>
@@ -4128,7 +4110,7 @@ function renderExpeditionHeroResult(hero, index) {
   const statusLabel = hero.status === "injured" ? `Injured on return | ${hero.recovery}s recovery` : "Ready for tomorrow";
   return `
     <article class="expedition-hero-result ${levelled ? "level-up" : ""} ${hero.status === "injured" ? "injured" : ""}" style="--hero-index:${index}">
-      <div class="expedition-hero-sprite">${renderSprite(hero, "report-profile-sprite")}<span>${hero.status === "injured" ? "!" : reportHeroMark(hero.classId)}</span></div>
+      <div class="expedition-hero-sprite">${renderSprite(hero, "report-profile-sprite")}</div>
       <div class="expedition-hero-copy">
         <div><span><small>${classes[hero.classId]?.label || "Adventurer"}</small><strong>${hero.name}</strong></span><b>${levelled ? `Lv ${hero.levelBefore} to ${hero.levelAfter}` : `Lv ${hero.levelAfter}`}</b></div>
         <div class="expedition-xp-line"><span>Experience</span><strong>+${hero.xpGain} XP</strong></div>
@@ -4138,10 +4120,6 @@ function renderExpeditionHeroResult(hero, index) {
       </div>
     </article>
   `;
-}
-
-function reportHeroMark(classId) {
-  return classes[classId]?.label.slice(0, 1) || "A";
 }
 
 function renderEncounterPanel(activeMission, encounter, party) {
@@ -4159,7 +4137,6 @@ function renderEncounterPanel(activeMission, encounter, party) {
     ].filter(Boolean);
     return `
       <div class="encounter-result" role="status">
-        <span class="encounter-result-mark" aria-hidden="true">OK</span>
         <div><strong>${activeMission.encounterAutoResolved ? "Party decision" : "Your decision"}</strong><p>${activeMission.encounterResult}</p>${rewards.length ? `<div class="encounter-rewards">${rewards.map((reward) => `<span>${reward}</span>`).join("")}</div>` : ""}</div>
       </div>
     `;
@@ -4534,16 +4511,16 @@ function renderStores() {
   elements.guildStores.innerHTML = `
     <div class="stores-heading"><div><span class="eyebrow">Materials, equipment & curios</span><h3>Guild Stores</h3></div><strong>${materials.reduce((total, [, count]) => total + count, 0) + equipment.length + items.reduce((total, [, count]) => total + count, 0)}</strong></div>
     <div class="material-shelf">
-      ${Object.entries(materialCatalog).map(([id, material]) => `<article class="material-item"><span>${material.mark}</span><div><strong>${material.name}</strong><small>${material.description}</small></div><b>${state.materials[id] || 0}</b></article>`).join("")}
+      ${Object.entries(materialCatalog).map(([id, material]) => `<article class="material-item"><div><strong>${material.name}</strong><small>${material.description}</small></div><b>${state.materials[id] || 0}</b></article>`).join("")}
     </div>
     ${equipment.length ? `<div class="equipment-shelf"><p class="eyebrow">Crafted equipment</p>${equipment.map((item) => {
       const recipe = equipmentCatalog[item.recipeId];
       const owner = item.equippedTo ? getAdventurer(item.equippedTo)?.name : "Available";
-      return `<article class="store-item"><span>${recipe.mark}</span><div><strong>${recipe.name}</strong><small>${recipe.description}</small></div><b>${owner}</b></article>`;
+      return `<article class="store-item"><div><strong>${recipe.name}</strong><small>${recipe.description}</small></div><b>${owner}</b></article>`;
     }).join("")}</div>` : ""}
     ${items.length ? `<div class="store-grid">${items.map(([lootId, count]) => {
       const loot = lootCatalog[lootId];
-      return `<article class="store-item" title="${loot.description}"><span>${loot.mark}</span><div><strong>${loot.name}</strong><small>${loot.description}</small></div><b>x${count}</b></article>`;
+      return `<article class="store-item" title="${loot.description}"><div><strong>${loot.name}</strong><small>${loot.description}</small></div><b>x${count}</b></article>`;
     }).join("")}</div>` : `<p class="stores-empty">Quest discoveries and unusual rewards will be kept here.</p>`}
   `;
 }
@@ -4605,7 +4582,6 @@ function renderAbilityRow(id, extraClass = "") {
   const source = ability.source === "natural" ? `Class ability | Lv ${ability.level}` : "Training ability";
   return `
     <div class="ability-row ${extraClass}">
-      <span class="ability-sigil" aria-hidden="true">${ability.source === "natural" ? classes[ability.classId]?.label.slice(0, 1) || "A" : "T"}</span>
       <div><strong>${ability.name}</strong><small>${ability.description}</small></div>
       <span class="ability-source">${source}</span>
     </div>
@@ -4618,7 +4594,7 @@ function renderKnownAbilities(adventurer) {
     .find((id) => !adventurer.abilities.includes(id));
   const nextNatural = nextNaturalId ? abilityCatalog[nextNaturalId] : null;
   const nextRow = nextNatural
-    ? `<div class="ability-row upcoming"><span class="ability-sigil" aria-hidden="true">?</span><div><strong>${nextNatural.name}</strong><small>Naturally learned at level ${nextNatural.level}.</small></div><span class="ability-source">Upcoming</span></div>`
+    ? `<div class="ability-row upcoming"><div><strong>${nextNatural.name}</strong><small>Naturally learned at level ${nextNatural.level}.</small></div><span class="ability-source">Upcoming</span></div>`
     : "";
   return known + nextRow || `<p class="system-empty">No abilities learned yet.</p>`;
 }
@@ -4646,7 +4622,6 @@ function renderTrainingCurriculum(adventurer) {
       <section class="character-section training-section active-job">
         <div class="section-line-heading"><p class="eyebrow">Training In Progress</p><span>Completes day ${activeJob.readyDay}</span></div>
         <div class="profile-training-job">
-          <span class="ability-sigil training-pulse" aria-hidden="true">T</span>
           <div><strong>${getTrainingJobName(activeJob)}</strong><small>${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining. This adventurer cannot join expeditions while training.</small></div>
           <b>${progress}%</b>
           <div class="training-progress"><i style="width:${progress}%"></i></div>
@@ -4667,7 +4642,6 @@ function renderTrainingCurriculum(adventurer) {
       : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${cost}G / ${duration}d`;
     return `
       <div class="training-row stat-drill ${full ? "locked" : ""}">
-        <span class="ability-sigil" aria-hidden="true">${drill.mark.slice(0, 1)}</span>
         <div><strong>${drill.name}</strong><small>${drill.description}</small></div>
         <button class="secondary-button" data-start-training="${drill.stat}" data-training-kind="stat" type="button" ${disabled ? "disabled" : ""}>${buttonText}</button>
       </div>
@@ -4687,7 +4661,6 @@ function renderTrainingCurriculum(adventurer) {
       : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${cost}G / ${duration}d`;
     return `
       <div class="training-row ${known ? "known" : ""} ${levelLocked ? "locked" : ""}">
-        <span class="ability-sigil" aria-hidden="true">T</span>
         <div><strong>${ability.name}</strong><small>${ability.description}</small></div>
         <button class="secondary-button" data-start-training="${id}" data-training-kind="ability" type="button" ${disabled ? "disabled" : ""}>${buttonText}</button>
       </div>
@@ -6510,14 +6483,12 @@ function renderChapterDialog() {
   elements.chapterDialogKind.textContent = kind === "briefing" ? "Mara's Briefing" : kind === "unlock" ? "New Opportunity" : kind === "warning" ? "Guild Alert" : kind === "celebration" ? "Guild Celebration" : "Guild Story";
   elements.chapterDialogSpeaker.textContent = moment.speaker || "Mara";
   elements.chapterDialogRole.textContent = moment.role || "Guild Steward";
-  elements.chapterDialog.querySelector(".story-speaker-seal").textContent = (moment.speaker || "Mara").slice(0, 1);
   elements.chapterDialogEyebrow.textContent = moment.eyebrow;
   elements.chapterDialogTitle.textContent = moment.title;
   const copy = moment.copy || [moment.text || ""];
   elements.chapterDialogText.innerHTML = copy.map((paragraph) => `<p>${formatCopy(paragraph)}</p>`).join("");
   elements.chapterDialogCallout.classList.toggle("hidden", !moment.callout);
   elements.chapterDialogCallout.innerHTML = moment.callout ? `
-    <span class="story-callout-mark" aria-hidden="true">${kind === "warning" ? "!" : kind === "celebration" ? "+" : kind === "unlock" ? "U" : "Q"}</span>
     <div><small>${moment.callout.label}</small><strong>${formatCopy(moment.callout.title)}</strong><p>${formatCopy(moment.callout.detail)}</p>${moment.callout.facts?.length ? `<div class="story-facts">${moment.callout.facts.map((fact) => `<span>${formatCopy(fact)}</span>`).join("")}</div>` : ""}</div>
   ` : "";
   elements.chapterDialogSteps.classList.toggle("hidden", !moment.steps?.length);
@@ -6762,7 +6733,6 @@ function renderGuildActions() {
 
   elements.guildActionBar.innerHTML = `
     <div class="guild-action-summary">
-      <span class="guild-action-crest" aria-hidden="true">G</span>
       <div><p class="eyebrow">Guildmaster Actions</p><strong>${remaining} of ${capacity} available</strong><small>Rank ${getRank()} allowance</small></div>
     </div>
     <div class="guild-action-seals" aria-label="${remaining} of ${capacity} Guild Actions available">${seals}</div>

@@ -52,6 +52,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Timed realm events and animated mission dispatch
 - Local browser save data
 - Responsive desktop and mobile layouts
+- Streamlined text-first navigation and management panels without redundant initial badges
 - Contextual map and management workspace modes
 - Living tavern interiors with idle heroes, applicants, and visible room upgrades
 - Hand-painted fantasy-anime tavern backdrop with live sprite overlays

@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=35/);
+  assert.match(index, /styles\.css\?v=36/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,11 +97,25 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=35/);
+  assert.match(index, /game\.js\?v=36/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.dock-button[\s\S]*font-size: var\(--type-caption\)/);
+});
+
+test("decorative initial badges stay out of the text-first interface", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "game.js"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+  assert.doesNotMatch(index, /class="(?:crest|stat-icon|dock-icon|story-speaker-seal|morning-report-crest|expedition-report-seal)"/);
+  assert.doesNotMatch(index, /class="class-option[^>]*>[\s\S]*?<span aria-hidden="true">[WMRB]<\/span>/);
+  assert.doesNotMatch(source, /class="(?:bulletin-mark|guild-action-crest|ability-sigil|recruitment-sign|facility-order-mark|crafting-mark|return-tray-seal|expedition-entry-mark)"/);
+  assert.match(styles, /Redundant initial badges have been removed/);
+  assert.match(styles, /\.dock-button \{[\s\S]*?min-height: 48px/);
+  assert.match(styles, /@media \(max-width: 480px\)[\s\S]*?\.expedition-return-tray[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(index, /<span class="stat-label">Rank<\/span>[\s\S]*?id="rankValue"/);
 });
 
 test("Mara introduces the first quest through the reusable Guild Story framework", () => {

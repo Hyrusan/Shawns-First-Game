@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=35">
+    <link rel="stylesheet" href="styles.css?v=36">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -18,7 +18,6 @@
         <span class="unit-sprite slot-3 title-adventurer title-adventurer-three"></span>
       </div>
       <div class="title-panel">
-        <div class="crest crest-large" aria-hidden="true"><span>G</span></div>
         <p class="eyebrow">The holy realm of Jenny presents</p>
         <h1>Guildstead</h1>
         <div class="title-rule" aria-hidden="true"><span></span></div>
@@ -45,7 +44,6 @@
     <main class="game-shell">
       <header class="topbar">
         <div class="hud-brand">
-          <div class="crest" aria-hidden="true"><span>G</span></div>
           <div>
             <p class="eyebrow">Guild management office</p>
             <h1>Guildstead</h1>
@@ -59,22 +57,18 @@
 
         <section class="stat-strip" aria-label="Guild resources">
           <div class="stat stat-gold">
-            <span class="stat-icon" aria-hidden="true">G</span>
             <span class="stat-label">Gold</span>
             <strong id="goldValue">180</strong>
           </div>
           <div class="stat stat-fame">
-            <span class="stat-icon" aria-hidden="true">F</span>
             <span class="stat-label">Fame</span>
             <strong id="fameValue">0</strong>
           </div>
           <div class="stat stat-roster">
-            <span class="stat-icon" aria-hidden="true">A</span>
             <span class="stat-label">Roster</span>
             <strong id="rosterValue">0/12</strong>
           </div>
           <div class="stat stat-rank">
-            <span class="stat-icon" aria-hidden="true">R</span>
             <span class="stat-label">Rank</span>
             <strong id="rankValue">F</strong>
             <span class="rank-meter"><i id="rankProgress"></i></span>
@@ -85,22 +79,22 @@
       <section class="game-workspace">
         <nav class="command-dock" aria-label="Guild menus">
           <button class="dock-button active" data-view="guildhall" type="button">
-            <span class="dock-icon" aria-hidden="true">G</span><span>Hall</span>
+            <span>Hall</span>
           </button>
           <button class="dock-button" data-view="quest" type="button">
-            <span class="dock-icon" aria-hidden="true">Q</span><span>Quests</span>
+            <span>Quests</span>
           </button>
           <button class="dock-button" data-view="adventurers" type="button">
-            <span class="dock-icon" aria-hidden="true">A</span><span>Roster</span>
+            <span>Roster</span>
           </button>
           <button class="dock-button" data-view="facilities" type="button">
-            <span class="dock-icon" aria-hidden="true">F</span><span>Build</span>
+            <span>Build</span>
           </button>
           <button class="dock-button" data-view="events" type="button">
-            <span class="dock-icon" aria-hidden="true">!</span><span>Events</span>
+            <span>Events</span>
           </button>
           <button class="dock-button" data-view="log" type="button">
-            <span class="dock-icon" aria-hidden="true">L</span><span>Ledger</span>
+            <span>Ledger</span>
           </button>
         </nav>
 
@@ -176,16 +170,16 @@
                 </div>
                 <div class="class-picker" role="group" aria-label="Hero class">
                   <button class="class-option active" data-founder-class="warden" type="button">
-                    <span aria-hidden="true">W</span><strong>Warrior</strong><small>Shield &amp; steel</small>
+                    <strong>Warrior</strong><small>Shield &amp; steel</small>
                   </button>
                   <button class="class-option" data-founder-class="spellwright" type="button">
-                    <span aria-hidden="true">M</span><strong>Mage</strong><small>Arcane power</small>
+                    <strong>Mage</strong><small>Arcane power</small>
                   </button>
                   <button class="class-option" data-founder-class="ranger" type="button">
-                    <span aria-hidden="true">R</span><strong>Ranger</strong><small>Bow &amp; tracking</small>
+                    <strong>Ranger</strong><small>Bow &amp; tracking</small>
                   </button>
                   <button class="class-option" data-founder-class="minstrel" type="button">
-                    <span aria-hidden="true">B</span><strong>Minstrel</strong><small>Music &amp; morale</small>
+                    <strong>Minstrel</strong><small>Music &amp; morale</small>
                   </button>
                 </div>
                 <div class="creator-actions">
@@ -267,11 +261,9 @@
         <div id="chapterDialogArt" class="event-art chapter-art guild-story-art" aria-hidden="true">
           <span id="chapterDialogKind" class="story-kind">Guild Story</span>
           <span class="story-portrait-frame"></span>
-          <span class="story-banner-mark">G</span>
         </div>
         <div class="event-copy guild-story-copy">
           <header class="story-speaker">
-            <span class="story-speaker-seal" aria-hidden="true">M</span>
             <div><strong id="chapterDialogSpeaker">Mara</strong><small id="chapterDialogRole">Innkeeper, The Wayfarer's Rest</small></div>
           </header>
           <p id="chapterDialogEyebrow" class="eyebrow">Guild Story</p>
@@ -304,7 +296,6 @@
     <section id="morningReportDialog" class="event-dialog morning-report-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="morningReportTitle">
       <div class="morning-report-sheet">
         <header class="morning-report-masthead">
-          <span class="morning-report-crest" aria-hidden="true">G</span>
           <div><p id="morningReportEyebrow" class="eyebrow">Mara's Morning Post</p><h2 id="morningReportTitle">A New Day In Greenbank</h2></div>
           <span id="morningReportDate" class="morning-report-date">Day 2</span>
         </header>
@@ -319,7 +310,6 @@
     <section id="expeditionReportDialog" class="event-dialog expedition-report-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="expeditionReportTitle">
       <div id="expeditionReportSheet" class="expedition-report-sheet">
         <header class="expedition-report-masthead">
-          <span id="expeditionReportSeal" class="expedition-report-seal" aria-hidden="true">V</span>
           <div><p id="expeditionReportEyebrow" class="eyebrow">Expedition Report</p><h2 id="expeditionReportTitle">The Party Has Returned</h2></div>
           <span id="expeditionReportDate" class="expedition-report-date">Day 1</span>
         </header>
@@ -333,6 +323,6 @@
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=35"></script>
+    <script src="game.js?v=36"></script>
   </body>
 </html>

@@ -9944,3 +9944,202 @@
     font-size: var(--type-small);
   }
 }
+
+/* Redundant initial badges have been removed in favour of clearer text-first layouts. */
+@layer management {
+  .stat {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-meter {
+    left: 8px;
+  }
+
+  .game-workspace {
+    grid-template-columns: 78px minmax(0, 1fr);
+  }
+
+  .dock-button {
+    min-height: 48px;
+    gap: 0;
+    padding: 8px 5px;
+    font-size: 0.68rem;
+  }
+
+  .class-option {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    min-height: 54px;
+    text-align: center;
+  }
+
+  .archive-focus,
+  .chronicle-empty,
+  .chronicle-lead,
+  .standout-body.no-portrait,
+  .campaign-resource,
+  .guild-action-summary,
+  .facility-order-card,
+  .quest-preparation,
+  .recruitment-waiting-copy {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chronicle-edition,
+  .expedition-archive-entry {
+    grid-template-columns: minmax(0, 1fr) 18px;
+  }
+
+  .chronicle-edition > span:first-child,
+  .expedition-archive-entry > span:first-child {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .season-focus-grid button,
+  .season-focus-selected {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .season-focus-grid em {
+    grid-column: 1;
+  }
+
+  .ability-row,
+  .training-row,
+  .profile-training-job {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .profile-training-job > .training-progress {
+    grid-column: 1 / -1;
+  }
+
+  .store-item,
+  .material-item,
+  .crafting-card,
+  .equipped-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .available-equipment button {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .available-equipment button small {
+    grid-column: 1;
+  }
+
+  .facility-order-action {
+    grid-column: 1;
+  }
+
+  .training-overview.blueprint,
+  .recruitment-service,
+  .recruitment-service.locked {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .greenbank-bulletin .bulletin-masthead {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .expedition-return-tray {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .map-guild .map-town::after {
+    display: none;
+  }
+}
+
+@layer overlays {
+  .story-speaker,
+  .story-callout,
+  .report-column.notices > p,
+  .expedition-reward-strip article,
+  .season-focus-grid button,
+  .season-focus-selected {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .morning-report-masthead,
+  .expedition-report-masthead {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@layer responsive {
+  @media (max-width: 1180px) {
+    .stat {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .dock-button {
+      min-height: 50px;
+      gap: 0;
+      padding: 8px 2px;
+    }
+
+    .morning-report-masthead,
+    .expedition-report-masthead {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .morning-report-date,
+    .expedition-report-date {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+      text-align: right;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .chronicle-edition,
+    .expedition-archive-entry {
+      grid-template-columns: minmax(0, 1fr) 14px;
+    }
+
+    .ability-row,
+    .training-row,
+    .profile-training-job {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .profile-training-job > .training-progress {
+      grid-column: 1 / -1;
+    }
+
+    .training-overview.blueprint,
+    .crafting-card,
+    .expedition-return-tray,
+    .recruitment-service,
+    .recruitment-service.locked,
+    .recruitment-waiting-copy {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .training-overview.blueprint > button,
+    .crafting-card button,
+    .expedition-return-tray > button,
+    .recruitment-service button {
+      grid-column: 1;
+      width: 100%;
+    }
+
+    .expedition-report-masthead {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .expedition-report-date {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+      text-align: right;
+    }
+  }
+}

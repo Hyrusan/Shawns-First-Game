@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=33/);
+  assert.match(index, /styles\.css\?v=34/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=33/);
+  assert.match(index, /game\.js\?v=34/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -351,7 +351,7 @@ test("version 17 saves migrate into the goblin campaign without replaying comple
     decisions: state.chapter.goblinDecisions
   })`);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.intel, 0);
   assert.equal(result.support, 0);
   assert.deepEqual([...result.completedStoryMissions], ["greenbankCart", "stolenSupplies"]);
@@ -378,7 +378,7 @@ test("version 18 saves gain resumable Guild Story state", () => {
        normalisedPending: normalised.pending, defaultSeen: state.storyEvents.seen });
   `);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.pending, "firstBriefing");
   assert.equal(result.current, "firstBriefing");
   assert.equal(result.normalisedPending, "firstBriefing");
@@ -420,7 +420,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -532,7 +532,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -641,6 +641,106 @@ test("quest cards provide inline party selection with clear availability states"
   assert.doesNotMatch(result.selectedDispatch, /disabled/);
 });
 
+test("story and time-sensitive quests carry distinct priority treatments and tougher party guidance", () => {
+  const context = createGameContext();
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.facilities.questBoard = 1;
+    state.chapter.stage = "localRequests";
+    state.selectedIds = [founder.id];
+    state.greenbank.requests = [{
+      id: "urgent-request", templateId: "urgent-request", name: "Hold Saffron Bridge",
+      location: "Saffron Bridge", description: "Reach the bridge before the traders abandon it.",
+      difficulty: 39, duration: 45, gold: 70, fame: 6, focus: "str", rotatingRequest: true,
+      spawnedDay: state.day, expiresDay: state.day + 1, marker: { left: "60%", top: "60%" }
+    }];
+    renderMissions();
+    ({ board: elements.missionList.innerHTML,
+       storyDifficulties: missionDeck.filter((mission) => mission.storyEncounter).map((mission) => mission.difficulty),
+       eventDifficulties: eventMissionDeck.map((mission) => mission.difficulty),
+       storyParty: getRecommendedPartySize(missionDeck[1]),
+       bossParty: getRecommendedPartySize(missionDeck[4]) });
+  `);
+
+  assert.match(result.board, /story-mission story-priority/);
+  assert.match(result.board, /Story quest/);
+  assert.match(result.board, /time-sensitive deadline-close/);
+  assert.match(result.board, /Time sensitive/);
+  assert.match(result.board, /1 day left/);
+  assert.match(result.board, /2 heroes advised/);
+  assert.deepEqual([...result.storyDifficulties], [8, 38, 44, 50, 78]);
+  assert.deepEqual([...result.eventDifficulties], [46, 54, 62]);
+  assert.equal(result.storyParty, 2);
+  assert.equal(result.bossParty, 3);
+  assert.match(styles, /\.mission-card\.story-priority/);
+  assert.match(styles, /\.mission-card\.time-sensitive/);
+  assert.match(styles, /\.mission-priority-tag\.story/);
+  assert.match(styles, /\.mission-priority-tag\.timed/);
+});
+
+test("an adventurer can depart on only one quest per day", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.chapter.stage = "firstQuest";
+    state.day = 3;
+    state.selectedIds = [founder.id];
+    startMission("stolenSupplies");
+    const departureDay = founder.lastQuestDay;
+    founder.status = "idle";
+    state.activeMissions = [];
+    state.selectedIds = [founder.id];
+    startMission("stolenSupplies");
+    const sameDayMissionCount = state.activeMissions.length;
+    const sameDayPicker = renderQuestPartyPicker(missionDeck[0]);
+    const sameDayStatus = getAdventurerStatusLabel(founder);
+    state.day = 4;
+    state.selectedIds = [founder.id];
+    startMission("stolenSupplies");
+    ({ departureDay, sameDayMissionCount, sameDayPicker, sameDayStatus,
+       nextDayMissionCount: state.activeMissions.length, nextDepartureDay: founder.lastQuestDay });
+  `);
+
+  assert.equal(result.departureDay, 3);
+  assert.equal(result.sameDayMissionCount, 0);
+  assert.match(result.sameDayPicker, /Quested today/);
+  assert.match(result.sameDayPicker, /disabled/);
+  assert.equal(result.sameDayStatus, "Quested today");
+  assert.equal(result.nextDayMissionCount, 1);
+  assert.equal(result.nextDepartureDay, 4);
+});
+
+test("version 19 adventurers gain a daily quest record without losing their save", () => {
+  const context = createGameContext({
+    version: 19,
+    screen: "game",
+    day: 6,
+    gold: 100,
+    fame: 4,
+    adventurers: [{
+      id: "founder", name: "Jenny", gender: "female", classId: "warden", founder: true,
+      level: 2, xp: 3, status: "idle", recovery: 0, potential: 5,
+      stats: { str: 11, mag: 3, wit: 6, cha: 5 }, traits: {},
+      quirks: { positive: "dauntless", negative: "homesick" }, abilities: ["shieldBash"], lifeLog: []
+    }],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: [], completedStoryMissions: ["stolenSupplies"], charterEarned: false },
+    founderCreated: true
+  });
+  const result = run(context, `({ version: state.version, heroName: state.adventurers[0].name,
+    lastQuestDay: state.adventurers[0].lastQuestDay, available: canAdventurerQuestToday(state.adventurers[0]) })`);
+
+  assert.equal(result.version, 20);
+  assert.equal(result.heroName, "Jenny");
+  assert.equal(result.lastQuestDay, 0);
+  assert.equal(result.available, true);
+});
+
 test("named adventurers use matching male and female class sprite rows", () => {
   const context = createGameContext();
   const result = run(context, `({
@@ -689,7 +789,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -937,7 +1037,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -1059,7 +1159,7 @@ test("version 14 saves migrate to a fresh rank-scaled action day", () => {
   const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
     remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.actionDay, 5);
   assert.equal(result.remaining, 4);
   assert.equal(result.capacity, 4);
@@ -1229,7 +1329,7 @@ test("version 15 saves gain village, materials, equipment, and promotion default
     confidence: state.greenbank.confidence, materials: { ...state.materials },
     equipmentCount: state.equipment.items.length, pendingRank: state.rankRewards.pending })`);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.threat, 24);
   assert.equal(result.confidence, 42);
   assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 0 });
@@ -1384,7 +1484,7 @@ test("version 16 saves migrate to an empty but correctly aligned Chronicle", () 
     seasonStart: state.chronicle.season.startDay, focus: state.chronicle.activeFocus,
     baselineGold: state.chronicle.week.baseline.gold, baselineThreat: state.chronicle.week.baseline.threat })`);
 
-  assert.equal(result.version, 19);
+  assert.equal(result.version, 20);
   assert.equal(result.weekly, 0);
   assert.equal(result.seasonal, 0);
   assert.equal(result.weekStart, 15);

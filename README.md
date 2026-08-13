@@ -36,6 +36,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Timed Training Yard drills and teachable techniques with potential-based capacity
 - Three-person expedition parties
 - Inline quest-party selection with availability and mission-fit indicators
+- Priority styling for story quests and expiring contracts, with party-size guidance
+- One expedition per adventurer per day, making roster depth and daily planning matter
 - Class-specific expedition battle animations
 - Real-time mission clocks that continue while managing other screens
 - Timed expedition encounters with story decisions plus class, ability, and quirk responses

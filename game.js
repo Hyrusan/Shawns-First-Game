@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 19;
+const SAVE_VERSION = 20;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -736,10 +736,10 @@ const missionDeck = [
     name: "Guard the Greenbank Cart",
     location: "Greenbank Road",
     description: "Escort a flour cart through the stretch of road the goblins have been watching.",
-    difficulty: 24,
+    difficulty: 38,
     duration: 36,
-    gold: 48,
-    fame: 4,
+    gold: 72,
+    fame: 6,
     unlockFame: 0,
     focus: "str",
     localRequest: true,
@@ -752,10 +752,10 @@ const missionDeck = [
     name: "Find the Lost Woodcutter",
     location: "Mushroomwood Edge",
     description: "Search the woodland paths before nightfall and keep an eye out for goblin snares.",
-    difficulty: 27,
+    difficulty: 44,
     duration: 42,
-    gold: 55,
-    fame: 5,
+    gold: 80,
+    fame: 7,
     unlockFame: 0,
     focus: "wit",
     localRequest: true,
@@ -768,10 +768,10 @@ const missionDeck = [
     name: "Gather Mooncap Remedy",
     location: "Mara's Herb Path",
     description: "Collect mooncap mushrooms for the village healer without disturbing the local nest.",
-    difficulty: 30,
+    difficulty: 50,
     duration: 48,
-    gold: 60,
-    fame: 5,
+    gold: 92,
+    fame: 8,
     unlockFame: 0,
     focus: "mag",
     localRequest: true,
@@ -784,10 +784,10 @@ const missionDeck = [
     name: "Defeat the Barrow Hill Chief",
     location: "Barrow Hill",
     description: "Break the goblin camp, recover the stolen trade goods, and make Greenbank Road safe again.",
-    difficulty: 40,
+    difficulty: 78,
     duration: 60,
-    gold: 170,
-    fame: 22,
+    gold: 240,
+    fame: 30,
     unlockFame: 0,
     focus: "str",
     chapterBoss: true,
@@ -817,10 +817,10 @@ const eventMissionDeck = [
     name: "Lantern Vigil",
     location: "Jenny's Belltown",
     description: "A sacred lantern has gone dark outside Belltown. The wardens ask Guildstead to investigate before evening prayers.",
-    difficulty: 30,
+    difficulty: 46,
     duration: 45,
-    gold: 72,
-    fame: 14,
+    gold: 95,
+    fame: 18,
     focus: "mag",
     expiresIn: 4,
     marker: { left: "72%", top: "34%" }
@@ -830,10 +830,10 @@ const eventMissionDeck = [
     name: "Bridge Bell Rescue",
     location: "Saffron Bridge",
     description: "The bridge bells are ringing without a keeper. Travellers are stuck on the crossing and need a calm escort home.",
-    difficulty: 36,
+    difficulty: 54,
     duration: 50,
-    gold: 86,
-    fame: 16,
+    gold: 112,
+    fame: 20,
     focus: "cha",
     expiresIn: 3,
     marker: { left: "66%", top: "71%" }
@@ -843,10 +843,10 @@ const eventMissionDeck = [
     name: "Abbey Storehouse Audit",
     location: "West Abbey",
     description: "A shipment for the holy kitchens has vanished from the ledgers. The abbey wants sharp eyes and quiet questions.",
-    difficulty: 42,
+    difficulty: 62,
     duration: 65,
-    gold: 96,
-    fame: 18,
+    gold: 130,
+    fame: 24,
     focus: "wit",
     expiresIn: 5,
     marker: { left: "84%", top: "50%" }
@@ -859,7 +859,7 @@ const greenbankRequestDeck = [
     name: "Guard The Miller's Flour",
     location: "Greenbank Mill Road",
     description: "Miller Tamsin needs her flour cart escorted past a stretch of road where goblin scouts have been seen.",
-    difficulty: 22,
+    difficulty: 30,
     duration: 34,
     gold: 42,
     fame: 3,
@@ -877,7 +877,7 @@ const greenbankRequestDeck = [
     name: "Gather Moonleaf Sprigs",
     location: "Mara's Herb Path",
     description: "The village healer is short of moonleaf and needs careful hands near the old badger paths.",
-    difficulty: 24,
+    difficulty: 32,
     duration: 38,
     gold: 38,
     fame: 3,
@@ -895,7 +895,7 @@ const greenbankRequestDeck = [
     name: "Recover The Mine Tools",
     location: "Old Chalk Quarry",
     description: "A quarry crew fled from goblin signs and left a valuable crate of tools behind.",
-    difficulty: 29,
+    difficulty: 37,
     duration: 44,
     gold: 50,
     fame: 4,
@@ -913,7 +913,7 @@ const greenbankRequestDeck = [
     name: "Find Bramble Farm's Goats",
     location: "Bramble Farm",
     description: "Three goats have escaped through a broken fence. Their owner insists one of them is a tactical genius.",
-    difficulty: 20,
+    difficulty: 28,
     duration: 32,
     gold: 34,
     fame: 3,
@@ -931,7 +931,7 @@ const greenbankRequestDeck = [
     name: "Secure Saffron Footbridge",
     location: "Saffron Brook",
     description: "The spring current has loosened the bridge supports while goblins watch from the opposite bank.",
-    difficulty: 31,
+    difficulty: 39,
     duration: 46,
     gold: 56,
     fame: 5,
@@ -949,7 +949,7 @@ const greenbankRequestDeck = [
     name: "Light The Road Lanterns",
     location: "Greenbank Road",
     description: "The road lamps have gone dark one by one. Relighting them may reveal who keeps putting them out.",
-    difficulty: 27,
+    difficulty: 35,
     duration: 40,
     gold: 46,
     fame: 4,
@@ -967,7 +967,7 @@ const greenbankRequestDeck = [
     name: "Deliver The Merchant Letters",
     location: "West Abbey Track",
     description: "Trade letters need to reach the abbey before rumours of the goblin trouble become worse than the truth.",
-    difficulty: 28,
+    difficulty: 36,
     duration: 42,
     gold: 54,
     fame: 4,
@@ -985,7 +985,7 @@ const greenbankRequestDeck = [
     name: "Clear The Goblin Lookout",
     location: "Barrow Hill Foothills",
     description: "Smoke above the foothills suggests a lookout is tracking every cart entering Greenbank.",
-    difficulty: 36,
+    difficulty: 44,
     duration: 52,
     gold: 68,
     fame: 6,
@@ -1727,7 +1727,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -3280,7 +3280,7 @@ function selectGuildRoom(roomId) {
 
 function renderRoster() {
   const recruitmentCost = getRecruitmentCost();
-  const selectedAvailable = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle");
+  const selectedAvailable = state.selectedIds.filter((id) => canAdventurerQuestToday(getAdventurer(id)));
   state.selectedIds = selectedAvailable.slice(0, 3);
   if (!getAdventurer(selectedAdventurerId)) {
     selectedAdventurerId = state.adventurers[0]?.id || null;
@@ -3327,10 +3327,11 @@ function renderRoster() {
     .map((adventurer) => {
       const selected = state.selectedIds.includes(adventurer.id);
       const inspected = selectedAdventurerId === adventurer.id;
-      const statusText = adventurer.status === "idle" ? `Lv ${adventurer.level}` : getAdventurerStatusLabel(adventurer);
+      const questAvailable = canAdventurerQuestToday(adventurer);
+      const statusText = questAvailable ? `Lv ${adventurer.level}` : getAdventurerStatusLabel(adventurer);
       const partyFull = state.selectedIds.length >= 3 && !selected;
       return `
-        <article class="adventurer-card ${adventurer.status} ${selected ? "selected" : ""} ${inspected ? "inspected" : ""}" data-adventurer="${adventurer.id}">
+        <article class="adventurer-card ${adventurer.status} ${adventurer.lastQuestDay === state.day ? "quested-today" : ""} ${selected ? "selected" : ""} ${inspected ? "inspected" : ""}" data-adventurer="${adventurer.id}">
           <button class="adventurer-inspect" data-inspect="${adventurer.id}" type="button" aria-label="View ${adventurer.name}'s profile">
             <div class="sprite-frame">${renderSprite(adventurer)}</div>
             <div class="adventurer-main">
@@ -3351,8 +3352,8 @@ function renderRoster() {
               </div>
             </div>
           </button>
-          <button class="party-toggle ${selected ? "remove" : ""}" data-party="${adventurer.id}" type="button" ${adventurer.status !== "idle" || partyFull ? "disabled" : ""}>
-            ${adventurer.status !== "idle" ? getAdventurerStatusLabel(adventurer) : selected ? "Remove" : "Add"}
+          <button class="party-toggle ${selected ? "remove" : ""}" data-party="${adventurer.id}" type="button" ${!questAvailable || partyFull ? "disabled" : ""}>
+            ${!questAvailable ? getAdventurerStatusLabel(adventurer) : selected ? "Remove" : "Add"}
           </button>
         </article>
       `;
@@ -3636,9 +3637,43 @@ function renderEquipmentSection(adventurer) {
   `;
 }
 
+function isTimeSensitiveMission(mission) {
+  return Boolean(mission?.isEvent || mission?.rotatingRequest || Number.isFinite(mission?.expiresDay));
+}
+
+function getMissionDaysRemaining(mission) {
+  if (!Number.isFinite(mission?.expiresDay)) {
+    return null;
+  }
+  return Math.max(0, mission.expiresDay - state.day);
+}
+
+function formatMissionDeadline(daysRemaining) {
+  if (daysRemaining === null) {
+    return "Limited time";
+  }
+  if (daysRemaining === 0) {
+    return "Expires today";
+  }
+  return `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`;
+}
+
+function getRecommendedPartySize(mission) {
+  if (mission?.tutorial) {
+    return 1;
+  }
+  if (mission?.chapterBoss || mission?.difficulty >= 58) {
+    return 3;
+  }
+  if (mission?.storyEncounter || isTimeSensitiveMission(mission) || mission?.difficulty >= 32) {
+    return 2;
+  }
+  return 1;
+}
+
 function renderMissions() {
-  state.selectedIds = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle").slice(0, 3);
-  const selectedParty = state.selectedIds.map(getAdventurer).filter((adventurer) => adventurer?.status === "idle");
+  state.selectedIds = state.selectedIds.filter((id) => canAdventurerQuestToday(getAdventurer(id))).slice(0, 3);
+  const selectedParty = state.selectedIds.map(getAdventurer).filter(canAdventurerQuestToday);
   const campaignMarkup = renderGoblinCampaignPanel();
   const partyMarkup = `
     <section class="party-tray">
@@ -3679,12 +3714,22 @@ function renderMissions() {
       const oddsTone = odds >= 75 ? "good" : odds >= 45 ? "fair" : "poor";
       const oddsLabel = odds >= 75 ? "Promising" : odds >= 45 ? "Risky" : "Dangerous";
       const pickerOpen = partyPickerMissionId === mission.id && !locked && !active;
+      const storyPriority = Boolean(mission.storyEncounter);
+      const timeSensitive = isTimeSensitiveMission(mission);
+      const daysRemaining = getMissionDaysRemaining(mission);
+      const deadlineClose = timeSensitive && daysRemaining !== null && daysRemaining <= 1;
+      const recommendedPartySize = getRecommendedPartySize(mission);
       return `
-        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.rotatingRequest ? "greenbank-request" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${mission.storyEncounter ? "story-mission" : ""} ${resolved ? "resolved" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
+        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.rotatingRequest ? "greenbank-request" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${storyPriority ? "story-mission story-priority" : ""} ${timeSensitive ? "time-sensitive" : ""} ${deadlineClose ? "deadline-close" : ""} ${resolved ? "resolved" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
           <div class="mission-card-main">
+            ${(storyPriority || timeSensitive) ? `<div class="mission-priority-tags">
+              ${storyPriority ? `<span class="mission-priority-tag story">Story quest</span>` : ""}
+              ${timeSensitive ? `<span class="mission-priority-tag timed">${mission.isEvent ? "Realm deadline" : "Time sensitive"}</span>` : ""}
+              ${timeSensitive ? `<span class="mission-deadline ${deadlineClose ? "close" : ""}">${formatMissionDeadline(daysRemaining)}</span>` : ""}
+            </div>` : ""}
             <div class="mission-title-row">
               <div>
-                <span class="mission-kicker">${mission.isEvent ? "Realm event" : mission.rotatingRequest ? `Greenbank request | ${mission.location}` : mission.location}</span>
+                <span class="mission-kicker">${mission.location}</span>
                 <h3>${mission.name}</h3>
               </div>
               <span class="focus-chip">${mission.focus.toUpperCase()}</span>
@@ -3696,10 +3741,9 @@ function renderMissions() {
               <span>${formatMissionTime(selectedParty.length ? getMissionDuration(mission, selectedParty) : mission.duration)}</span>
               <span>${mission.gold}G</span>
               <span>${mission.fame} fame</span>
+              <span class="party-advice">${recommendedPartySize} ${recommendedPartySize === 1 ? "hero" : "heroes"} advised</span>
               ${mission.materials ? `<span>${formatMaterials(mission.materials)}</span>` : ""}
             </div>
-            ${mission.isEvent ? `<p class="mission-note">Expires on day ${mission.expiresDay}</p>` : ""}
-            ${mission.rotatingRequest ? `<p class="mission-note request-deadline">Requested day ${mission.spawnedDay} | Expires day ${mission.expiresDay}</p>` : ""}
             ${locked ? `<p class="mission-note locked-note">${lockReason}</p>` : ""}
             ${active ? `<div class="mission-progress-label"><span>Expedition underway</span><strong>${progress}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>` : ""}
           </div>
@@ -3804,12 +3848,14 @@ function renderMissionStoryNote(mission, resolved) {
 }
 
 function renderQuestPartyPicker(mission) {
-  const selectedCount = state.selectedIds.length;
+  const eligibleSelectedIds = state.selectedIds.filter((id) => canAdventurerQuestToday(getAdventurer(id)));
+  const selectedCount = eligibleSelectedIds.length;
   const partyFull = selectedCount >= 3;
   const focusLabel = mission.focus.toUpperCase();
+  const readyToday = state.adventurers.filter(canAdventurerQuestToday).length;
   const options = state.adventurers.map((adventurer) => {
-    const selected = state.selectedIds.includes(adventurer.id);
-    const available = adventurer.status === "idle";
+    const available = canAdventurerQuestToday(adventurer);
+    const selected = available && eligibleSelectedIds.includes(adventurer.id);
     const disabled = !available || (partyFull && !selected);
     const focusValue = adventurer.stats[mission.focus] || 0;
     const fitLabel = focusValue >= 8 ? "Strong fit" : focusValue >= 6 ? "Good fit" : "Support";
@@ -3836,7 +3882,7 @@ function renderQuestPartyPicker(mission) {
         ${options || `<p class="quest-party-empty">Create your founding adventurer before assembling a party.</p>`}
       </div>
       <footer>
-        <span>Quest focus: ${focusLabel}</span>
+        <span>Quest focus: ${focusLabel} | ${readyToday} ready today</span>
         <button class="ghost-button" data-clear-quest-party type="button" ${selectedCount ? "" : "disabled"}>Clear</button>
       </footer>
     </section>
@@ -4663,6 +4709,7 @@ function makeAdventurer(name, classId, founder, gender = null) {
     xp: 0,
     status: "idle",
     recovery: 0,
+    lastQuestDay: 0,
     abilities: getNaturalAbilityIds(classId, 1),
     trainingStats: { str: 0, mag: 0, wit: 0, cha: 0 },
     stats: { ...base }
@@ -4709,6 +4756,7 @@ function normaliseAdventurer(adventurer, day) {
     origin: adventurer.origin || identity.origin,
     birthdayDay: adventurer.birthdayDay || identity.birthdayDay,
     potential: adventurer.founder ? 5 : Math.max(1, Math.min(5, adventurer.potential || identity.potential)),
+    lastQuestDay: Math.max(0, Number(adventurer.lastQuestDay) || 0),
     quirks: {
       positive: adventurer.quirks?.positive && quirkCatalog[adventurer.quirks.positive] ? adventurer.quirks.positive : identity.quirks.positive,
       negative: adventurer.quirks?.negative && quirkCatalog[adventurer.quirks.negative] ? adventurer.quirks.negative : identity.quirks.negative
@@ -5198,7 +5246,14 @@ function getAdventurerStatusLabel(adventurer) {
   if (adventurer.status === "candidate") {
     return "Applicant";
   }
+  if (adventurer.lastQuestDay === state.day) {
+    return "Quested today";
+  }
   return "Available";
+}
+
+function canAdventurerQuestToday(adventurer) {
+  return Boolean(adventurer && adventurer.status === "idle" && adventurer.lastQuestDay !== state.day);
 }
 
 function startTraining(adventurerId, kind, targetId) {
@@ -5305,7 +5360,7 @@ function getTrainingCost(baseCost) {
 
 function toggleAdventurer(id) {
   const adventurer = getAdventurer(id);
-  if (!adventurer || adventurer.status !== "idle") {
+  if (!canAdventurerQuestToday(adventurer)) {
     return;
   }
   if (state.selectedIds.includes(id)) {
@@ -5321,7 +5376,7 @@ function startMission(missionId) {
   if (!mission || getMissionLockReason(mission) || state.selectedIds.length === 0) {
     return;
   }
-  const partyIds = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle").slice(0, 3);
+  const partyIds = state.selectedIds.filter((id) => canAdventurerQuestToday(getAdventurer(id))).slice(0, 3);
   if (partyIds.length === 0) {
     return;
   }
@@ -5331,6 +5386,7 @@ function startMission(missionId) {
   const preparationSummary = getPreparationSummary();
   party.forEach((adventurer) => {
     adventurer.status = "busy";
+    adventurer.lastQuestDay = state.day;
     addLifeEvent(adventurer, `Set out for ${mission.name}.`);
   });
 

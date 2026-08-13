@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=34/);
+  assert.match(index, /styles\.css\?v=35/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=34/);
+  assert.match(index, /game\.js\?v=35/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -351,7 +351,7 @@ test("version 17 saves migrate into the goblin campaign without replaying comple
     decisions: state.chapter.goblinDecisions
   })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.intel, 0);
   assert.equal(result.support, 0);
   assert.deepEqual([...result.completedStoryMissions], ["greenbankCart", "stolenSupplies"]);
@@ -378,7 +378,7 @@ test("version 18 saves gain resumable Guild Story state", () => {
        normalisedPending: normalised.pending, defaultSeen: state.storyEvents.seen });
   `);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.pending, "firstBriefing");
   assert.equal(result.current, "firstBriefing");
   assert.equal(result.normalisedPending, "firstBriefing");
@@ -420,7 +420,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -532,7 +532,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -735,7 +735,7 @@ test("version 19 adventurers gain a daily quest record without losing their save
   const result = run(context, `({ version: state.version, heroName: state.adventurers[0].name,
     lastQuestDay: state.adventurers[0].lastQuestDay, available: canAdventurerQuestToday(state.adventurers[0]) })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.lastQuestDay, 0);
   assert.equal(result.available, true);
@@ -789,7 +789,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -916,6 +916,133 @@ test("encounter bonuses flow into final gold, fame, experience, and injury prote
   assert.equal(result.protectedRecovery, 0);
 });
 
+test("a victorious party returns with a persistent report, level-up, and story impact", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    founder.level = 3;
+    founder.xp = 53;
+    founder.status = "busy";
+    founder.quirks = { positive: "dauntless", negative: "homesick" };
+    founder.abilities = ["shieldBash"];
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.chapter.stage = "firstQuest";
+    const mission = { ...missionDeck.find((item) => item.id === "stolenSupplies") };
+    const active = normaliseActiveMission({
+      id: "return-victory", missionId: mission.id, missionSnapshot: mission, partyIds: [founder.id],
+      elapsed: mission.duration, duration: mission.duration, encounterId: mission.encounterId,
+      encounterStatus: "active", encounterTriggerAt: 7, encounterExpiresAt: Date.now() + 10000
+    });
+    state.activeMissions = [active];
+    resolveEncounterChoice(active.id, "secureProvisions", false, false);
+    resolveMission(active);
+    renderExpeditionReturnTray();
+    const tray = elements.expeditionReturnTray.innerHTML;
+    const report = state.expeditionReports.entries[0];
+    openExpeditionReport(report.id);
+    const reportMarkup = elements.expeditionReportBody.innerHTML;
+    const unreadAfterOpen = state.expeditionReports.unreadIds.length;
+    activeView = "log";
+    renderChronicleArchive();
+    renderExpeditionReportDialog();
+    ({
+      report,
+      tray,
+      reportMarkup,
+      unreadAfterOpen,
+      ledgerMarkup: elements.chronicleArchive.innerHTML,
+      closeLabel: elements.closeExpeditionReport.textContent
+    });
+  `);
+
+  assert.equal(result.report.success, true);
+  assert.equal(result.report.rewards.gold, 77);
+  assert.equal(result.report.rewards.fame, 3);
+  assert.equal(result.report.heroes[0].levelBefore, 3);
+  assert.equal(result.report.heroes[0].levelAfter, 4);
+  assert.deepEqual([...result.report.heroes[0].abilitiesLearned], ["holdTheLine"]);
+  assert.equal(result.report.village.confidenceDelta, 7);
+  assert.equal(result.report.decision.label, "Secure the provisions");
+  assert.match(result.tray, /Party returned/);
+  assert.match(result.tray, /View Report/);
+  assert.equal(result.unreadAfterOpen, 0);
+  assert.match(result.reportMarkup, /The Party Returns Victorious/);
+  assert.match(result.reportMarkup, /Hold the Line/);
+  assert.match(result.reportMarkup, /Greenbank Impact/);
+  assert.match(result.ledgerMarkup, /Field Reports/);
+  assert.match(result.ledgerMarkup, /Recover the Stolen Supplies/);
+  assert.equal(result.closeLabel, "Return To Ledger");
+});
+
+test("a failed expedition report records consolation rewards, village harm, and injury", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    founder.status = "busy";
+    state.adventurers = [founder];
+    const mission = {
+      id: "failed-request", name: "Hold The Broken Crossing", location: "Saffron Brook",
+      description: "A deliberately overwhelming test contract.", difficulty: 999, duration: 30,
+      gold: 30, fame: 5, focus: "wit", rotatingRequest: true, expiresDay: 3,
+      materials: { timber: 2 }, success: { threat: -4, confidence: 3 },
+      failure: { threat: 4, confidence: -2 }
+    };
+    const active = normaliseActiveMission({
+      id: "return-retreat", missionId: mission.id, missionSnapshot: mission, partyIds: [founder.id],
+      elapsed: mission.duration, duration: mission.duration, encounterStatus: "resolved", injuryShield: 0
+    });
+    resolveMission(active);
+    renderExpeditionReturnTray();
+    const report = state.expeditionReports.entries[0];
+    ({
+      report,
+      tray: elements.expeditionReturnTray.innerHTML,
+      heroStatus: founder.status,
+      recovery: founder.recovery
+    });
+  `);
+
+  assert.equal(result.report.success, false);
+  assert.equal(result.report.rewards.gold, 9);
+  assert.equal(result.report.rewards.fame, 0);
+  assert.deepEqual({ ...result.report.rewards.materials }, {});
+  assert.equal(result.report.heroes[0].status, "injured");
+  assert.equal(result.heroStatus, "injured");
+  assert.ok(result.recovery >= 3);
+  assert.equal(result.report.village.threatDelta, 4);
+  assert.equal(result.report.village.confidenceDelta, -2);
+  assert.match(result.report.outcomeNote, /injured during the retreat/);
+  assert.match(result.tray, /made it home after a retreat/);
+});
+
+test("version 20 saves gain the expedition archive and responsive report presentation", () => {
+  const context = createGameContext({
+    version: 20,
+    screen: "game",
+    day: 5,
+    gold: 180,
+    fame: 4,
+    adventurers: [],
+    activeMissions: [],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: [], completedStoryMissions: [], charterEarned: false },
+    founderCreated: true
+  });
+  const result = run(context, `({ version: state.version, reports: state.expeditionReports })`);
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+  assert.equal(result.version, 21);
+  assert.deepEqual([...result.reports.entries], []);
+  assert.deepEqual([...result.reports.unreadIds], []);
+  assert.match(index, /id="expeditionReturnTray"/);
+  assert.match(index, /id="expeditionReportDialog"/);
+  assert.match(styles, /\.expedition-report-sheet/);
+  assert.match(styles, /@media \(max-width: 480px\)[\s\S]*\.expedition-report-sheet/);
+  assert.match(styles, /prefers-reduced-motion[\s\S]*\.report-return-hero/);
+});
+
 test("Tavern Life choices create persistent bonds, history, and profile UI", () => {
   const context = createGameContext();
   const result = run(context, `
@@ -1037,7 +1164,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -1159,7 +1286,7 @@ test("version 14 saves migrate to a fresh rank-scaled action day", () => {
   const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
     remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.actionDay, 5);
   assert.equal(result.remaining, 4);
   assert.equal(result.capacity, 4);
@@ -1329,7 +1456,7 @@ test("version 15 saves gain village, materials, equipment, and promotion default
     confidence: state.greenbank.confidence, materials: { ...state.materials },
     equipmentCount: state.equipment.items.length, pendingRank: state.rankRewards.pending })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.threat, 24);
   assert.equal(result.confidence, 42);
   assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 0 });
@@ -1484,7 +1611,7 @@ test("version 16 saves migrate to an empty but correctly aligned Chronicle", () 
     seasonStart: state.chronicle.season.startDay, focus: state.chronicle.activeFocus,
     baselineGold: state.chronicle.week.baseline.gold, baselineThreat: state.chronicle.week.baseline.threat })`);
 
-  assert.equal(result.version, 20);
+  assert.equal(result.version, 21);
   assert.equal(result.weekly, 0);
   assert.equal(result.seasonal, 0);
   assert.equal(result.weekStart, 15);

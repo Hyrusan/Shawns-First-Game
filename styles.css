@@ -8976,3 +8976,971 @@
     font-size: var(--type-small);
   }
 }
+
+@layer management {
+  .expedition-return-tray {
+    position: relative;
+    z-index: 8;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 10px;
+    padding: 9px 10px;
+    overflow: hidden;
+    border: 1px solid #b77a2d;
+    border-left-width: 4px;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, rgb(231 177 70 / 13%), transparent 36%),
+      linear-gradient(180deg, #213b34, #12231f);
+    box-shadow: 0 3px 0 #050807, inset 0 0 0 1px rgb(255 225 144 / 9%);
+    color: #f7e9bf;
+    animation: expedition-tray-arrive 420ms cubic-bezier(0.2, 0.8, 0.25, 1) both;
+  }
+
+  .expedition-return-tray.hidden {
+    display: none;
+  }
+
+  .expedition-return-tray::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 228 154 / 10%) 48%, transparent 66%);
+    content: "";
+    pointer-events: none;
+    translate: -120% 0;
+    animation: expedition-tray-glint 700ms 240ms ease-out both;
+  }
+
+  .return-tray-seal {
+    display: grid;
+    width: 38px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 2px solid #16231d;
+    border-radius: 50% 50% 5px 50%;
+    background: #50835e;
+    box-shadow: 0 2px 0 #07100c, inset 0 0 0 2px rgb(255 241 191 / 12%);
+    color: #fff2bd;
+    font-family: Georgia, serif;
+    font-weight: 900;
+  }
+
+  .return-tray-seal.retreat {
+    background: #a65845;
+  }
+
+  .return-tray-copy {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .return-tray-copy .mission-kicker {
+    color: #deb45e;
+    font-size: 0.57rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .return-tray-copy strong,
+  .return-tray-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .return-tray-copy strong {
+    font-family: Georgia, serif;
+    font-size: 0.76rem;
+  }
+
+  .return-tray-copy small {
+    color: #bdcfc0;
+    font-size: 0.6rem;
+  }
+
+  .expedition-return-tray > button {
+    position: relative;
+    z-index: 1;
+    min-height: 38px;
+  }
+
+  .expedition-archive {
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 3px double #604124;
+  }
+
+  .expedition-archive-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .expedition-archive-heading > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .expedition-archive-heading h3 {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+  }
+
+  .expedition-archive-heading > div > span {
+    color: #6d5138;
+    font-size: 0.62rem;
+  }
+
+  .expedition-archive-list {
+    display: grid;
+    gap: 5px;
+    margin-top: 9px;
+  }
+
+  .expedition-archive-entry {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid #8c6741;
+    border-left: 4px solid #4e7759;
+    border-radius: 3px;
+    background: rgb(255 247 218 / 30%);
+    color: var(--parchment-ink);
+    text-align: left;
+    transition: background 140ms ease, border-color 140ms ease, translate 140ms ease;
+  }
+
+  .expedition-archive-entry:hover,
+  .expedition-archive-entry:focus-visible {
+    border-color: #456952;
+    background: rgb(100 139 91 / 13%);
+    translate: 2px 0;
+  }
+
+  .expedition-archive-entry.retreat {
+    border-left-color: #a75d49;
+  }
+
+  .expedition-archive-entry.unread {
+    background: linear-gradient(90deg, rgb(223 164 56 / 20%), rgb(255 247 218 / 30%));
+    box-shadow: inset 0 0 0 1px rgb(150 95 28 / 18%);
+  }
+
+  .expedition-entry-mark {
+    display: grid;
+    width: 34px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #352117;
+    border-radius: 50% 50% 5px 50%;
+    background: #31584d;
+    color: #f5d37d;
+    font-family: Georgia, serif;
+    font-size: 0.68rem;
+    font-weight: 900;
+  }
+
+  .expedition-archive-entry.retreat .expedition-entry-mark {
+    background: #8e493b;
+  }
+
+  .expedition-archive-entry > span:nth-child(2) {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .expedition-archive-entry small,
+  .expedition-archive-entry em {
+    overflow: hidden;
+    color: #775738;
+    font-size: 0.56rem;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .expedition-archive-entry strong {
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .expedition-archive-entry > i {
+    color: #725033;
+    font-family: Georgia, serif;
+    font-size: 1.1rem;
+    font-style: normal;
+    text-align: center;
+  }
+
+  @keyframes expedition-tray-arrive {
+    from { opacity: 0; translate: 0 -8px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes expedition-tray-glint {
+    to { translate: 120% 0; }
+  }
+}
+
+@layer overlays {
+  .expedition-report-dialog {
+    z-index: 135;
+    background: rgb(5 9 9 / 86%);
+  }
+
+  .expedition-report-sheet {
+    width: min(920px, calc(100vw - 28px));
+    max-height: min(820px, calc(100vh - 28px));
+    padding: 15px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border: 3px solid #2e1a10;
+    border-radius: 5px;
+    background:
+      repeating-linear-gradient(90deg, rgb(80 45 24 / 5%) 0 1px, transparent 1px 22px),
+      linear-gradient(180deg, #f6e2ad, #dab977);
+    box-shadow: 0 14px 42px rgb(0 0 0 / 62%), inset 0 0 0 2px rgb(255 247 215 / 40%);
+    color: var(--parchment-ink);
+    animation: expedition-report-open 380ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+  }
+
+  .expedition-report-sheet.retreat {
+    border-color: #4c271e;
+  }
+
+  .expedition-report-masthead {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    padding-bottom: 10px;
+    border-bottom: 3px double #57371f;
+  }
+
+  .expedition-report-masthead > div {
+    min-width: 0;
+  }
+
+  .expedition-report-masthead h2 {
+    overflow: hidden;
+    margin-top: 2px;
+    color: #321d10;
+    font-family: Georgia, serif;
+    font-size: 1.35rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .expedition-report-sheet .eyebrow {
+    color: #7b4d29;
+  }
+
+  .expedition-report-seal {
+    display: grid;
+    width: 46px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 2px solid #3b2215;
+    border-radius: 50% 50% 5px 50%;
+    background: #31534c;
+    color: #f2cd6a;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    font-weight: 900;
+  }
+
+  .expedition-report-seal.retreat {
+    background: #934b3d;
+    color: #ffe0a5;
+  }
+
+  .expedition-report-date {
+    padding: 5px 8px;
+    border: 1px solid #72502f;
+    font-size: 0.65rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .expedition-report-body {
+    padding: 12px 0;
+  }
+
+  .expedition-return-scene {
+    position: relative;
+    display: grid;
+    min-height: 154px;
+    align-items: end;
+    padding: 16px;
+    overflow: hidden;
+    border: 2px solid #33241a;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, rgb(9 18 14 / 88%) 0 42%, rgb(9 18 14 / 20%) 70%),
+      linear-gradient(180deg, transparent 35%, rgb(5 9 7 / 54%)),
+      var(--realm-map) 48% 59% / 145% auto no-repeat;
+    box-shadow: inset 0 0 24px rgb(3 7 5 / 46%);
+    color: #fff0c5;
+  }
+
+  .expedition-return-scene.retreat {
+    filter: saturate(0.82);
+  }
+
+  .return-scene-copy {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    max-width: 48%;
+    gap: 3px;
+    text-shadow: 0 2px 1px #07100c;
+  }
+
+  .return-scene-copy > span {
+    color: #efc968;
+    font-size: 0.57rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .return-scene-copy h3 {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+  }
+
+  .return-scene-copy p {
+    color: #d7e1d1;
+    font-size: 0.64rem;
+    line-height: 1.4;
+  }
+
+  .report-return-party {
+    position: absolute;
+    right: 7%;
+    bottom: 5px;
+    z-index: 4;
+    display: flex;
+    min-width: 210px;
+    align-items: end;
+    justify-content: center;
+  }
+
+  .report-return-hero {
+    display: block;
+    margin-left: -13px;
+    opacity: 0;
+    filter: drop-shadow(0 6px 3px rgb(0 0 0 / 55%));
+    transform-origin: bottom center;
+    animation: report-hero-return 680ms calc(100ms + var(--return-index) * 120ms) cubic-bezier(0.2, 0.85, 0.25, 1) forwards;
+  }
+
+  .report-return-hero:first-child {
+    margin-left: 0;
+  }
+
+  .report-return-hero.injured {
+    filter: grayscale(0.35) drop-shadow(0 6px 3px rgb(0 0 0 / 55%));
+  }
+
+  .report-return-hero .report-sprite {
+    width: 76px;
+  }
+
+  .expedition-reward-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 9px;
+  }
+
+  .expedition-reward-strip article {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    padding: 7px;
+    border-top: 3px solid #b47a31;
+    background: rgb(255 248 219 / 30%);
+  }
+
+  .expedition-reward-strip article.success { border-color: #56764f; }
+  .expedition-reward-strip article.retreat { border-color: #a44b41; }
+
+  .expedition-reward-strip article > span {
+    display: grid;
+    width: 28px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #6c4b2c;
+    border-radius: 50%;
+    color: #5f4228;
+    font-family: Georgia, serif;
+    font-size: 0.65rem;
+    font-weight: 900;
+  }
+
+  .expedition-reward-strip article > div {
+    display: grid;
+    min-width: 0;
+  }
+
+  .expedition-reward-strip small {
+    color: #715439;
+    font-size: 0.56rem;
+    text-transform: uppercase;
+  }
+
+  .expedition-reward-strip strong {
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .expedition-report-section {
+    margin-top: 12px;
+  }
+
+  .expedition-section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgb(83 50 28 / 28%);
+  }
+
+  .expedition-section-heading h3 {
+    font-family: Georgia, serif;
+    font-size: 0.88rem;
+  }
+
+  .expedition-section-heading > span {
+    color: #73563a;
+    font-size: 0.6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .expedition-hero-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 7px;
+    margin-top: 7px;
+  }
+
+  .expedition-hero-result {
+    display: grid;
+    grid-template-columns: 66px minmax(0, 1fr);
+    gap: 8px;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid rgb(96 64 37 / 34%);
+    border-left: 4px solid #53735a;
+    border-radius: 3px;
+    background: rgb(255 248 220 / 28%);
+    opacity: 0;
+    animation: expedition-hero-card-in 360ms calc(250ms + var(--hero-index) * 90ms) ease-out forwards;
+  }
+
+  .expedition-hero-result.level-up {
+    border-left-color: #c88932;
+    background: linear-gradient(100deg, rgb(233 176 65 / 17%), rgb(255 248 220 / 28%));
+  }
+
+  .expedition-hero-result.injured {
+    border-left-color: #a95746;
+  }
+
+  .expedition-hero-sprite {
+    position: relative;
+    display: grid;
+    width: 64px;
+    height: 76px;
+    place-items: end center;
+    overflow: hidden;
+    border: 1px solid #58402a;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #537267, #1d3a34);
+    box-shadow: inset 0 -12px 20px rgb(5 14 11 / 35%);
+  }
+
+  .expedition-hero-sprite .report-profile-sprite {
+    width: 60px;
+  }
+
+  .expedition-hero-sprite > span:last-child {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    display: grid;
+    width: 20px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #49301e;
+    border-radius: 50%;
+    background: #f0d383;
+    color: #3f2b1b;
+    font-size: 0.55rem;
+    font-weight: 900;
+  }
+
+  .expedition-hero-copy {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: 5px;
+  }
+
+  .expedition-hero-copy > div:first-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .expedition-hero-copy > div:first-child > span {
+    display: grid;
+    min-width: 0;
+  }
+
+  .expedition-hero-copy small {
+    color: #725239;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+  }
+
+  .expedition-hero-copy strong {
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .expedition-hero-copy > div:first-child > b {
+    flex: 0 0 auto;
+    color: #396347;
+    font-size: 0.62rem;
+  }
+
+  .expedition-xp-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    color: #6c4f36;
+    font-size: 0.57rem;
+  }
+
+  .expedition-xp-line strong {
+    color: #376049;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  .expedition-xp-track {
+    height: 6px;
+    overflow: hidden;
+    border: 1px solid #6b4c31;
+    border-radius: 2px;
+    background: #8d734f;
+  }
+
+  .expedition-xp-track i {
+    display: block;
+    width: var(--xp-target);
+    height: 100%;
+    background: linear-gradient(90deg, #47765c, #81a854);
+    transform-origin: left center;
+    animation: expedition-xp-fill 900ms 520ms ease-out both;
+  }
+
+  .expedition-hero-notes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .expedition-hero-notes span {
+    padding: 2px 4px;
+    border: 1px solid rgb(91 62 38 / 28%);
+    color: #674b35;
+    font-size: 0.52rem;
+  }
+
+  .expedition-hero-notes span.ready {
+    border-color: #678261;
+    color: #3e6448;
+  }
+
+  .expedition-hero-notes span.injured {
+    border-color: #a55b4a;
+    color: #8e3e35;
+  }
+
+  .expedition-ability-earned {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    padding-top: 4px;
+    border-top: 1px solid rgb(88 57 34 / 22%);
+  }
+
+  .expedition-ability-earned span {
+    color: #845426;
+    font-size: 0.53rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .expedition-ability-earned strong {
+    color: #315b49;
+    font-size: 0.65rem;
+  }
+
+  .expedition-report-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 3px double #614326;
+  }
+
+  .expedition-field-notes,
+  .expedition-village-impact {
+    min-width: 0;
+    padding: 9px;
+    border-top: 3px solid #5b765e;
+    background: rgb(255 248 220 / 27%);
+  }
+
+  .expedition-village-impact {
+    border-top-color: #b27b32;
+  }
+
+  .expedition-field-notes h3,
+  .expedition-village-impact h3 {
+    margin: 2px 0 4px;
+    color: #3b2618;
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+  }
+
+  .expedition-field-notes > strong {
+    color: #355d48;
+    font-size: 0.65rem;
+  }
+
+  .expedition-field-notes > p:not(.eyebrow),
+  .expedition-village-impact > p:not(.eyebrow) {
+    margin-top: 4px;
+    color: #634a34;
+    font-size: 0.62rem;
+    line-height: 1.4;
+  }
+
+  .expedition-field-notes > span {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 3px 5px;
+    border: 1px solid #9b743e;
+    background: rgb(224 174 68 / 14%);
+    color: #694a2c;
+    font-size: 0.56rem;
+    font-weight: 900;
+  }
+
+  .expedition-score {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-top: 7px;
+  }
+
+  .expedition-score span {
+    display: grid;
+    padding: 4px;
+    border: 1px solid rgb(91 62 38 / 24%);
+    color: #745337;
+    font-size: 0.54rem;
+  }
+
+  .expedition-score b {
+    color: #315b49;
+    font-family: Georgia, serif;
+    font-size: 0.72rem;
+  }
+
+  .bond-contribution {
+    display: block;
+    margin-top: 5px;
+    color: #7a4d64;
+    font-size: 0.56rem;
+  }
+
+  .expedition-village-impact > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 7px;
+  }
+
+  .expedition-village-impact > div > span {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1px 5px;
+    padding: 6px;
+    border: 1px solid #987043;
+  }
+
+  .expedition-village-impact small {
+    color: #735239;
+    font-size: 0.53rem;
+    text-transform: uppercase;
+  }
+
+  .expedition-village-impact strong {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+  }
+
+  .expedition-village-impact em {
+    color: #74573e;
+    font-size: 0.55rem;
+    font-style: normal;
+  }
+
+  .expedition-village-impact .good strong { color: #3e714f; }
+  .expedition-village-impact .bad strong { color: #9a4438; }
+  .expedition-village-impact .steady strong { color: #74573e; }
+
+  .expedition-village-impact .expedition-loot {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+    align-items: center;
+  }
+
+  .expedition-loot b {
+    padding: 3px 5px;
+    border: 1px solid #93682e;
+    background: #e3bd67;
+    color: #46301c;
+  }
+
+  .expedition-report-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 3px double #57371f;
+  }
+
+  .expedition-report-footer span {
+    color: #73563a;
+    font-size: 0.58rem;
+    font-style: italic;
+  }
+
+  @keyframes expedition-report-open {
+    from { opacity: 0; scale: 0.97; translate: 0 10px; }
+    to { opacity: 1; scale: 1; translate: 0 0; }
+  }
+
+  @keyframes report-hero-return {
+    0% { opacity: 0; translate: 80px 4px; }
+    72% { opacity: 1; translate: -4px -2px; }
+    86% { opacity: 1; translate: 0 -6px; }
+    100% { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes expedition-hero-card-in {
+    from { opacity: 0; translate: 0 6px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  @keyframes expedition-xp-fill {
+    from { width: var(--xp-start); }
+    to { width: var(--xp-target); }
+  }
+}
+
+@layer responsive {
+  @media (max-width: 720px) {
+    .expedition-reward-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .expedition-report-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .report-return-party {
+      right: 2%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .expedition-return-tray {
+      grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .return-tray-seal {
+      width: 35px;
+    }
+
+    .expedition-return-tray > button {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-height: 44px;
+    }
+
+    .expedition-archive-heading {
+      align-items: flex-start;
+    }
+
+    .expedition-archive-entry {
+      grid-template-columns: 34px minmax(0, 1fr) 14px;
+    }
+
+    .expedition-entry-mark {
+      width: 31px;
+    }
+
+    .expedition-report-sheet {
+      width: calc(100vw - 12px);
+      max-height: calc(100vh - 12px);
+      padding: 10px;
+    }
+
+    .expedition-report-masthead {
+      grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .expedition-report-seal {
+      width: 36px;
+    }
+
+    .expedition-report-masthead h2 {
+      font-size: 1rem;
+    }
+
+    .expedition-report-date {
+      grid-column: 1 / -1;
+      justify-self: stretch;
+      text-align: center;
+    }
+
+    .expedition-return-scene {
+      min-height: 190px;
+      align-items: start;
+      padding: 11px;
+      background:
+        linear-gradient(180deg, rgb(9 18 14 / 90%) 0 42%, rgb(9 18 14 / 14%) 70%),
+        linear-gradient(180deg, transparent 35%, rgb(5 9 7 / 54%)),
+        var(--realm-map) 48% 59% / auto 100% no-repeat;
+    }
+
+    .return-scene-copy {
+      max-width: 100%;
+    }
+
+    .report-return-party {
+      right: 50%;
+      bottom: 2px;
+      min-width: 190px;
+      translate: 50% 0;
+    }
+
+    .report-return-hero .report-sprite {
+      width: 68px;
+    }
+
+    .expedition-hero-results {
+      grid-template-columns: 1fr;
+    }
+
+    .expedition-score {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .expedition-report-footer {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .expedition-report-footer button {
+      min-height: 44px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .expedition-return-tray,
+    .expedition-return-tray::after,
+    .expedition-report-sheet,
+    .report-return-hero,
+    .expedition-hero-result,
+    .expedition-xp-track i {
+      animation: none;
+    }
+
+    .report-return-hero,
+    .expedition-hero-result {
+      opacity: 1;
+    }
+  }
+}
+
+@layer readability {
+  .return-tray-copy .mission-kicker,
+  .return-tray-copy small,
+  .expedition-archive-heading > div > span,
+  .expedition-archive-entry small,
+  .expedition-archive-entry em,
+  .return-scene-copy > span,
+  .return-scene-copy p,
+  .expedition-reward-strip small,
+  .expedition-section-heading > span,
+  .expedition-hero-copy small,
+  .expedition-xp-line,
+  .expedition-hero-notes span,
+  .expedition-ability-earned span,
+  .expedition-field-notes > p:not(.eyebrow),
+  .expedition-village-impact > p:not(.eyebrow),
+  .expedition-field-notes > span,
+  .expedition-score span,
+  .bond-contribution,
+  .expedition-village-impact small,
+  .expedition-village-impact em,
+  .expedition-report-footer span {
+    font-size: var(--type-caption);
+  }
+
+  .return-tray-copy strong,
+  .expedition-archive-entry strong,
+  .expedition-reward-strip strong,
+  .expedition-hero-copy strong,
+  .expedition-field-notes h3,
+  .expedition-village-impact h3 {
+    font-size: var(--type-small);
+  }
+}

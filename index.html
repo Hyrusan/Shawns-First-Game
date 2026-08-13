@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=34">
+    <link rel="stylesheet" href="styles.css?v=35">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -147,6 +147,7 @@
             </div>
 
             <section id="expeditionWatch" class="expedition-watch hidden" aria-live="polite"></section>
+            <section id="expeditionReturnTray" class="expedition-return-tray hidden" aria-live="polite"></section>
 
             <div class="view-stack">
               <section id="creatorPanel" class="creator-panel view-panel" data-panel="hero">
@@ -315,8 +316,23 @@
       </div>
     </section>
 
+    <section id="expeditionReportDialog" class="event-dialog expedition-report-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="expeditionReportTitle">
+      <div id="expeditionReportSheet" class="expedition-report-sheet">
+        <header class="expedition-report-masthead">
+          <span id="expeditionReportSeal" class="expedition-report-seal" aria-hidden="true">V</span>
+          <div><p id="expeditionReportEyebrow" class="eyebrow">Expedition Report</p><h2 id="expeditionReportTitle">The Party Has Returned</h2></div>
+          <span id="expeditionReportDate" class="expedition-report-date">Day 1</span>
+        </header>
+        <div id="expeditionReportBody" class="expedition-report-body"></div>
+        <footer class="expedition-report-footer">
+          <span>Filed in the Guildstead Ledger by Mara.</span>
+          <button id="closeExpeditionReportButton" class="primary-button" type="button">Return To Guild</button>
+        </footer>
+      </div>
+    </section>
+
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=34"></script>
+    <script src="game.js?v=35"></script>
   </body>
 </html>

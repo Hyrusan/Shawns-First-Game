@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 20;
+const SAVE_VERSION = 21;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -1503,6 +1503,7 @@ let toastTimer = null;
 let tavernLifeDialogOpen = false;
 let morningReportDialogOpen = false;
 let activeChronicleReport = null;
+let activeExpeditionReportId = null;
 const state = loadState();
 currentChapterMomentId = chapterMoments[state.storyEvents.pending] ? state.storyEvents.pending : null;
 
@@ -1549,6 +1550,7 @@ const elements = {
   activeViewEyebrow: document.querySelector("#activeViewEyebrow"),
   activeViewTitle: document.querySelector("#activeViewTitle"),
   expeditionWatch: document.querySelector("#expeditionWatch"),
+  expeditionReturnTray: document.querySelector("#expeditionReturnTray"),
   creatorPanel: document.querySelector("#creatorPanel"),
   founderName: document.querySelector("#founderName"),
   founderClass: document.querySelector("#founderClass"),
@@ -1599,6 +1601,14 @@ const elements = {
   morningReportDate: document.querySelector("#morningReportDate"),
   morningReportBody: document.querySelector("#morningReportBody"),
   closeMorningReport: document.querySelector("#closeMorningReportButton"),
+  expeditionReportDialog: document.querySelector("#expeditionReportDialog"),
+  expeditionReportSheet: document.querySelector("#expeditionReportSheet"),
+  expeditionReportSeal: document.querySelector("#expeditionReportSeal"),
+  expeditionReportEyebrow: document.querySelector("#expeditionReportEyebrow"),
+  expeditionReportTitle: document.querySelector("#expeditionReportTitle"),
+  expeditionReportDate: document.querySelector("#expeditionReportDate"),
+  expeditionReportBody: document.querySelector("#expeditionReportBody"),
+  closeExpeditionReport: document.querySelector("#closeExpeditionReportButton"),
   toastRail: document.querySelector("#toastRail")
 };
 
@@ -1620,6 +1630,7 @@ elements.viewEvent.addEventListener("click", viewPopupEvent);
 elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
 elements.closeTavernLife.addEventListener("click", closeTavernLifeEvent);
 elements.closeMorningReport.addEventListener("click", closeMorningReport);
+elements.closeExpeditionReport.addEventListener("click", closeExpeditionReport);
 elements.founderName.addEventListener("input", renderFounderPreview);
 elements.founderClassOptions.forEach((button) => {
   button.addEventListener("click", () => selectFounderClass(button.dataset.founderClass));
@@ -1649,6 +1660,7 @@ function defaultState() {
     adventurers: [],
     selectedIds: [],
     activeMissions: [],
+    expeditionReports: { entries: [], unreadIds: [] },
     trainingJobs: [],
     relationships: {},
     tavernLife: {
@@ -1727,7 +1739,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1762,6 +1774,7 @@ function loadState() {
       facilities: migratedFacilities,
       chapter: normaliseChapter(migratedChapter, fresh.chapter),
       storyEvents: normaliseStoryEvents(saved.storyEvents),
+      expeditionReports: normaliseExpeditionReports(saved.expeditionReports),
       trainingJobs: [],
       eventMissions: saved.eventMissions || [],
       inventory: saved.inventory || {},
@@ -1891,6 +1904,34 @@ function normaliseStoryEvents(savedEvents) {
     ? savedEvents.pending
     : null;
   return { pending, seen };
+}
+
+function normaliseExpeditionReports(savedReports) {
+  const entries = Array.isArray(savedReports?.entries)
+    ? savedReports.entries.filter((report) => report?.id && report?.mission?.name).slice(0, 40).map((report) => ({
+        ...report,
+        day: Math.max(1, Number(report.day) || 1),
+        success: Boolean(report.success),
+        rewards: {
+          gold: Math.max(0, Number(report.rewards?.gold) || 0),
+          fame: Math.max(0, Number(report.rewards?.fame) || 0),
+          materials: normaliseMaterials(report.rewards?.materials),
+          lootId: lootCatalog[report.rewards?.lootId] ? report.rewards.lootId : ""
+        },
+        village: {
+          threatDelta: Number(report.village?.threatDelta) || 0,
+          confidenceDelta: Number(report.village?.confidenceDelta) || 0,
+          threatAfter: Math.max(0, Math.min(100, Number(report.village?.threatAfter) || 0)),
+          confidenceAfter: Math.max(0, Math.min(100, Number(report.village?.confidenceAfter) || 0))
+        },
+        heroes: Array.isArray(report.heroes) ? report.heroes.filter((hero) => hero?.id && hero?.name).slice(0, 3) : []
+      }))
+    : [];
+  const validIds = new Set(entries.map((report) => report.id));
+  const unreadIds = Array.isArray(savedReports?.unreadIds)
+    ? [...new Set(savedReports.unreadIds.filter((id) => validIds.has(id)))].slice(0, 40)
+    : [];
+  return { entries, unreadIds };
 }
 
 function normaliseGreenbank(savedGreenbank, day) {
@@ -2106,6 +2147,7 @@ function resetGame() {
   tavernLifeDialogOpen = false;
   morningReportDialogOpen = false;
   activeChronicleReport = null;
+  activeExpeditionReportId = null;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
   Object.assign(state, fresh);
@@ -2161,9 +2203,11 @@ function render() {
   renderTrainingPanel();
   renderMissions();
   renderExpeditionWatch();
+  renderExpeditionReturnTray();
   renderLog();
   renderStores();
   renderMorningReport();
+  renderExpeditionReportDialog();
   renderEventDialog();
   renderTavernLifeDialog();
   renderChapterDialog();
@@ -2219,9 +2263,10 @@ function renderScreens() {
   const chapterOpen = Boolean(currentChapterMomentId);
   const tavernLifeOpen = Boolean(tavernLifeDialogOpen && state.tavernLife.active);
   const morningReportOpen = Boolean(morningReportDialogOpen && getDisplayedReport());
+  const expeditionReportOpen = Boolean(activeExpeditionReportId && getExpeditionReport(activeExpeditionReportId));
   elements.titleScreen.classList.toggle("hidden", !titleOpen);
   elements.introScene.classList.toggle("hidden", !introOpen);
-  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen || tavernLifeOpen || morningReportOpen);
+  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen || tavernLifeOpen || morningReportOpen || expeditionReportOpen);
 }
 
 function renderIntroScene() {
@@ -2725,6 +2770,8 @@ function renderChronicleArchive() {
   }
   const reports = [...state.chronicle.weeklyReports, ...state.chronicle.seasonReports]
     .sort((first, second) => second.endDay - first.endDay || (second.kind === "seasonal" ? 1 : -1));
+  const expeditionReports = state.expeditionReports.entries;
+  const unreadExpeditions = new Set(state.expeditionReports.unreadIds);
   const activeFocus = getSeasonFocus();
   elements.chronicleArchive.innerHTML = `
     <div class="chronicle-archive-heading">
@@ -2738,9 +2785,25 @@ function renderChronicleArchive() {
         <i aria-hidden="true">&rsaquo;</i>
       </button>
     `).join("")}</div>` : `<div class="chronicle-empty"><span aria-hidden="true">C</span><div><strong>The first edition is still being written</strong><p>Mara will file a Chronicle after Guildstead's first seven days.</p></div></div>`}
+    <section class="expedition-archive">
+      <div class="expedition-archive-heading">
+        <div><p class="eyebrow">Expedition archive</p><h3>Field Reports</h3><span>Party returns, rewards and hard-earned lessons.</span></div>
+        <span class="archive-count"><b>${expeditionReports.length}</b> filed</span>
+      </div>
+      ${expeditionReports.length ? `<div class="expedition-archive-list">${expeditionReports.slice(0, 12).map((report) => `
+        <button class="expedition-archive-entry ${report.success ? "success" : "retreat"} ${unreadExpeditions.has(report.id) ? "unread" : ""}" data-open-expedition-report="${report.id}" type="button">
+          <span class="expedition-entry-mark" aria-hidden="true">${report.success ? "V" : "!"}</span>
+          <span><small>Day ${report.day} | ${report.mission.location}${unreadExpeditions.has(report.id) ? " | New report" : ""}</small><strong>${report.mission.name}</strong><em>${report.heroes.map((hero) => hero.name).join(", ")} | +${report.rewards.gold}G | +${report.rewards.fame} fame</em></span>
+          <i aria-hidden="true">&rsaquo;</i>
+        </button>
+      `).join("")}</div>` : `<div class="chronicle-empty expedition-empty"><span aria-hidden="true">R</span><div><strong>No parties have returned yet</strong><p>The first completed expedition will be filed here automatically.</p></div></div>`}
+    </section>
   `;
   elements.chronicleArchive.querySelectorAll("[data-open-chronicle]").forEach((button) => {
     button.addEventListener("click", () => openArchivedChronicle(button.dataset.openChronicle));
+  });
+  elements.chronicleArchive.querySelectorAll("[data-open-expedition-report]").forEach((button) => {
+    button.addEventListener("click", () => openExpeditionReport(button.dataset.openExpeditionReport));
   });
 }
 
@@ -3945,6 +4008,140 @@ function renderExpeditionWatch() {
   elements.expeditionWatch.querySelectorAll("[data-encounter-choice]").forEach((button) => {
     button.addEventListener("click", () => resolveEncounterChoice(activeMission.id, button.dataset.encounterChoice));
   });
+}
+
+function getExpeditionReport(reportId) {
+  return state.expeditionReports.entries.find((report) => report.id === reportId) || null;
+}
+
+function queueExpeditionReport(report) {
+  state.expeditionReports.entries.unshift(report);
+  state.expeditionReports.entries = state.expeditionReports.entries.slice(0, 40);
+  state.expeditionReports.unreadIds.unshift(report.id);
+  state.expeditionReports.unreadIds = [...new Set(state.expeditionReports.unreadIds)].slice(0, 40);
+}
+
+function renderExpeditionReturnTray() {
+  const unreadReports = state.expeditionReports.entries.filter((report) => state.expeditionReports.unreadIds.includes(report.id));
+  const latest = unreadReports[0];
+  elements.expeditionReturnTray.classList.toggle("hidden", !latest);
+  if (!latest) {
+    elements.expeditionReturnTray.innerHTML = "";
+    return;
+  }
+  const partyNames = latest.heroes.map((hero) => hero.name).join(", ");
+  elements.expeditionReturnTray.innerHTML = `
+    <span class="return-tray-seal ${latest.success ? "success" : "retreat"}" aria-hidden="true">${latest.success ? "V" : "!"}</span>
+    <div class="return-tray-copy">
+      <span class="mission-kicker">Party returned${unreadReports.length > 1 ? ` | ${unreadReports.length} reports waiting` : ""}</span>
+      <strong>${latest.mission.name}</strong>
+      <small>${partyNames} ${latest.success ? "completed the contract" : "made it home after a retreat"}.</small>
+    </div>
+    <button class="primary-button" data-open-expedition-report="${latest.id}" type="button">View Report</button>
+  `;
+  elements.expeditionReturnTray.querySelector("[data-open-expedition-report]")?.addEventListener("click", () => openExpeditionReport(latest.id));
+}
+
+function openExpeditionReport(reportId) {
+  const report = getExpeditionReport(reportId);
+  if (!report) {
+    return;
+  }
+  currentPopupEventId = null;
+  tavernLifeDialogOpen = false;
+  morningReportDialogOpen = false;
+  activeChronicleReport = null;
+  activeExpeditionReportId = reportId;
+  state.expeditionReports.unreadIds = state.expeditionReports.unreadIds.filter((id) => id !== reportId);
+  render();
+}
+
+function closeExpeditionReport() {
+  activeExpeditionReportId = null;
+  render();
+}
+
+function renderExpeditionReportDialog() {
+  const report = activeExpeditionReportId ? getExpeditionReport(activeExpeditionReportId) : null;
+  elements.expeditionReportDialog.classList.toggle("hidden", !report);
+  if (!report) {
+    return;
+  }
+  const materials = formatMaterials(report.rewards.materials);
+  const loot = report.rewards.lootId ? lootCatalog[report.rewards.lootId] : null;
+  const threatTone = report.village.threatDelta < 0 ? "good" : report.village.threatDelta > 0 ? "bad" : "steady";
+  const confidenceTone = report.village.confidenceDelta > 0 ? "good" : report.village.confidenceDelta < 0 ? "bad" : "steady";
+  const signed = (value) => `${value > 0 ? "+" : ""}${value}`;
+  elements.expeditionReportSheet.className = `expedition-report-sheet ${report.success ? "success" : "retreat"}`;
+  elements.expeditionReportSeal.className = `expedition-report-seal ${report.success ? "success" : "retreat"}`;
+  elements.expeditionReportSeal.textContent = report.success ? "V" : "!";
+  elements.expeditionReportEyebrow.textContent = report.success ? "Contract Completed" : "Difficult Retreat";
+  elements.expeditionReportTitle.textContent = report.mission.name;
+  elements.expeditionReportDate.textContent = `Day ${report.day}`;
+  elements.closeExpeditionReport.textContent = activeView === "log" ? "Return To Ledger" : "Return To Guild";
+  elements.expeditionReportBody.innerHTML = `
+    <section class="expedition-return-scene ${report.success ? "success" : "retreat"}">
+      <div class="return-scene-copy">
+        <span>${report.success ? "Safe return to the Wayfarer's Rest" : "The tavern doors stayed open late"}</span>
+        <h3>${report.success ? "The Party Returns Victorious" : "The Party Returns Wiser"}</h3>
+        <p>${report.summary}</p>
+      </div>
+      <div class="report-return-party" aria-label="${report.heroes.map((hero) => hero.name).join(", ")} returning from ${report.mission.location}">
+        ${report.heroes.map((hero, index) => `<span class="report-return-hero ${hero.status === "injured" ? "injured" : ""}" style="--return-index:${index}">${renderSprite(hero, "report-sprite")}</span>`).join("")}
+      </div>
+    </section>
+    <section class="expedition-reward-strip">
+      <article class="${report.success ? "success" : "retreat"}"><span aria-hidden="true">${report.success ? "V" : "!"}</span><div><small>Outcome</small><strong>${report.success ? "Victory" : "Retreat"}</strong></div></article>
+      <article><span aria-hidden="true">G</span><div><small>Gold returned</small><strong>+${report.rewards.gold}G</strong></div></article>
+      <article><span aria-hidden="true">F</span><div><small>Fame earned</small><strong>+${report.rewards.fame}</strong></div></article>
+      <article><span aria-hidden="true">S</span><div><small>Guild stores</small><strong>${materials || loot?.name || "No new supplies"}</strong></div></article>
+    </section>
+    <section class="expedition-report-section">
+      <div class="expedition-section-heading"><div><p class="eyebrow">Party Progress</p><h3>Adventurer Results</h3></div><span>${report.heroes.length} returned</span></div>
+      <div class="expedition-hero-results">${report.heroes.map((hero, index) => renderExpeditionHeroResult(hero, index)).join("")}</div>
+    </section>
+    <section class="expedition-report-grid">
+      <article class="expedition-field-notes">
+        <p class="eyebrow">Field Notes</p>
+        <h3>${report.decision?.title || "The road home"}</h3>
+        <strong>${report.decision?.label || (report.success ? "Contract fulfilled" : "A measured withdrawal")}</strong>
+        <p>${report.decision?.result || report.outcomeNote}</p>
+        ${report.decision?.consequence ? `<span>${report.decision.consequence}</span>` : ""}
+        <div class="expedition-score"><span>Party power <b>${report.score.power}</b></span><span>Field roll <b>${report.score.roll}</b></span><span>Quest risk <b>${report.score.difficulty}</b></span></div>
+        ${report.score.bondPower ? `<small class="bond-contribution">Party bonds contributed ${signed(report.score.bondPower)} power.</small>` : ""}
+      </article>
+      <article class="expedition-village-impact">
+        <p class="eyebrow">Greenbank Impact</p>
+        <h3>${report.success ? "Word Reaches The Village" : "News Of The Retreat Spreads"}</h3>
+        <div><span class="${threatTone}"><small>Goblin threat</small><strong>${signed(report.village.threatDelta)}</strong><em>${report.village.threatAfter} now</em></span><span class="${confidenceTone}"><small>Confidence</small><strong>${signed(report.village.confidenceDelta)}</strong><em>${report.village.confidenceAfter} now</em></span></div>
+        ${loot ? `<p class="expedition-loot"><b>${loot.name}</b>${loot.description}</p>` : `<p>${materials ? `${materials} were added to Guild Stores.` : "No additional curios were recovered this time."}</p>`}
+      </article>
+    </section>
+  `;
+}
+
+function renderExpeditionHeroResult(hero, index) {
+  const levelled = hero.levelAfter > hero.levelBefore;
+  const xpTarget = Math.min(100, Math.round((hero.xpAfter / Math.max(1, hero.xpRequiredAfter)) * 100));
+  const xpStart = levelled ? 0 : Math.min(xpTarget, Math.round((hero.xpBefore / Math.max(1, hero.xpRequiredBefore)) * 100));
+  const learned = (hero.abilitiesLearned || []).map((id) => abilityCatalog[id]?.name).filter(Boolean);
+  const statusLabel = hero.status === "injured" ? `Injured on return | ${hero.recovery}s recovery` : "Ready for tomorrow";
+  return `
+    <article class="expedition-hero-result ${levelled ? "level-up" : ""} ${hero.status === "injured" ? "injured" : ""}" style="--hero-index:${index}">
+      <div class="expedition-hero-sprite">${renderSprite(hero, "report-profile-sprite")}<span>${hero.status === "injured" ? "!" : reportHeroMark(hero.classId)}</span></div>
+      <div class="expedition-hero-copy">
+        <div><span><small>${classes[hero.classId]?.label || "Adventurer"}</small><strong>${hero.name}</strong></span><b>${levelled ? `Lv ${hero.levelBefore} to ${hero.levelAfter}` : `Lv ${hero.levelAfter}`}</b></div>
+        <div class="expedition-xp-line"><span>Experience</span><strong>+${hero.xpGain} XP</strong></div>
+        <div class="expedition-xp-track" aria-label="${hero.name} has ${hero.xpAfter} of ${hero.xpRequiredAfter} experience"><i style="--xp-start:${xpStart}%;--xp-target:${xpTarget}%"></i></div>
+        <div class="expedition-hero-notes"><span class="${hero.status === "injured" ? "injured" : "ready"}">${statusLabel}</span><span>${quirkCatalog[hero.positiveQuirk]?.name || "Steady"} / ${quirkCatalog[hero.negativeQuirk]?.name || "Unproven"}</span></div>
+        ${learned.length ? `<div class="expedition-ability-earned"><span>New ability</span><strong>${learned.join(", ")}</strong></div>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function reportHeroMark(classId) {
+  return classes[classId]?.label.slice(0, 1) || "A";
 }
 
 function renderEncounterPanel(activeMission, encounter, party) {
@@ -5492,17 +5689,30 @@ function resolveMission(activeMission) {
   const roll = Math.floor(Math.random() * 18) + getPartyRollBonus(party);
   const success = mission.guaranteedSuccess || power + roll >= mission.difficulty;
   const partyNames = party.map((adventurer) => adventurer.name).join(", ");
+  const villageBefore = { threat: state.greenbank.threat, confidence: state.greenbank.confidence };
+  const heroBefore = party.map((adventurer) => ({
+    id: adventurer.id,
+    level: adventurer.level,
+    xp: adventurer.xp,
+    xpRequired: xpForNext(adventurer.level),
+    abilities: [...(adventurer.abilities || [])]
+  }));
+  const xpAwards = {};
+  let gold = 0;
+  let fame = 0;
+  let storyDecision = null;
+  let outcomeNote = "The party returned to the tavern and shared what happened on the road.";
 
   if (success) {
     const baseGold = mission.gold + state.facilities.questBoard * 6 + (activeMission.goldBonus || 0);
-    const gold = Math.round(baseGold * getPartyGoldRate(party));
-    const fame = mission.fame + Math.floor(state.facilities.questBoard / 2) + getPartyFameBonus(party) + (activeMission.fameBonus || 0);
+    gold = Math.round(baseGold * getPartyGoldRate(party));
+    fame = mission.fame + Math.floor(state.facilities.questBoard / 2) + getPartyFameBonus(party) + (activeMission.fameBonus || 0);
     state.gold += gold;
     state.fame += fame;
     if (mission.materials) {
       grantMaterials(mission.materials);
     }
-    commitStoryMissionDecision(activeMission, mission);
+    storyDecision = commitStoryMissionDecision(activeMission, mission);
     if (mission.rotatingRequest) {
       adjustGreenbank(mission.success);
       state.greenbank.completedRequests += 1;
@@ -5514,7 +5724,9 @@ function resolveMission(activeMission) {
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Completed ${mission.name} and helped earn ${fame} fame.`);
-      grantXp(adventurer, Math.round((9 + mission.fame + state.facilities.trainingYard * 2 + (activeMission.xpBonus || 0)) * getXpRate(adventurer)));
+      const xp = Math.round((9 + mission.fame + state.facilities.trainingYard * 2 + (activeMission.xpBonus || 0)) * getXpRate(adventurer));
+      xpAwards[adventurer.id] = xp;
+      grantXp(adventurer, xp);
     });
     addLog(`${partyNames} complete ${mission.name}, earning ${gold}G and ${fame} fame.`);
     recordChronicleEvent({
@@ -5529,14 +5741,16 @@ function resolveMission(activeMission) {
     });
     handleChapterMissionSuccess(mission);
     syncRankReward(previousRank);
-    showToast("Mission complete", `${mission.name} earned ${gold}G and ${fame} fame${mission.materials ? `, plus ${formatMaterials(mission.materials)}` : ""}.`, "success");
+    outcomeNote = `${partyNames} completed the contract and returned with ${gold}G and ${fame} fame.`;
   } else {
-    const consolationGold = Math.floor(mission.gold * 0.3);
-    state.gold += consolationGold;
+    gold = Math.floor(mission.gold * 0.3);
+    state.gold += gold;
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Retreated from ${mission.name}, wiser and bruised.`);
-      grantXp(adventurer, Math.round(4 * getXpRate(adventurer)));
+      const xp = Math.round(4 * getXpRate(adventurer));
+      xpAwards[adventurer.id] = xp;
+      grantXp(adventurer, xp);
     });
     if (mission.rotatingRequest) {
       adjustGreenbank(mission.failure);
@@ -5547,22 +5761,119 @@ function resolveMission(activeMission) {
       success: false,
       heroIds: party.map((adventurer) => adventurer.id),
       focus: mission.focus,
-      gold: consolationGold,
+      gold,
       fame: 0,
       highlight: `${partyNames} returned from ${mission.name} with hard-earned lessons.`
     });
     if (activeMission.injuryShield > 0) {
       addLog(`${partyNames} retreat from ${mission.name}, but their earlier preparation prevents an injury.`);
-      showToast("Party retreated safely", `The party escaped ${mission.location} without injury.`, "info");
+      outcomeNote = "The expedition preparation held. Everyone escaped without a lasting injury.";
     } else {
       const injured = party[Math.floor(Math.random() * party.length)];
       injured.status = "injured";
       injured.recovery = Math.max(3, 12 - state.facilities.dormitory * 2 - getRecoveryReduction(injured));
       addLifeEvent(injured, `Was injured during ${mission.name}.`);
       addLog(`${partyNames} retreat from ${mission.name}. ${injured.name} needs ${injured.recovery}s to recover.`);
-      showToast("Party retreated", `${injured.name} was injured at ${mission.location}.`, "danger");
+      outcomeNote = `${injured.name} was injured during the retreat and will need time to recover.`;
     }
   }
+
+  const report = createExpeditionReport(activeMission, mission, party, {
+    success,
+    power,
+    roll,
+    gold,
+    fame,
+    heroBefore,
+    xpAwards,
+    villageBefore,
+    storyDecision,
+    outcomeNote
+  });
+  queueExpeditionReport(report);
+  showToast("Party returned", `${mission.name} has a new Expedition Report.`, success ? "success" : "danger");
+}
+
+function createExpeditionReport(activeMission, mission, party, resolution) {
+  const heroBeforeById = new Map(resolution.heroBefore.map((hero) => [hero.id, hero]));
+  const heroes = party.map((adventurer) => {
+    const before = heroBeforeById.get(adventurer.id) || {};
+    return {
+      id: adventurer.id,
+      name: adventurer.name,
+      classId: adventurer.classId,
+      gender: adventurer.gender,
+      founder: Boolean(adventurer.founder),
+      levelBefore: before.level || adventurer.level,
+      levelAfter: adventurer.level,
+      xpBefore: before.xp || 0,
+      xpAfter: adventurer.xp,
+      xpRequiredBefore: before.xpRequired || xpForNext(before.level || adventurer.level),
+      xpRequiredAfter: xpForNext(adventurer.level),
+      xpGain: resolution.xpAwards[adventurer.id] || 0,
+      abilitiesLearned: (adventurer.abilities || []).filter((id) => !(before.abilities || []).includes(id)),
+      positiveQuirk: adventurer.quirks?.positive || "",
+      negativeQuirk: adventurer.quirks?.negative || "",
+      status: adventurer.status,
+      recovery: adventurer.recovery || 0
+    };
+  });
+  const encounter = encounterDeck[activeMission.encounterId];
+  const encounterOutcome = activeMission.encounterOutcome || {};
+  const decision = resolution.storyDecision
+    ? {
+        title: encounter?.title || "Guildmaster decision",
+        label: resolution.storyDecision.label,
+        result: resolution.storyDecision.result,
+        consequence: resolution.storyDecision.consequence
+      }
+    : activeMission.encounterResult ? {
+        title: encounter?.title || "Field decision",
+        label: activeMission.encounterAutoResolved ? "Party instinct" : "Guildmaster's order",
+        result: activeMission.encounterResult,
+        consequence: ""
+      } : null;
+  const lootAwarded = encounterOutcome.lootId && (!mission.storyEncounter || resolution.success)
+    ? encounterOutcome.lootId
+    : "";
+  return {
+    id: `expedition-report-${crypto.randomUUID()}`,
+    day: state.day,
+    success: resolution.success,
+    mission: {
+      id: mission.id,
+      name: mission.name,
+      location: mission.location,
+      focus: mission.focus,
+      difficulty: mission.difficulty,
+      story: Boolean(mission.storyEncounter),
+      timeSensitive: isTimeSensitiveMission(mission)
+    },
+    summary: resolution.success
+      ? `${heroes.map((hero) => hero.name).join(", ")} crossed the threshold with the contract complete and the road behind them.`
+      : `${heroes.map((hero) => hero.name).join(", ")} made it back together after the expedition turned against them.`,
+    rewards: {
+      gold: resolution.gold,
+      fame: resolution.fame,
+      materials: resolution.success ? { ...(mission.materials || {}) } : {},
+      lootId: lootAwarded
+    },
+    heroes,
+    decision,
+    outcomeNote: resolution.outcomeNote,
+    score: {
+      power: resolution.power,
+      roll: resolution.roll,
+      difficulty: mission.difficulty,
+      bondPower: getRelationshipPartyPower(party)
+    },
+    village: {
+      threatDelta: state.greenbank.threat - resolution.villageBefore.threat,
+      confidenceDelta: state.greenbank.confidence - resolution.villageBefore.confidence,
+      threatAfter: state.greenbank.threat,
+      confidenceAfter: state.greenbank.confidence
+    }
+  };
 }
 
 function normaliseActiveMission(activeMission) {

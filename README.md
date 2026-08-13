@@ -42,6 +42,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Real-time mission clocks that continue while managing other screens
 - Timed expedition encounters with story decisions plus class, ability, and quirk responses
 - Enemy health, encounter consequences, and an optional auto-decision fallback
+- Animated expedition return reports with rewards, levelling, injuries, decisions, and village impact
+- A permanent Field Reports archive in the Guild Ledger
 - Recoverable curios stored in the Guild Stores ledger
 - Mission odds, rewards, injuries, experience, and levelling
 - Room construction, blueprint unlocks, and facility upgrades

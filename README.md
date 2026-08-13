@@ -9,6 +9,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Interactive pixel-art world map and guildhall interior
 - Looping map theme with an in-game music control
 - Three-scene tavern prologue and guided Chapter One progression
+- Character-led Guild Story briefings with a dedicated Mara portrait, resumable major announcements, and clear next objectives
+- A gentle first-quest tutorial that introduces party dispatch and expedition decisions before the wider campaign appears
 - Branching goblin quest chain with bespoke decisions and a Barrow Hill finale shaped by Goblin Intel and Village Support
 - Male and female hero creation across four visual classes
 - Gender-consistent class sprites for every named adventurer

@@ -597,6 +597,425 @@
   }
 }
 
+@layer overlays {
+  .guild-story-dialog {
+    padding: clamp(10px, 2.5vw, 28px);
+    background:
+      linear-gradient(90deg, rgb(4 8 7 / 86%), rgb(4 8 7 / 64%) 42%, rgb(4 8 7 / 88%)),
+      rgb(3 6 6 / 78%);
+  }
+
+  .chapter-panel.guild-story-panel {
+    --story-accent: #d8a044;
+    --story-accent-soft: rgb(216 160 68 / 14%);
+    grid-template-columns: minmax(270px, 34%) minmax(0, 1fr);
+    width: min(930px, 96vw);
+    max-height: min(760px, 94vh);
+    border-color: #9b6b31;
+    background:
+      linear-gradient(110deg, rgb(216 160 68 / 5%), transparent 42%),
+      linear-gradient(180deg, #1b2824, #0d1513);
+  }
+
+  .chapter-panel.guild-story-panel.kind-warning {
+    --story-accent: #d66f4b;
+    --story-accent-soft: rgb(214 111 75 / 15%);
+    border-color: #984e36;
+  }
+
+  .chapter-panel.guild-story-panel.kind-unlock {
+    --story-accent: #76b79c;
+    --story-accent-soft: rgb(118 183 156 / 14%);
+    border-color: #4d806c;
+  }
+
+  .chapter-panel.guild-story-panel.kind-celebration {
+    --story-accent: #e9c96d;
+    --story-accent-soft: rgb(233 201 109 / 15%);
+    border-color: #a88337;
+  }
+
+  .chapter-art.guild-story-art {
+    min-height: 570px;
+    border-right-color: #8d622e;
+    background-color: #171f1b;
+    background-image:
+      linear-gradient(180deg, transparent 48%, rgb(6 11 9 / 26%) 68%, rgb(5 9 8 / 92%) 100%),
+      linear-gradient(90deg, transparent 76%, rgb(7 13 11 / 78%) 100%),
+      url("assets/mara-portrait-v1.webp");
+    background-position: center, center, 52% 36%;
+    background-repeat: no-repeat;
+    background-size: cover, cover, cover;
+  }
+
+  .chapter-art.guild-story-art::before {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    border: 0;
+    border-radius: 0;
+    background:
+      linear-gradient(135deg, rgb(255 224 159 / 12%), transparent 26%),
+      linear-gradient(180deg, transparent 74%, var(--story-accent-soft));
+    box-shadow: inset -1px 0 rgb(255 222 150 / 10%);
+    content: "";
+    pointer-events: none;
+  }
+
+  .story-kind {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    z-index: 3;
+    padding: 6px 9px 5px;
+    border: 1px solid rgb(255 225 166 / 34%);
+    border-radius: 3px;
+    background: rgb(8 14 12 / 76%);
+    box-shadow: 0 3px 0 rgb(0 0 0 / 28%);
+    color: #f5d58d;
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .story-portrait-frame {
+    position: absolute;
+    inset: 8px;
+    z-index: 2;
+    border: 1px solid rgb(255 228 170 / 14%);
+    border-radius: 3px 3px 0 0;
+    clip-path: polygon(0 0, 100% 0, 100% 94%, 94% 100%, 0 100%);
+    pointer-events: none;
+  }
+
+  .story-banner-mark {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 3;
+    display: grid;
+    width: 44px;
+    aspect-ratio: 0.78;
+    place-items: center;
+    border: 1px solid #d09b42;
+    background: linear-gradient(180deg, #264f58 0 76%, transparent 76%);
+    clip-path: polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%);
+    color: #f3ce75;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    font-weight: 900;
+    text-shadow: 0 2px #0b1414;
+  }
+
+  .guild-story-copy {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+    padding: clamp(22px, 3vw, 34px);
+    overflow-y: auto;
+    scrollbar-color: #91652f #111a17;
+  }
+
+  .story-speaker {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 9px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 13px;
+    border-bottom: 1px solid rgb(225 186 108 / 18%);
+  }
+
+  .story-speaker-seal {
+    display: grid;
+    width: 36px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid var(--story-accent);
+    border-radius: 50% 50% 8px 50%;
+    background: linear-gradient(145deg, color-mix(in srgb, var(--story-accent) 42%, #17211d), #14201c);
+    box-shadow: inset 0 0 0 3px rgb(5 10 9 / 28%);
+    color: #fff0c2;
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+    font-weight: 900;
+  }
+
+  .story-speaker div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .story-speaker strong {
+    color: #f1d69a;
+    font-family: Georgia, serif;
+    font-size: 0.92rem;
+  }
+
+  .story-speaker small {
+    color: #8fa99d;
+    font-size: 0.7rem;
+  }
+
+  .guild-story-copy > .eyebrow { color: var(--story-accent); }
+
+  .guild-story-copy h2 {
+    max-width: 24ch;
+    margin: 5px 0 13px;
+    color: #fff0c9;
+    font-size: 1.85rem;
+    line-height: 1.08;
+  }
+
+  .story-dialogue {
+    display: grid;
+    gap: 9px;
+  }
+
+  .story-dialogue p {
+    color: #d5cbb4;
+    font-family: Georgia, serif;
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+
+  .story-dialogue p:first-child {
+    color: #efe0bd;
+    font-size: 0.94rem;
+  }
+
+  .story-callout {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 11px;
+    align-items: start;
+    margin-top: 19px;
+    padding: 14px 0;
+    border-top: 1px solid rgb(231 194 118 / 20%);
+    border-bottom: 1px solid rgb(231 194 118 / 20%);
+    background: linear-gradient(90deg, var(--story-accent-soft), transparent 84%);
+  }
+
+  .story-callout.hidden,
+  .story-steps.hidden { display: none; }
+
+  .story-callout-mark {
+    display: grid;
+    width: 38px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid var(--story-accent);
+    border-radius: 4px;
+    background: #121d19;
+    box-shadow: inset 0 0 12px var(--story-accent-soft);
+    color: var(--story-accent);
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+  }
+
+  .story-callout > div {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .story-callout small {
+    color: var(--story-accent);
+    font-size: 0.63rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .story-callout strong {
+    color: #f4e2b6;
+    font-family: Georgia, serif;
+    font-size: 0.94rem;
+  }
+
+  .story-callout p {
+    color: #acb9ae;
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .story-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .story-facts span {
+    padding: 3px 6px;
+    border: 1px solid rgb(215 177 104 / 24%);
+    border-radius: 2px;
+    background: rgb(7 13 11 / 44%);
+    color: #c9b57f;
+    font-size: 0.64rem;
+    font-weight: 800;
+  }
+
+  .story-steps {
+    display: grid;
+    gap: 0;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+
+  .story-steps li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 9px;
+    align-items: start;
+    min-height: 48px;
+    padding: 7px 0;
+  }
+
+  .story-steps li:not(:last-child)::after {
+    position: absolute;
+    top: 35px;
+    bottom: -6px;
+    left: 14px;
+    width: 1px;
+    background: linear-gradient(var(--story-accent), transparent);
+    content: "";
+    opacity: 0.42;
+  }
+
+  .story-steps li > span {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 29px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--story-accent) 72%, #33423b);
+    border-radius: 50%;
+    background: #111a17;
+    color: var(--story-accent);
+    font-size: 0.67rem;
+    font-weight: 900;
+  }
+
+  .story-steps li > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .story-steps strong {
+    color: #ded4bb;
+    font-size: 0.74rem;
+  }
+
+  .story-steps small {
+    color: #91a097;
+    font-size: 0.69rem;
+    line-height: 1.35;
+  }
+
+  .story-actions {
+    justify-content: flex-start;
+    margin-top: 19px;
+  }
+
+  .story-actions .primary-button {
+    min-width: min(240px, 100%);
+    min-height: 44px;
+    font-size: 0.78rem;
+  }
+}
+
+@layer responsive {
+  @media (max-width: 720px) {
+    .guild-story-dialog {
+      align-items: start;
+      overflow-y: auto;
+    }
+
+    .chapter-panel.guild-story-panel {
+      grid-template-columns: minmax(0, 1fr);
+      max-height: none;
+      margin-block: auto;
+    }
+
+    .chapter-art.guild-story-art {
+      min-height: 190px;
+      border-right: 0;
+      border-bottom: 2px solid #8d622e;
+      background-position: center, center, 50% 27%;
+      background-size: cover, cover, 115%;
+    }
+
+    .story-kind {
+      top: 13px;
+      left: 13px;
+    }
+
+    .story-banner-mark {
+      right: 15px;
+      bottom: 13px;
+      left: auto;
+      width: 36px;
+    }
+
+    .guild-story-copy {
+      padding: 20px;
+      overflow: visible;
+    }
+
+    .story-speaker { margin-bottom: 15px; }
+  }
+
+  @media (max-width: 440px) {
+    .guild-story-dialog { padding: 7px; }
+    .chapter-art.guild-story-art { min-height: 132px; background-position: center, center, 50% 24%; }
+    .guild-story-copy { padding: 14px 15px 15px; }
+    .story-speaker { margin-bottom: 10px; padding-bottom: 9px; }
+    .guild-story-copy h2 { font-size: 1.35rem; }
+    .guild-story-copy h2 { margin-bottom: 9px; }
+    .story-dialogue { gap: 6px; }
+    .story-dialogue p,
+    .story-dialogue p:first-child { font-size: 0.82rem; }
+    .story-callout { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; margin-top: 12px; padding-block: 10px; }
+    .story-callout-mark { width: 34px; }
+    .story-steps { margin-top: 9px; }
+    .story-steps li { min-height: 42px; padding-block: 4px; }
+    .story-actions { margin-top: 11px; }
+    .story-actions .primary-button { width: 100%; }
+  }
+
+  @media (max-height: 680px) and (min-width: 721px) {
+    .chapter-panel.guild-story-panel { max-height: 94vh; }
+    .chapter-art.guild-story-art { min-height: 0; }
+    .story-speaker { margin-bottom: 12px; padding-bottom: 10px; }
+    .story-callout { margin-top: 13px; padding-block: 10px; }
+    .story-steps { margin-top: 9px; }
+    .story-steps li { min-height: 41px; padding-block: 4px; }
+    .story-actions { margin-top: 12px; }
+  }
+}
+
+@layer readability {
+  .story-kind,
+  .story-speaker small,
+  .story-callout small,
+  .story-facts span,
+  .story-steps small {
+    font-size: var(--type-caption);
+  }
+
+  .story-callout p,
+  .story-steps strong,
+  .story-actions .primary-button {
+    font-size: var(--type-small);
+  }
+}
+
 @layer management {
   .goblin-campaign {
     --campaign-gold: #e6ae4e;

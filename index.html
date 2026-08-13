@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=32">
+    <link rel="stylesheet" href="styles.css?v=33">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -261,17 +261,24 @@
       </div>
     </section>
 
-    <section id="chapterDialog" class="event-dialog chapter-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="chapterDialogTitle">
-      <div class="event-panel chapter-panel">
-        <div class="event-art chapter-art" aria-hidden="true">
-          <span class="chapter-lantern"></span>
-          <span class="unit-sprite slot-3"></span>
+    <section id="chapterDialog" class="event-dialog chapter-dialog guild-story-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="chapterDialogTitle" aria-describedby="chapterDialogText">
+      <div id="chapterDialogPanel" class="event-panel chapter-panel guild-story-panel">
+        <div id="chapterDialogArt" class="event-art chapter-art guild-story-art" aria-hidden="true">
+          <span id="chapterDialogKind" class="story-kind">Guild Story</span>
+          <span class="story-portrait-frame"></span>
+          <span class="story-banner-mark">G</span>
         </div>
-        <div class="event-copy">
-          <p id="chapterDialogEyebrow" class="eyebrow">Chapter One</p>
+        <div class="event-copy guild-story-copy">
+          <header class="story-speaker">
+            <span class="story-speaker-seal" aria-hidden="true">M</span>
+            <div><strong id="chapterDialogSpeaker">Mara</strong><small id="chapterDialogRole">Innkeeper, The Wayfarer's Rest</small></div>
+          </header>
+          <p id="chapterDialogEyebrow" class="eyebrow">Guild Story</p>
           <h2 id="chapterDialogTitle">Mara Has An Idea</h2>
-          <p id="chapterDialogText"></p>
-          <div class="event-actions">
+          <div id="chapterDialogText" class="story-dialogue"></div>
+          <section id="chapterDialogCallout" class="story-callout"></section>
+          <ol id="chapterDialogSteps" class="story-steps"></ol>
+          <div class="event-actions story-actions">
             <button id="chapterDialogButton" class="primary-button" type="button">Continue</button>
           </div>
         </div>
@@ -310,6 +317,6 @@
 
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=32"></script>
+    <script src="game.js?v=33"></script>
   </body>
 </html>

@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=32/);
+  assert.match(index, /styles\.css\?v=33/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,11 +97,60 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=32/);
+  assert.match(index, /game\.js\?v=33/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
   assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.dock-button[\s\S]*font-size: var\(--type-caption\)/);
+});
+
+test("Mara introduces the first quest through the reusable Guild Story framework", () => {
+  const context = createGameContext();
+  const portrait = path.join(__dirname, "..", "assets", "mara-portrait-v1.webp");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const result = run(context, `
+    elements.founderName.value = "Jenny";
+    elements.founderClass.value = "warden";
+    elements.founderGender.value = "female";
+    createFounder();
+    const briefing = {
+      moment: currentChapterMomentId,
+      pending: state.storyEvents.pending,
+      viewBefore: activeView,
+      panelClass: elements.chapterDialogPanel.className,
+      title: elements.chapterDialogTitle.textContent,
+      speaker: elements.chapterDialogSpeaker.textContent,
+      dialogue: elements.chapterDialogText.innerHTML,
+      callout: elements.chapterDialogCallout.innerHTML,
+      steps: elements.chapterDialogSteps.innerHTML,
+      button: elements.chapterDialogButton.textContent
+    };
+    closeChapterMoment();
+    renderMissions();
+    ({ briefing, viewAfter: activeView, pendingAfter: state.storyEvents.pending,
+       seen: state.storyEvents.seen, missionBoard: elements.missionList.innerHTML });
+  `);
+
+  assert.equal(result.briefing.moment, "firstBriefing");
+  assert.equal(result.briefing.pending, "firstBriefing");
+  assert.equal(result.briefing.viewBefore, "guildhall");
+  assert.match(result.briefing.panelClass, /kind-briefing/);
+  assert.equal(result.briefing.title, "The Road Needs Its First Hero");
+  assert.equal(result.briefing.speaker, "Mara");
+  assert.match(result.briefing.dialogue, /Jenny/);
+  assert.match(result.briefing.dialogue, /Goblin Threat/);
+  assert.match(result.briefing.callout, /Recover the Stolen Supplies/);
+  assert.equal((result.briefing.steps.match(/<li>/g) || []).length, 3);
+  assert.equal(result.briefing.button, "Show Me The Quest");
+  assert.equal(result.viewAfter, "quest");
+  assert.equal(result.pendingAfter, null);
+  assert.deepEqual([...result.seen], ["firstBriefing"]);
+  assert.match(result.missionBoard, /1 adventurer ready/);
+  assert.doesNotMatch(result.missionBoard, /goblin-campaign/);
+  assert.match(result.missionBoard, /Guided first quest/);
+  assert.match(styles, /url\("assets\/mara-portrait-v1\.webp"\)/);
+  assert.ok(fs.existsSync(portrait));
+  assert.ok(fs.statSync(portrait).size > 100_000);
 });
 
 test("a timed encounter exposes the founder's class response and records the choice", () => {
@@ -197,6 +246,7 @@ test("the goblin chapter gives every story mission a bespoke decision and unlock
     state.adventurers = [founder];
     state.founderCreated = true;
     state.chapter.stage = "localRequests";
+    state.facilities.questBoard = 1;
     const encounterIds = missionDeck.slice(0, 5).map((mission) => getEncounterIdForMission(mission));
     const openingChoices = getAvailableEncounterChoices(encounterDeck.supplyTrail, [founder]).map((choice) => choice.id);
     const bossChoicesBefore = getAvailableEncounterChoices(encounterDeck.barrowAssault, [founder]).map((choice) => choice.id);
@@ -301,11 +351,38 @@ test("version 17 saves migrate into the goblin campaign without replaying comple
     decisions: state.chapter.goblinDecisions
   })`);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.intel, 0);
   assert.equal(result.support, 0);
   assert.deepEqual([...result.completedStoryMissions], ["greenbankCart", "stolenSupplies"]);
   assert.deepEqual([...result.decisions], []);
+});
+
+test("version 18 saves gain resumable Guild Story state", () => {
+  const context = createGameContext({
+    version: 18,
+    screen: "game",
+    day: 2,
+    gold: 80,
+    fame: 3,
+    adventurers: [],
+    facilities: { tavern: 1, questBoard: 0, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "firstQuest", completedLocalMissions: [], completedStoryMissions: [], charterEarned: false },
+    founderCreated: true
+  });
+  const result = run(context, `
+    showChapterMoment("firstBriefing");
+    saveState();
+    const normalised = normaliseStoryEvents({ pending: "firstBriefing", seen: [] });
+    ({ version: state.version, pending: state.storyEvents.pending, current: currentChapterMomentId,
+       normalisedPending: normalised.pending, defaultSeen: state.storyEvents.seen });
+  `);
+
+  assert.equal(result.version, 19);
+  assert.equal(result.pending, "firstBriefing");
+  assert.equal(result.current, "firstBriefing");
+  assert.equal(result.normalisedPending, "firstBriefing");
+  assert.deepEqual([...result.defaultSeen], []);
 });
 
 test("version 9 saves gain current systems without losing active missions", () => {
@@ -343,7 +420,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -455,7 +532,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -612,7 +689,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -860,7 +937,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -982,7 +1059,7 @@ test("version 14 saves migrate to a fresh rank-scaled action day", () => {
   const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
     remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.actionDay, 5);
   assert.equal(result.remaining, 4);
   assert.equal(result.capacity, 4);
@@ -1152,7 +1229,7 @@ test("version 15 saves gain village, materials, equipment, and promotion default
     confidence: state.greenbank.confidence, materials: { ...state.materials },
     equipmentCount: state.equipment.items.length, pendingRank: state.rankRewards.pending })`);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.threat, 24);
   assert.equal(result.confidence, 42);
   assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 0 });
@@ -1307,7 +1384,7 @@ test("version 16 saves migrate to an empty but correctly aligned Chronicle", () 
     seasonStart: state.chronicle.season.startDay, focus: state.chronicle.activeFocus,
     baselineGold: state.chronicle.week.baseline.gold, baselineThreat: state.chronicle.week.baseline.threat })`);
 
-  assert.equal(result.version, 18);
+  assert.equal(result.version, 19);
   assert.equal(result.weekly, 0);
   assert.equal(result.seasonal, 0);
   assert.equal(result.weekStart, 15);

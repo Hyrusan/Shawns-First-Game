@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 18;
+const SAVE_VERSION = 19;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -100,38 +100,88 @@ const introScenes = [
 ];
 
 const chapterMoments = {
+  firstBriefing: {
+    kind: "briefing",
+    eyebrow: "Urgent Tavern Briefing",
+    title: "The Road Needs Its First Hero",
+    speaker: "Mara",
+    role: "Innkeeper, The Wayfarer's Rest",
+    portrait: "mara",
+    copy: [
+      "{hero}, excellent. You look exactly like someone who can retrieve several sacks of onions under hostile conditions.",
+      "The Goblin Threat is close at hand. They have taken our supplies, frightened the traders, and left Greenbank Road unguarded. We need your help before the inn's cupboards become impressively empty."
+    ],
+    callout: {
+      label: "First mission",
+      title: "Recover the Stolen Supplies",
+      detail: "Your hero is already selected. Send them to Greenbank Lane and keep an eye on the expedition while it runs.",
+      facts: ["Short expedition", "Guided decision", "Safe first mission"]
+    },
+    steps: [
+      { mark: "1", title: "Choose the job", detail: "The Quest Board holds work available to the guild." },
+      { mark: "2", title: "Dispatch your hero", detail: "Pick an available party and send them on their way." },
+      { mark: "3", title: "Answer the call", detail: "Some expeditions pause for a Guildmaster decision." }
+    ],
+    button: "Show Me The Quest",
+    view: "quest"
+  },
   recruitment: {
+    kind: "milestone",
     eyebrow: "Mara's Next Bright Idea",
     title: "Put The Word Out",
-    text: "One hero recovered the supplies, but Greenbank will need more than one pair of hands. Mara can post a paid notice in the tavern. Cover the travel costs now, wait a day or two, and choose who deserves a place at your table.",
+    speaker: "Mara",
+    role: "Innkeeper, The Wayfarer's Rest",
+    portrait: "mara",
+    copy: ["One hero recovered the supplies, but Greenbank will need more than one pair of hands.", "I can post a paid notice in the tavern. Cover the travel costs now, wait a day or two, and choose who deserves a place at your table."],
+    callout: { label: "New activity", title: "Tavern Recruitment", detail: "Post a 45G notice, wait for applicants to arrive, then choose one adventurer to join." },
     button: "Visit The Tavern",
     view: "adventurers"
   },
   questBoard: {
+    kind: "unlock",
     eyebrow: "Chapter One: Goblin Trouble",
     title: "A Noticeboard With Ambition",
-    text: "The supplies are back and Greenbank is talking about your little band. Mara has found an old board in the cellar. Build a proper Quest Board and the tavern can start taking local requests.",
+    speaker: "Mara",
+    role: "Innkeeper, The Wayfarer's Rest",
+    portrait: "mara",
+    copy: ["The supplies are back and Greenbank is talking about your little band.", "I found an old board in the cellar. Build it properly and the tavern can start accepting local requests instead of waiting for trouble to walk through the door."],
+    callout: { label: "Facility unlocked", title: "Quest Board", detail: "Build it for 55G to reveal Greenbank requests and the Barrow Hill campaign." },
     button: "Build the Quest Board",
     view: "facilities"
   },
   expansion: {
+    kind: "warning",
     eyebrow: "Guildstead Is Growing",
     title: "Heroes Need Somewhere To Train",
-    text: "Three local problems solved, and the goblins are gathering at Barrow Hill. Mara suggests turning the old yard into a proper training space before anyone attempts the chief's camp.",
+    speaker: "Mara",
+    role: "Guild Steward",
+    portrait: "mara",
+    copy: ["Three local problems are settled, but the goblins are gathering at Barrow Hill.", "Before anyone attempts the chief's camp, we should turn the old yard into a proper training space. Enthusiasm is useful. Practice is usually less painful."],
+    callout: { label: "Threat escalation", title: "Barrow Hill Is Stirring", detail: "Build the Training Yard and prepare a party for the chapter finale." },
     button: "Build The Training Yard",
     view: "facilities"
   },
   trainingYard: {
+    kind: "unlock",
     eyebrow: "The First Expansion",
     title: "Training Begins At Guildstead",
-    text: "The new yard is ready. Adventurers can spend a day improving a stat or learn techniques over one or two days. While training they cannot join expeditions, so timing now matters.",
+    speaker: "Mara",
+    role: "Guild Steward",
+    portrait: "mara",
+    copy: ["The new yard is ready. Adventurers can spend a day improving a stat or learn techniques over one or two days.", "They cannot join expeditions while training, so choose the timing carefully. Barrow Hill is not known for waiting politely."],
+    callout: { label: "New activity", title: "Adventurer Training", detail: "Improve stats, teach techniques and turn potential into long-term strength." },
     button: "Choose A Trainee",
     view: "adventurers"
   },
   charter: {
+    kind: "celebration",
     eyebrow: "Royal Charter Awarded",
     title: "Welcome To Guildstead",
-    text: "With the Barrow Hill goblins defeated, the Western March finally has a recognised adventurers' guild. The Wayfarer's Rest is now Guildstead Hall, and its next chapter is yours to build.",
+    speaker: "Mara",
+    role: "Guild Steward",
+    portrait: "mara",
+    copy: ["With the Barrow Hill goblins defeated, the Western March finally has a recognised adventurers' guild.", "The Wayfarer's Rest is now Guildstead Hall. We started with an empty cupboard and one brave hero. The next chapter is yours to build."],
+    callout: { label: "Chapter complete", title: "Guildstead Is Chartered", detail: "New facilities, contracts and the wider Western March can now open to the guild." },
     button: "Raise the Guild Banner",
     view: "guildhall"
   }
@@ -1454,6 +1504,7 @@ let tavernLifeDialogOpen = false;
 let morningReportDialogOpen = false;
 let activeChronicleReport = null;
 const state = loadState();
+currentChapterMomentId = chapterMoments[state.storyEvents.pending] ? state.storyEvents.pending : null;
 
 const elements = {
   titleScreen: document.querySelector("#titleScreen"),
@@ -1524,9 +1575,16 @@ const elements = {
   viewEvent: document.querySelector("#viewEventButton"),
   closeEvent: document.querySelector("#closeEventButton"),
   chapterDialog: document.querySelector("#chapterDialog"),
+  chapterDialogPanel: document.querySelector("#chapterDialogPanel"),
+  chapterDialogArt: document.querySelector("#chapterDialogArt"),
+  chapterDialogKind: document.querySelector("#chapterDialogKind"),
   chapterDialogEyebrow: document.querySelector("#chapterDialogEyebrow"),
   chapterDialogTitle: document.querySelector("#chapterDialogTitle"),
+  chapterDialogSpeaker: document.querySelector("#chapterDialogSpeaker"),
+  chapterDialogRole: document.querySelector("#chapterDialogRole"),
   chapterDialogText: document.querySelector("#chapterDialogText"),
+  chapterDialogCallout: document.querySelector("#chapterDialogCallout"),
+  chapterDialogSteps: document.querySelector("#chapterDialogSteps"),
   chapterDialogButton: document.querySelector("#chapterDialogButton"),
   tavernLifeDialog: document.querySelector("#tavernLifeDialog"),
   tavernLifeArt: document.querySelector("#tavernLifeArt"),
@@ -1648,6 +1706,10 @@ function defaultState() {
       goblinDecisions: [],
       charterEarned: false
     },
+    storyEvents: {
+      pending: null,
+      seen: []
+    },
     log: [
       {
         day: 1,
@@ -1665,7 +1727,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1699,6 +1761,7 @@ function loadState() {
       screen: saved.screen || (saved.founderCreated ? "game" : "title"),
       facilities: migratedFacilities,
       chapter: normaliseChapter(migratedChapter, fresh.chapter),
+      storyEvents: normaliseStoryEvents(saved.storyEvents),
       trainingJobs: [],
       eventMissions: saved.eventMissions || [],
       inventory: saved.inventory || {},
@@ -1818,6 +1881,16 @@ function normaliseChapter(savedChapter, fallbackChapter) {
     villageSupport: Math.min(4, Math.max(0, Math.floor(Number(savedChapter?.villageSupport) || 0))),
     goblinDecisions
   };
+}
+
+function normaliseStoryEvents(savedEvents) {
+  const seen = Array.isArray(savedEvents?.seen)
+    ? [...new Set(savedEvents.seen.filter((id) => chapterMoments[id]))].slice(-30)
+    : [];
+  const pending = chapterMoments[savedEvents?.pending] && !seen.includes(savedEvents.pending)
+    ? savedEvents.pending
+    : null;
+  return { pending, seen };
 }
 
 function normaliseGreenbank(savedGreenbank, day) {
@@ -2023,7 +2096,7 @@ function resetGame() {
     // Reset the in-memory state regardless of storage availability.
   }
   currentPopupEventId = null;
-  currentChapterMomentId = null;
+  clearStoryMoment(true);
   dispatchAnimations = [];
   activeView = "guildhall";
   selectedGuildRoomId = "tavernRoom";
@@ -2678,7 +2751,7 @@ function openArchivedChronicle(reportId) {
     return;
   }
   currentPopupEventId = null;
-  currentChapterMomentId = null;
+  clearStoryMoment(true);
   tavernLifeDialogOpen = false;
   morningReportDialogOpen = true;
   render();
@@ -2814,7 +2887,7 @@ function openMorningReport() {
     state.greenbank.lastReport = createStatusReport();
   }
   currentPopupEventId = null;
-  currentChapterMomentId = null;
+  clearStoryMoment(true);
   tavernLifeDialogOpen = false;
   morningReportDialogOpen = true;
   render();
@@ -3682,7 +3755,7 @@ function renderMissions() {
 }
 
 function renderGoblinCampaignPanel() {
-  if (!state.founderCreated || ["tavern", "hero"].includes(state.chapter.stage) || state.chapter.charterEarned) {
+  if (!state.founderCreated || state.facilities.questBoard < 1 || state.chapter.charterEarned) {
     return "";
   }
   const intel = state.chapter.goblinIntel || 0;
@@ -3723,6 +3796,9 @@ function renderMissionStoryNote(mission, resolved) {
   if (mission.chapterBoss) {
     const routeCount = encounterDeck.barrowAssault.storyChoices.filter((choice) => isStoryChoiceUnlocked(choice)).length;
     return `<p class="mission-story-note"><span>Chapter finale</span>${routeCount} approach${routeCount === 1 ? "" : "es"} available during the expedition</p>`;
+  }
+  if (mission.tutorial) {
+    return `<p class="mission-story-note guided"><span>Guided first quest</span>Mara will alert you when the expedition needs an order</p>`;
   }
   return `<p class="mission-story-note"><span>Story decision</span>Your order during this expedition will shape the Barrow Hill finale</p>`;
 }
@@ -4472,10 +4548,10 @@ function createFounder() {
   state.selectedIds = [founder.id];
   state.founderCreated = true;
   state.chapter.stage = "firstQuest";
-  activeView = "quest";
+  activeView = "guildhall";
   addLog(`${name} answers Mara's call as the Wayfarer's Rest's first and only adventurer.`);
+  showChapterMoment("firstBriefing");
   render();
-  showToast("First job posted", `${name} is ready to recover the tavern supplies.`, "info");
 }
 
 function randomiseFounder() {
@@ -6059,15 +6135,41 @@ function renderChapterDialog() {
   if (!moment) {
     return;
   }
+  const heroName = state.adventurers.find((adventurer) => adventurer.founder)?.name || "Guildmaster";
+  const formatCopy = (value = "") => value.replaceAll("{hero}", heroName);
+  const kind = moment.kind || "milestone";
+  elements.chapterDialogPanel.className = `event-panel chapter-panel guild-story-panel kind-${kind}`;
+  elements.chapterDialogArt.className = `event-art chapter-art guild-story-art portrait-${moment.portrait || "mara"}`;
+  elements.chapterDialogKind.textContent = kind === "briefing" ? "Mara's Briefing" : kind === "unlock" ? "New Opportunity" : kind === "warning" ? "Guild Alert" : kind === "celebration" ? "Guild Celebration" : "Guild Story";
+  elements.chapterDialogSpeaker.textContent = moment.speaker || "Mara";
+  elements.chapterDialogRole.textContent = moment.role || "Guild Steward";
+  elements.chapterDialog.querySelector(".story-speaker-seal").textContent = (moment.speaker || "Mara").slice(0, 1);
   elements.chapterDialogEyebrow.textContent = moment.eyebrow;
   elements.chapterDialogTitle.textContent = moment.title;
-  elements.chapterDialogText.textContent = moment.text;
+  const copy = moment.copy || [moment.text || ""];
+  elements.chapterDialogText.innerHTML = copy.map((paragraph) => `<p>${formatCopy(paragraph)}</p>`).join("");
+  elements.chapterDialogCallout.classList.toggle("hidden", !moment.callout);
+  elements.chapterDialogCallout.innerHTML = moment.callout ? `
+    <span class="story-callout-mark" aria-hidden="true">${kind === "warning" ? "!" : kind === "celebration" ? "+" : kind === "unlock" ? "U" : "Q"}</span>
+    <div><small>${moment.callout.label}</small><strong>${formatCopy(moment.callout.title)}</strong><p>${formatCopy(moment.callout.detail)}</p>${moment.callout.facts?.length ? `<div class="story-facts">${moment.callout.facts.map((fact) => `<span>${formatCopy(fact)}</span>`).join("")}</div>` : ""}</div>
+  ` : "";
+  elements.chapterDialogSteps.classList.toggle("hidden", !moment.steps?.length);
+  elements.chapterDialogSteps.innerHTML = (moment.steps || []).map((step) => `
+    <li><span>${step.mark}</span><div><strong>${formatCopy(step.title)}</strong><small>${formatCopy(step.detail)}</small></div></li>
+  `).join("");
   elements.chapterDialogButton.textContent = moment.button;
 }
 
 function closeChapterMoment() {
+  const momentId = currentChapterMomentId;
   const moment = currentChapterMomentId ? chapterMoments[currentChapterMomentId] : null;
-  currentChapterMomentId = null;
+  if (momentId === "firstBriefing") {
+    const founder = state.adventurers.find((adventurer) => adventurer.founder && adventurer.status === "idle");
+    if (founder) {
+      state.selectedIds = [founder.id];
+    }
+  }
+  clearStoryMoment(true);
   if (moment?.view) {
     activeView = moment.view;
   }
@@ -6080,6 +6182,17 @@ function showChapterMoment(id) {
   }
   currentPopupEventId = null;
   currentChapterMomentId = id;
+  state.storyEvents.pending = id;
+}
+
+function clearStoryMoment(markSeen = false) {
+  const id = currentChapterMomentId || state.storyEvents.pending;
+  if (markSeen && id && !state.storyEvents.seen.includes(id)) {
+    state.storyEvents.seen.push(id);
+    state.storyEvents.seen = state.storyEvents.seen.slice(-30);
+  }
+  currentChapterMomentId = null;
+  state.storyEvents.pending = null;
 }
 
 function handleChapterMissionSuccess(mission) {

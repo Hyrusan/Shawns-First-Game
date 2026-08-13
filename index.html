@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111817">
     <title>Guildstead</title>
-    <link rel="stylesheet" href="styles.css?v=29">
+    <link rel="stylesheet" href="styles.css?v=30">
   </head>
   <body>
     <section id="titleScreen" class="title-screen">
@@ -130,6 +130,7 @@
               <div class="map-legend" aria-label="Map legend">
                 <span><i class="legend-dot guild-dot"></i>Guild</span>
                 <span><i class="legend-dot quest-dot"></i>Quest</span>
+                <span><i class="legend-dot request-dot"></i>Request</span>
                 <span><i class="legend-dot event-dot"></i>Realm event</span>
               </div>
               <div id="mapStatus" class="map-status">Select a room, location, or menu to manage the guild.</div>
@@ -197,6 +198,7 @@
               </section>
 
               <section class="view-panel active" data-panel="guildhall">
+                <div id="greenbankNewsPanel" class="greenbank-news-panel" aria-live="polite"></div>
                 <div id="tavernEventPanel" class="tavern-event-panel hidden" aria-live="polite"></div>
                 <div id="guildhallInterior" class="guildhall-interior" aria-label="Guildhall interior management view"></div>
                 <div id="guildhallRoomDetail" class="guildhall-room-detail"></div>
@@ -229,6 +231,7 @@
               </section>
 
               <section class="view-panel" data-panel="log">
+                <section id="greenbankNewsArchive" class="greenbank-news-archive" aria-label="Greenbank news"></section>
                 <section id="guildStores" class="guild-stores" aria-label="Guild Stores"></section>
                 <ol id="eventLog" class="event-log"></ol>
               </section>
@@ -289,8 +292,23 @@
       </div>
     </section>
 
+    <section id="morningReportDialog" class="event-dialog morning-report-dialog hidden" aria-modal="true" role="dialog" aria-labelledby="morningReportTitle">
+      <div class="morning-report-sheet">
+        <header class="morning-report-masthead">
+          <span class="morning-report-crest" aria-hidden="true">G</span>
+          <div><p id="morningReportEyebrow" class="eyebrow">Mara's Morning Post</p><h2 id="morningReportTitle">A New Day In Greenbank</h2></div>
+          <span id="morningReportDate" class="morning-report-date">Day 2</span>
+        </header>
+        <div id="morningReportBody" class="morning-report-body"></div>
+        <footer class="morning-report-footer">
+          <span>Filed at the Wayfarer's Rest before breakfast.</span>
+          <button id="closeMorningReportButton" class="primary-button" type="button">Begin The Day</button>
+        </footer>
+      </div>
+    </section>
+
     <div id="toastRail" class="toast-rail" aria-live="polite"></div>
     <audio id="mapTheme" src="assets/map_theme.mp3" preload="metadata" loop></audio>
-    <script src="game.js?v=29"></script>
+    <script src="game.js?v=30"></script>
   </body>
 </html>

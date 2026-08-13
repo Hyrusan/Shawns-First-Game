@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 15;
+const SAVE_VERSION = 16;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -793,6 +793,208 @@ const eventMissionDeck = [
   }
 ];
 
+const greenbankRequestDeck = [
+  {
+    templateId: "millersFlour",
+    name: "Guard The Miller's Flour",
+    location: "Greenbank Mill Road",
+    description: "Miller Tamsin needs her flour cart escorted past a stretch of road where goblin scouts have been seen.",
+    difficulty: 22,
+    duration: 34,
+    gold: 42,
+    fame: 3,
+    focus: "str",
+    expiresIn: 2,
+    materials: { timber: 2 },
+    success: { threat: -5, confidence: 3 },
+    failure: { threat: 4, confidence: -2 },
+    headline: "Flour cart reaches Greenbank safely",
+    missedHeadline: "Mill shelves thin after another missing cart",
+    marker: { left: "61%", top: "59%" }
+  },
+  {
+    templateId: "moonleafGathering",
+    name: "Gather Moonleaf Sprigs",
+    location: "Mara's Herb Path",
+    description: "The village healer is short of moonleaf and needs careful hands near the old badger paths.",
+    difficulty: 24,
+    duration: 38,
+    gold: 38,
+    fame: 3,
+    focus: "mag",
+    expiresIn: 3,
+    materials: { herbs: 3 },
+    success: { threat: -2, confidence: 4 },
+    failure: { threat: 2, confidence: -3 },
+    headline: "Healer's shelves fill with fresh moonleaf",
+    missedHeadline: "Healer asks families to ration remedies",
+    marker: { left: "75%", top: "45%" }
+  },
+  {
+    templateId: "mineTools",
+    name: "Recover The Mine Tools",
+    location: "Old Chalk Quarry",
+    description: "A quarry crew fled from goblin signs and left a valuable crate of tools behind.",
+    difficulty: 29,
+    duration: 44,
+    gold: 50,
+    fame: 4,
+    focus: "wit",
+    expiresIn: 3,
+    materials: { iron: 3 },
+    success: { threat: -6, confidence: 2 },
+    failure: { threat: 5, confidence: -2 },
+    headline: "Quarry bell rings again after tool recovery",
+    missedHeadline: "Old quarry closes as goblin signs multiply",
+    marker: { left: "79%", top: "63%" }
+  },
+  {
+    templateId: "missingGoats",
+    name: "Find Bramble Farm's Goats",
+    location: "Bramble Farm",
+    description: "Three goats have escaped through a broken fence. Their owner insists one of them is a tactical genius.",
+    difficulty: 20,
+    duration: 32,
+    gold: 34,
+    fame: 3,
+    focus: "cha",
+    expiresIn: 2,
+    materials: { timber: 1, herbs: 1 },
+    success: { threat: -1, confidence: 5 },
+    failure: { threat: 1, confidence: -3 },
+    headline: "Bramble Farm celebrates return of all three goats",
+    missedHeadline: "Goat tracks vanish towards Mushroomwood",
+    marker: { left: "54%", top: "68%" }
+  },
+  {
+    templateId: "bridgeRepairs",
+    name: "Secure Saffron Footbridge",
+    location: "Saffron Brook",
+    description: "The spring current has loosened the bridge supports while goblins watch from the opposite bank.",
+    difficulty: 31,
+    duration: 46,
+    gold: 56,
+    fame: 5,
+    focus: "str",
+    expiresIn: 3,
+    materials: { timber: 3, iron: 1 },
+    success: { threat: -5, confidence: 4 },
+    failure: { threat: 3, confidence: -4 },
+    headline: "Saffron Footbridge reopens before market day",
+    missedHeadline: "Broken bridge forces traders onto the north road",
+    marker: { left: "67%", top: "72%" }
+  },
+  {
+    templateId: "lanternPatrol",
+    name: "Light The Road Lanterns",
+    location: "Greenbank Road",
+    description: "The road lamps have gone dark one by one. Relighting them may reveal who keeps putting them out.",
+    difficulty: 27,
+    duration: 40,
+    gold: 46,
+    fame: 4,
+    focus: "mag",
+    expiresIn: 2,
+    materials: { herbs: 2, iron: 1 },
+    success: { threat: -7, confidence: 3 },
+    failure: { threat: 6, confidence: -2 },
+    headline: "Greenbank Road glows safely through the night",
+    missedHeadline: "Travellers avoid the unlit Greenbank Road",
+    marker: { left: "64%", top: "52%" }
+  },
+  {
+    templateId: "merchantLetters",
+    name: "Deliver The Merchant Letters",
+    location: "West Abbey Track",
+    description: "Trade letters need to reach the abbey before rumours of the goblin trouble become worse than the truth.",
+    difficulty: 28,
+    duration: 42,
+    gold: 54,
+    fame: 4,
+    focus: "cha",
+    expiresIn: 3,
+    materials: { timber: 1, iron: 1, herbs: 1 },
+    success: { threat: -2, confidence: 6 },
+    failure: { threat: 2, confidence: -5 },
+    headline: "Abbey merchants keep Greenbank on their route",
+    missedHeadline: "Trade letters fail to reach West Abbey",
+    marker: { left: "83%", top: "50%" }
+  },
+  {
+    templateId: "goblinLookout",
+    name: "Clear The Goblin Lookout",
+    location: "Barrow Hill Foothills",
+    description: "Smoke above the foothills suggests a lookout is tracking every cart entering Greenbank.",
+    difficulty: 36,
+    duration: 52,
+    gold: 68,
+    fame: 6,
+    focus: "wit",
+    expiresIn: 2,
+    materials: { iron: 2, timber: 2 },
+    success: { threat: -10, confidence: 3 },
+    failure: { threat: 8, confidence: -3 },
+    headline: "Goblin lookout cleared from Barrow foothills",
+    missedHeadline: "Watchfires spread across the Barrow foothills",
+    marker: { left: "84%", top: "27%" }
+  }
+];
+
+const materialCatalog = {
+  timber: { name: "Timber", mark: "T", description: "Sound boards and beams for rooms, repairs, and practical gear." },
+  iron: { name: "Iron", mark: "I", description: "Useful metal recovered through local work and quarry contracts." },
+  herbs: { name: "Herbs", mark: "H", description: "Medicinal and magical plants gathered around Greenbank." }
+};
+
+const equipmentCatalog = {
+  ironEdge: {
+    name: "Iron Edge",
+    mark: "IE",
+    description: "+2 power on every quest.",
+    cost: { iron: 3, timber: 1 },
+    effect: { power: 2 }
+  },
+  trailKit: {
+    name: "Trail Kit",
+    mark: "TK",
+    description: "Reduces journey time by 6%.",
+    cost: { timber: 2, herbs: 1 },
+    effect: { durationRate: 0.94 }
+  },
+  wardedCharm: {
+    name: "Warded Charm",
+    mark: "WC",
+    description: "+3 power on MAG quests.",
+    cost: { iron: 1, herbs: 3 },
+    effect: { focus: "mag", focusPower: 3 }
+  },
+  merchantsBrooch: {
+    name: "Merchant's Brooch",
+    mark: "MB",
+    description: "Adds 8% to quest gold rewards.",
+    cost: { iron: 2, herbs: 2 },
+    effect: { goldRate: 0.08 }
+  }
+};
+
+const rankChoiceCatalog = {
+  D: [
+    { id: "merchantWelcome", name: "Merchant Welcome", description: "Invite traders to celebrate the guild's promotion.", reward: "+55G", effect: { gold: 55 } },
+    { id: "buildersGift", name: "Builder's Gift", description: "Ask Greenbank's craftspeople for practical supplies.", reward: "+3 timber and +2 iron", effect: { materials: { timber: 3, iron: 2 } } },
+    { id: "fieldCommission", name: "Field Commission", description: "Fund one exceptionally thorough expedition plan.", reward: "+8 next-quest power", effect: { questPower: 8 } }
+  ],
+  C: [
+    { id: "regionalFeast", name: "Regional Feast", description: "Turn the promotion into a night Greenbank remembers.", reward: "+70G and +5 confidence", effect: { gold: 70, confidence: 5 } },
+    { id: "quartermasterGrant", name: "Quartermaster Grant", description: "Stock the guild for its next stage of growth.", reward: "+4 of every material", effect: { materials: { timber: 4, iron: 4, herbs: 4 } } },
+    { id: "royalRecommendation", name: "Royal Recommendation", description: "Display the recommendation where every client can see it.", reward: "+8 fame", effect: { fame: 8 } }
+  ],
+  B: [
+    { id: "guildEndowment", name: "Guild Endowment", description: "Accept a permanent fund for Guildstead's future.", reward: "+120G", effect: { gold: 120 } },
+    { id: "masterworkStores", name: "Masterwork Stores", description: "Take payment in rare building and crafting stock.", reward: "+7 of every material", effect: { materials: { timber: 7, iron: 7, herbs: 7 } } },
+    { id: "peoplesBanner", name: "The People's Banner", description: "Dedicate the promotion to the villages that built the guild.", reward: "+10 confidence and -10 threat", effect: { confidence: 10, threat: -10 } }
+  ]
+};
+
 const lootCatalog = {
   goblinToken: { name: "Goblin Token", mark: "GT", description: "Proof that Guildstead has made Greenbank Road safer." },
   oldRoadMap: { name: "Old Road Map", mark: "RM", description: "A weathered map with useful paths marked in charcoal." },
@@ -971,6 +1173,7 @@ let partyPickerMissionId = null;
 let mapModeOverride = null;
 let toastTimer = null;
 let tavernLifeDialogOpen = false;
+let morningReportDialogOpen = false;
 const state = loadState();
 
 const elements = {
@@ -993,6 +1196,8 @@ const elements = {
   facilityList: document.querySelector("#facilityList"),
   guildhallInterior: document.querySelector("#guildhallInterior"),
   guildhallRoomDetail: document.querySelector("#guildhallRoomDetail"),
+  greenbankNewsPanel: document.querySelector("#greenbankNewsPanel"),
+  greenbankNewsArchive: document.querySelector("#greenbankNewsArchive"),
   tavernEventPanel: document.querySelector("#tavernEventPanel"),
   realmMap: document.querySelector("#realmMap"),
   contextScene: document.querySelector("#contextScene"),
@@ -1050,6 +1255,12 @@ const elements = {
   tavernLifeText: document.querySelector("#tavernLifeText"),
   tavernLifeChoices: document.querySelector("#tavernLifeChoices"),
   closeTavernLife: document.querySelector("#closeTavernLifeButton"),
+  morningReportDialog: document.querySelector("#morningReportDialog"),
+  morningReportEyebrow: document.querySelector("#morningReportEyebrow"),
+  morningReportTitle: document.querySelector("#morningReportTitle"),
+  morningReportDate: document.querySelector("#morningReportDate"),
+  morningReportBody: document.querySelector("#morningReportBody"),
+  closeMorningReport: document.querySelector("#closeMorningReportButton"),
   toastRail: document.querySelector("#toastRail")
 };
 
@@ -1070,6 +1281,7 @@ elements.closeEvent.addEventListener("click", closeEventDialog);
 elements.viewEvent.addEventListener("click", viewPopupEvent);
 elements.chapterDialogButton.addEventListener("click", closeChapterMoment);
 elements.closeTavernLife.addEventListener("click", closeTavernLifeEvent);
+elements.closeMorningReport.addEventListener("click", closeMorningReport);
 elements.founderName.addEventListener("input", renderFounderPreview);
 elements.founderClassOptions.forEach((button) => {
   button.addEventListener("click", () => selectFounderClass(button.dataset.founderClass));
@@ -1116,6 +1328,21 @@ function defaultState() {
       nextQuestGoldBonus: 0,
       nextQuestInjuryShield: 0
     },
+    greenbank: {
+      threat: 24,
+      confidence: 42,
+      requests: [],
+      news: [
+        { id: "opening-news", day: 1, tone: "local", headline: "Quiet morning expected at the Wayfarer's Rest", body: "Mara has put fresh soup on and remains cautiously optimistic about the chairs." }
+      ],
+      lastRequestDay: 0,
+      completedRequests: 0,
+      missedRequests: 0,
+      lastReport: null
+    },
+    materials: { timber: 0, iron: 0, herbs: 0 },
+    equipment: { items: [] },
+    rankRewards: { claimed: [], pending: null },
     eventMissions: [],
     inventory: {},
     recruitment: {
@@ -1152,7 +1379,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1196,6 +1423,10 @@ function loadState() {
     loaded.tavernLife = normaliseTavernLife(saved.tavernLife, loaded.adventurers);
     loaded.guildActions = normaliseGuildActions(saved.guildActions, loaded.day);
     loaded.guildPreparations = normaliseGuildPreparations(saved.guildPreparations);
+    loaded.greenbank = normaliseGreenbank(saved.greenbank, loaded.day);
+    loaded.materials = normaliseMaterials(saved.materials);
+    loaded.equipment = normaliseEquipment(saved.equipment, loaded.adventurers);
+    loaded.rankRewards = normaliseRankRewards(saved.rankRewards, loaded.fame);
     loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
     loaded.trainingJobs = (saved.trainingJobs || [])
       .map(normaliseTrainingJob)
@@ -1259,6 +1490,56 @@ function normaliseGuildPreparations(savedPreparations) {
   };
 }
 
+function normaliseGreenbank(savedGreenbank, day) {
+  const openingNews = { id: "opening-news", day: 1, tone: "local", headline: "Quiet morning expected at the Wayfarer's Rest", body: "Mara has put fresh soup on and remains cautiously optimistic about the chairs." };
+  const savedThreat = Number(savedGreenbank?.threat);
+  const savedConfidence = Number(savedGreenbank?.confidence);
+  const requests = Array.isArray(savedGreenbank?.requests)
+    ? savedGreenbank.requests.filter((request) => request?.id && request?.templateId)
+    : [];
+  const news = Array.isArray(savedGreenbank?.news) && savedGreenbank.news.length ? savedGreenbank.news.slice(0, 40) : [openingNews];
+  return {
+    threat: Math.max(0, Math.min(100, Number.isFinite(savedThreat) ? savedThreat : 24)),
+    confidence: Math.max(0, Math.min(100, Number.isFinite(savedConfidence) ? savedConfidence : 42)),
+    requests,
+    news,
+    lastRequestDay: Math.max(0, Number(savedGreenbank?.lastRequestDay) || 0),
+    completedRequests: Math.max(0, Number(savedGreenbank?.completedRequests) || 0),
+    missedRequests: Math.max(0, Number(savedGreenbank?.missedRequests) || 0),
+    lastReport: savedGreenbank?.lastReport?.day <= day ? savedGreenbank.lastReport : null
+  };
+}
+
+function normaliseMaterials(savedMaterials) {
+  return Object.keys(materialCatalog).reduce((materials, id) => {
+    materials[id] = Math.max(0, Math.floor(Number(savedMaterials?.[id]) || 0));
+    return materials;
+  }, {});
+}
+
+function normaliseEquipment(savedEquipment, adventurers = []) {
+  const adventurerIds = new Set(adventurers.map((adventurer) => adventurer.id));
+  const seenHeroes = new Set();
+  const items = Array.isArray(savedEquipment?.items) ? savedEquipment.items : [];
+  return {
+    items: items
+      .filter((item) => item?.id && equipmentCatalog[item.recipeId])
+      .map((item) => {
+        const equippedTo = adventurerIds.has(item.equippedTo) && !seenHeroes.has(item.equippedTo) ? item.equippedTo : null;
+        if (equippedTo) {
+          seenHeroes.add(equippedTo);
+        }
+        return { id: item.id, recipeId: item.recipeId, equippedTo };
+      })
+  };
+}
+
+function normaliseRankRewards(savedRewards, fame) {
+  const claimed = Array.isArray(savedRewards?.claimed) ? savedRewards.claimed.filter((rank) => rankChoiceCatalog[rank]) : [];
+  const pending = rankChoiceCatalog[savedRewards?.pending] && !claimed.includes(savedRewards.pending) ? savedRewards.pending : null;
+  return { claimed, pending: pending || getEarnedUnclaimedRank(fame, claimed) };
+}
+
 function resetGame() {
   try {
     localStorage.removeItem(STORAGE_KEY);
@@ -1274,6 +1555,7 @@ function resetGame() {
   partyPickerMissionId = null;
   mapModeOverride = null;
   tavernLifeDialogOpen = false;
+  morningReportDialogOpen = false;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
   Object.assign(state, fresh);
@@ -1320,6 +1602,7 @@ function render() {
   renderGuildActions();
   renderRooms();
   renderFacilities();
+  renderGreenbankNews();
   renderTavernEventPanel();
   renderGuildhallInterior();
   renderMap();
@@ -1329,6 +1612,7 @@ function render() {
   renderExpeditionWatch();
   renderLog();
   renderStores();
+  renderMorningReport();
   renderEventDialog();
   renderTavernLifeDialog();
   renderChapterDialog();
@@ -1383,9 +1667,10 @@ function renderScreens() {
   const eventOpen = Boolean(currentPopupEventId);
   const chapterOpen = Boolean(currentChapterMomentId);
   const tavernLifeOpen = Boolean(tavernLifeDialogOpen && state.tavernLife.active);
+  const morningReportOpen = Boolean(morningReportDialogOpen && state.greenbank.lastReport);
   elements.titleScreen.classList.toggle("hidden", !titleOpen);
   elements.introScene.classList.toggle("hidden", !introOpen);
-  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen || tavernLifeOpen);
+  document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen || tavernLifeOpen || morningReportOpen);
 }
 
 function renderIntroScene() {
@@ -1426,6 +1711,8 @@ function renderFacilities() {
       const unlocked = isFacilityUnlocked(facility.id);
       const built = level > 0;
       const cost = upgradeCost(facility);
+      const materialCost = getFacilityMaterialCost(facility.id);
+      const materialsReady = canAffordMaterials(materialCost);
       const maxed = level >= 5;
       const levelPips = Array.from({ length: 5 }, (_, index) => `<i class="${index < level ? "filled" : ""}"></i>`).join("");
       return `
@@ -1438,10 +1725,11 @@ function renderFacilities() {
             </div>
             <p class="card-meta">${facility.effect}</p>
             ${unlocked && !maxed ? `<p class="facility-action-cost">Uses 1 Guild Action</p>` : ""}
+            ${built && !maxed ? `<p class="facility-material-cost">Upgrade materials: ${formatMaterials(materialCost)}</p>` : ""}
             ${!built ? `<p class="facility-requirement">${getFacilityUnlockText(facility.id)}</p>` : ""}
           </div>
-          <button class="${built ? "secondary-button" : "primary-button"}" data-upgrade="${facility.id}" type="button" ${!unlocked || maxed || state.gold < cost || noGuildActions ? "disabled" : ""}>
-            ${!unlocked ? "Locked" : maxed ? "Max level" : noGuildActions ? "No actions" : built ? `${cost}G` : `Build ${cost}G`}
+          <button class="${built ? "secondary-button" : "primary-button"}" data-upgrade="${facility.id}" type="button" ${!unlocked || maxed || state.gold < cost || noGuildActions || !materialsReady ? "disabled" : ""}>
+            ${!unlocked ? "Locked" : maxed ? "Max level" : noGuildActions ? "No actions" : !materialsReady ? "Needs materials" : built ? `${cost}G Upgrade` : `Build ${cost}G`}
           </button>
         </article>
       `;
@@ -1487,6 +1775,15 @@ function renderMap() {
     `)
     .join("");
 
+  const requestMarkers = state.greenbank.requests
+    .map((request) => `
+      <button class="map-request" data-map-view="quest" style="left:${request.marker.left};top:${request.marker.top}" type="button" aria-label="${request.name} at ${request.location}">
+        <span class="request-pin">Q</span>
+        <span class="map-label">${request.name}<b>Until day ${request.expiresDay}</b></span>
+      </button>
+    `)
+    .join("");
+
   const dispatchMarkup = dispatchAnimations
     .map((animation) => `
       <div class="dispatch-runner" style="offset-path:path('M 0 0 Q ${animation.controlX} ${animation.controlY} ${animation.travelX} ${animation.travelY}')">
@@ -1516,6 +1813,7 @@ function renderMap() {
     </button>
     ${facilityMarkers}
     ${missionMarkers}
+    ${requestMarkers}
     ${eventMarkers}
     <div class="dispatch-layer" id="dispatchLayer">${dispatchMarkup}</div>
   `;
@@ -1669,7 +1967,7 @@ function getBuiltFacilityCount() {
 }
 
 function renderEventSummaries() {
-  elements.scoutEvent.disabled = !state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3;
+  elements.scoutEvent.disabled = !state.founderCreated || state.facilities.questBoard < 1 || state.eventMissions.length >= 3 || getGuildActionsRemaining() < 1;
   if (state.eventMissions.length === 0) {
     const emptyText = state.facilities.questBoard < 1
       ? "Mara can send scouts once the tavern has a proper Quest Board."
@@ -1717,7 +2015,8 @@ function renderActiveView() {
   elements.dockButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.view === activeView);
     const needsAttention = (button.dataset.view === "adventurers" && state.recruitment.candidates.length > 0)
-      || (button.dataset.view === "guildhall" && Boolean(state.tavernLife.active));
+      || (button.dataset.view === "guildhall" && Boolean(state.tavernLife.active || state.rankRewards.pending))
+      || (button.dataset.view === "quest" && state.greenbank.requests.some((request) => request.expiresDay <= state.day + 1));
     button.classList.toggle("attention", needsAttention);
   });
 
@@ -1820,6 +2119,128 @@ function renderMapLayout() {
     : contextual ? "View the realm map" : "Return to the tavern interior";
   elements.mapFocus.setAttribute("aria-label", action);
   elements.mapFocus.title = action;
+}
+
+function renderGreenbankNews() {
+  if (!elements.greenbankNewsPanel || !elements.greenbankNewsArchive) {
+    return;
+  }
+  const latest = state.greenbank.news[0];
+  const threatTone = state.greenbank.threat >= 70 ? "danger" : state.greenbank.threat >= 40 ? "watch" : "calm";
+  const confidenceTone = state.greenbank.confidence >= 70 ? "high" : state.greenbank.confidence >= 40 ? "steady" : "low";
+  const pendingRank = state.rankRewards.pending;
+  elements.greenbankNewsPanel.innerHTML = `
+    <section class="greenbank-bulletin ${threatTone}">
+      <div class="bulletin-masthead">
+        <span class="bulletin-mark" aria-hidden="true">N</span>
+        <div><p class="eyebrow">Greenbank Morning Post</p><strong>${latest?.headline || "The village waits for news"}</strong></div>
+      </div>
+      <div class="village-pulse">
+        <span class="pulse-stat threat"><small>Goblin threat</small><b>${state.greenbank.threat}</b><i><em style="width:${state.greenbank.threat}%"></em></i></span>
+        <span class="pulse-stat confidence ${confidenceTone}"><small>Confidence</small><b>${state.greenbank.confidence}</b><i><em style="width:${state.greenbank.confidence}%"></em></i></span>
+      </div>
+      <div class="bulletin-actions">
+        ${pendingRank ? `<button class="secondary-button promotion-button" data-review-promotion type="button">Rank ${pendingRank} Choice</button>` : ""}
+        <button class="ghost-button" data-open-morning-post type="button" ${state.greenbank.lastReport ? "" : "disabled"}>Read Post</button>
+        <button class="ghost-button" data-open-news-ledger type="button">Archive</button>
+      </div>
+    </section>
+  `;
+
+  const news = state.greenbank.news.slice(0, 10);
+  elements.greenbankNewsArchive.innerHTML = `
+    <div class="news-archive-heading">
+      <div><p class="eyebrow">The Greenbank Morning Post</p><h3>Village News</h3></div>
+      <div class="archive-pulse"><span>Threat <b>${state.greenbank.threat}</b></span><span>Confidence <b>${state.greenbank.confidence}</b></span></div>
+    </div>
+    <div class="news-columns">
+      ${news.map((item) => `
+        <article class="news-item ${item.tone || "local"}">
+          <span>Day ${item.day}</span><h4>${item.headline}</h4><p>${item.body}</p>
+        </article>
+      `).join("")}
+    </div>
+  `;
+
+  elements.greenbankNewsPanel.querySelector("[data-open-morning-post]")?.addEventListener("click", openMorningReport);
+  elements.greenbankNewsPanel.querySelector("[data-review-promotion]")?.addEventListener("click", openMorningReport);
+  elements.greenbankNewsPanel.querySelector("[data-open-news-ledger]")?.addEventListener("click", () => setActiveView("log"));
+}
+
+function renderMorningReport() {
+  const report = state.greenbank.lastReport;
+  const visible = Boolean(report && morningReportDialogOpen);
+  elements.morningReportDialog.classList.toggle("hidden", !visible);
+  if (!visible) {
+    return;
+  }
+  const pendingRank = state.rankRewards.pending;
+  const changes = report.changes || {};
+  const signed = (value) => `${value > 0 ? "+" : ""}${value}`;
+  elements.morningReportEyebrow.textContent = pendingRank ? `Rank ${pendingRank} Promotion Edition` : "Mara's Morning Post";
+  elements.morningReportTitle.textContent = report.title || "A New Day In Greenbank";
+  elements.morningReportDate.textContent = `Day ${report.day}`;
+  elements.morningReportBody.innerHTML = `
+    <section class="report-lead">
+      <div class="report-pulse-card threat"><span>Goblin threat</span><strong>${state.greenbank.threat}</strong><small>${signed(changes.threat || 0)} since yesterday</small></div>
+      <div class="report-pulse-card confidence"><span>Village confidence</span><strong>${state.greenbank.confidence}</strong><small>${signed(changes.confidence || 0)} since yesterday</small></div>
+      <div class="report-pulse-card gold"><span>Guild purse</span><strong>${state.gold}G</strong><small>${signed(changes.gold || 0)}G since yesterday</small></div>
+    </section>
+    ${pendingRank ? renderRankChoice(pendingRank) : ""}
+    <section class="report-columns">
+      <div class="report-column">
+        <p class="eyebrow">Around Greenbank</p>
+        ${(report.headlines || []).length ? report.headlines.map((item) => `<article><h3>${item.headline}</h3><p>${item.body}</p></article>`).join("") : `<article><h3>A quiet morning</h3><p>No unusual reports reached Mara before breakfast.</p></article>`}
+      </div>
+      <div class="report-column notices">
+        <p class="eyebrow">Guild notices</p>
+        ${(report.notices || []).map((notice) => `<p><span aria-hidden="true">${notice.mark || "+"}</span>${notice.text}</p>`).join("") || `<p><span aria-hidden="true">G</span>No special notices today.</p>`}
+        ${(report.newRequests || []).length ? `<h3>New on the Quest Board</h3>${report.newRequests.map((name) => `<p><span aria-hidden="true">Q</span>${name}</p>`).join("")}` : ""}
+      </div>
+    </section>
+  `;
+  elements.morningReportBody.querySelectorAll("[data-rank-choice]").forEach((button) => {
+    button.addEventListener("click", () => selectRankReward(button.dataset.rankChoice));
+  });
+}
+
+function renderRankChoice(rank) {
+  const choices = rankChoiceCatalog[rank] || [];
+  return `
+    <section class="rank-choice-section">
+      <div><p class="eyebrow">Guild Rank ${rank}</p><h3>Choose How Greenbank Marks The Promotion</h3><span>The extra Guild Action is already yours. This one-time charter benefit shapes the celebration.</span></div>
+      <div class="rank-choice-grid">
+        ${choices.map((choice) => `<button data-rank-choice="${choice.id}" type="button"><strong>${choice.name}</strong><small>${choice.description}</small><b>${choice.reward}</b></button>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function openMorningReport() {
+  if (!state.greenbank.lastReport) {
+    state.greenbank.lastReport = createStatusReport();
+  }
+  currentPopupEventId = null;
+  currentChapterMomentId = null;
+  tavernLifeDialogOpen = false;
+  morningReportDialogOpen = true;
+  render();
+}
+
+function closeMorningReport() {
+  morningReportDialogOpen = false;
+  render();
+}
+
+function createStatusReport() {
+  return {
+    day: state.day,
+    title: `The Greenbank Post, Day ${state.day}`,
+    changes: { threat: 0, confidence: 0, gold: 0 },
+    headlines: state.greenbank.news.filter((item) => item.day === state.day).slice(0, 3),
+    notices: [{ mark: "G", text: `${getGuildActionsRemaining()} Guild Actions remain today.` }],
+    newRequests: state.greenbank.requests.map((request) => request.name).slice(0, 3)
+  };
 }
 
 function renderTavernEventPanel() {
@@ -1956,6 +2377,8 @@ function renderGuildRoomDetail() {
   const unlocked = isFacilityUnlocked(room.facilityId);
   const built = level > 0;
   const cost = facility ? upgradeCost(facility) : 0;
+  const materialCost = facility ? getFacilityMaterialCost(facility.id) : {};
+  const materialsReady = canAffordMaterials(materialCost);
   const roomTrainingJobs = room.facilityId === "trainingYard" ? getActiveTrainingJobs() : [];
   const trainingSummary = roomTrainingJobs.length
     ? roomTrainingJobs.map((job) => `${getAdventurer(job.adventurerId)?.name || "Adventurer"}: ${getTrainingJobName(job)} until day ${job.readyDay}`).join(" | ")
@@ -1971,9 +2394,10 @@ function renderGuildRoomDetail() {
       </div>
       ${built
         ? `<button class="primary-button" data-room-action="${room.targetView}" type="button">${room.action}</button>`
-        : `<button class="primary-button" data-build-room="${room.facilityId}" type="button" ${!unlocked || state.gold < cost || getGuildActionsRemaining() < 1 ? "disabled" : ""}>${unlocked ? getGuildActionsRemaining() < 1 ? "No actions" : `Build ${cost}G` : "Locked"}</button>`}
+        : `<button class="primary-button" data-build-room="${room.facilityId}" type="button" ${!unlocked || state.gold < cost || getGuildActionsRemaining() < 1 || !materialsReady ? "disabled" : ""}>${unlocked ? getGuildActionsRemaining() < 1 ? "No actions" : !materialsReady ? "Needs materials" : `Build ${cost}G` : "Locked"}</button>`}
     </article>
     ${built ? renderFacilityOrders(room.facilityId) : ""}
+    ${built && room.facilityId === "workshop" ? renderWorkshopCrafting() : ""}
   `;
 
   const action = elements.guildhallRoomDetail.querySelector("[data-room-action]");
@@ -1982,6 +2406,9 @@ function renderGuildRoomDetail() {
   buildAction?.addEventListener("click", () => upgradeFacility(buildAction.dataset.buildRoom));
   elements.guildhallRoomDetail.querySelectorAll("[data-facility-order]").forEach((button) => {
     button.addEventListener("click", () => queueFacilityOrder(button.dataset.facilityOrder));
+  });
+  elements.guildhallRoomDetail.querySelectorAll("[data-craft-equipment]").forEach((button) => {
+    button.addEventListener("click", () => craftEquipment(button.dataset.craftEquipment));
   });
 }
 
@@ -2013,6 +2440,30 @@ function renderFacilityOrders(facilityId) {
                   ${isQueued ? "Queued" : lockReason || "Issue Order"}
                 </button>
               </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderWorkshopCrafting() {
+  return `
+    <section class="workshop-crafting">
+      <div class="facility-orders-heading">
+        <div><p class="eyebrow">Workshop equipment</p><h3>Craft Guild Gear</h3></div>
+        <span>Crafting uses 1 Guild Action</span>
+      </div>
+      <div class="crafting-grid">
+        ${Object.entries(equipmentCatalog).map(([id, recipe]) => {
+          const affordable = canAffordMaterials(recipe.cost);
+          const disabled = !affordable || getGuildActionsRemaining() < 1;
+          return `
+            <article class="crafting-card">
+              <span class="crafting-mark" aria-hidden="true">${recipe.mark}</span>
+              <div><h4>${recipe.name}</h4><p>${recipe.description}</p><small>${formatMaterials(recipe.cost)}</small></div>
+              <button class="secondary-button" data-craft-equipment="${id}" type="button" ${disabled ? "disabled" : ""}>${getGuildActionsRemaining() < 1 ? "No Actions" : affordable ? "Craft" : "Needs Materials"}</button>
             </article>
           `;
         }).join("")}
@@ -2332,6 +2783,8 @@ function renderAdventurerDetail() {
         <div class="ability-list">${renderKnownAbilities(adventurer)}</div>
       </section>
 
+      ${renderEquipmentSection(adventurer)}
+
       ${renderTrainingCurriculum(adventurer)}
 
       ${renderRelationships(adventurer)}
@@ -2354,6 +2807,10 @@ function renderAdventurerDetail() {
   elements.adventurerDetail.querySelectorAll("[data-start-training]").forEach((button) => {
     button.addEventListener("click", () => startTraining(adventurer.id, button.dataset.trainingKind, button.dataset.startTraining));
   });
+  elements.adventurerDetail.querySelectorAll("[data-equip-item]").forEach((button) => {
+    button.addEventListener("click", () => equipItem(adventurer.id, button.dataset.equipItem));
+  });
+  elements.adventurerDetail.querySelector("[data-unequip-item]")?.addEventListener("click", () => unequipItem(adventurer.id));
   elements.adventurerDetail.querySelectorAll("[data-view-relationship]").forEach((button) => {
     button.addEventListener("click", () => {
       selectedAdventurerId = button.dataset.viewRelationship;
@@ -2361,6 +2818,24 @@ function renderAdventurerDetail() {
       elements.adventurerDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
+}
+
+function renderEquipmentSection(adventurer) {
+  const equipped = getEquipmentForAdventurer(adventurer.id);
+  const available = state.equipment.items.filter((item) => !item.equippedTo);
+  const equippedRecipe = equipped ? equipmentCatalog[equipped.recipeId] : null;
+  return `
+    <section class="character-section equipment-section">
+      <div class="section-line-heading"><p class="eyebrow">Equipment</p><span>One crafted item per adventurer</span></div>
+      ${equippedRecipe ? `
+        <div class="equipped-item"><span>${equippedRecipe.mark}</span><div><strong>${equippedRecipe.name}</strong><small>${equippedRecipe.description}</small></div><button class="ghost-button" data-unequip-item type="button">Remove</button></div>
+      ` : `<p class="system-empty">No equipment assigned. Workshop gear can be equipped here.</p>`}
+      ${available.length ? `<div class="available-equipment">${available.map((item) => {
+        const recipe = equipmentCatalog[item.recipeId];
+        return `<button data-equip-item="${item.id}" type="button"><span>${recipe.mark}</span><strong>${recipe.name}</strong><small>${recipe.description}</small></button>`;
+      }).join("")}</div>` : ""}
+    </section>
+  `;
 }
 
 function renderMissions() {
@@ -2393,7 +2868,7 @@ function renderMissions() {
     </section>
   ` : "";
 
-  const allMissions = [...missionDeck.filter((mission) => isMissionVisible(mission)), ...state.eventMissions];
+  const allMissions = [...missionDeck.filter((mission) => isMissionVisible(mission)), ...state.greenbank.requests, ...state.eventMissions];
   const missionCards = allMissions
     .map((mission) => {
       const lockReason = getMissionLockReason(mission);
@@ -2405,11 +2880,11 @@ function renderMissions() {
       const oddsLabel = odds >= 75 ? "Promising" : odds >= 45 ? "Risky" : "Dangerous";
       const pickerOpen = partyPickerMissionId === mission.id && !locked && !active;
       return `
-        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
+        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.rotatingRequest ? "greenbank-request" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
           <div class="mission-card-main">
             <div class="mission-title-row">
               <div>
-                <span class="mission-kicker">${mission.isEvent ? "Realm event" : mission.location}</span>
+                <span class="mission-kicker">${mission.isEvent ? "Realm event" : mission.rotatingRequest ? `Greenbank request | ${mission.location}` : mission.location}</span>
                 <h3>${mission.name}</h3>
               </div>
               <span class="focus-chip">${mission.focus.toUpperCase()}</span>
@@ -2420,8 +2895,10 @@ function renderMissions() {
               <span>${formatMissionTime(selectedParty.length ? getMissionDuration(mission, selectedParty) : mission.duration)}</span>
               <span>${mission.gold}G</span>
               <span>${mission.fame} fame</span>
+              ${mission.materials ? `<span>${formatMaterials(mission.materials)}</span>` : ""}
             </div>
             ${mission.isEvent ? `<p class="mission-note">Expires on day ${mission.expiresDay}</p>` : ""}
+            ${mission.rotatingRequest ? `<p class="mission-note request-deadline">Requested day ${mission.spawnedDay} | Expires day ${mission.expiresDay}</p>` : ""}
             ${locked ? `<p class="mission-note locked-note">${lockReason}</p>` : ""}
             ${active ? `<div class="mission-progress-label"><span>Expedition underway</span><strong>${progress}%</strong></div><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>` : ""}
           </div>
@@ -2763,6 +3240,136 @@ function grantLoot(lootId, amount = 1) {
   state.inventory[lootId] = (state.inventory[lootId] || 0) + amount;
 }
 
+function grantMaterials(materials = {}) {
+  Object.entries(materials).forEach(([id, amount]) => {
+    if (materialCatalog[id] && amount > 0) {
+      state.materials[id] = (state.materials[id] || 0) + amount;
+    }
+  });
+}
+
+function formatMaterials(materials = {}) {
+  return Object.entries(materials)
+    .filter(([id, amount]) => materialCatalog[id] && amount > 0)
+    .map(([id, amount]) => `${amount} ${materialCatalog[id].name.toLowerCase()}`)
+    .join(", ");
+}
+
+function addNews(headline, body, tone = "local") {
+  if (!headline) {
+    return null;
+  }
+  const item = { id: `news-${crypto.randomUUID()}`, day: state.day, tone, headline, body };
+  state.greenbank.news.unshift(item);
+  state.greenbank.news = state.greenbank.news.slice(0, 40);
+  return item;
+}
+
+function adjustGreenbank({ threat = 0, confidence = 0 } = {}) {
+  state.greenbank.threat = Math.max(0, Math.min(100, state.greenbank.threat + threat));
+  state.greenbank.confidence = Math.max(0, Math.min(100, state.greenbank.confidence + confidence));
+}
+
+function getEarnedUnclaimedRank(fame = state.fame, claimed = state.rankRewards?.claimed || []) {
+  const thresholds = { D: 18, C: 48, B: 90 };
+  return ["D", "C", "B"].find((rank) => fame >= thresholds[rank] && !claimed.includes(rank)) || null;
+}
+
+function syncRankReward(previousRank = null) {
+  const pending = state.rankRewards.pending || getEarnedUnclaimedRank();
+  if (!pending) {
+    return null;
+  }
+  state.rankRewards.pending = pending;
+  if (previousRank && previousRank !== getRank()) {
+    addNews(`Guildstead promoted to Rank ${getRank()}`, "Mara has found three suitably official ways to mark the occasion. The final choice belongs to the Guildmaster.", "guild");
+  }
+  return pending;
+}
+
+function selectRankReward(choiceId) {
+  const rank = state.rankRewards.pending;
+  const choice = rankChoiceCatalog[rank]?.find((item) => item.id === choiceId);
+  if (!rank || !choice) {
+    return false;
+  }
+  state.gold += choice.effect.gold || 0;
+  state.fame += choice.effect.fame || 0;
+  grantMaterials(choice.effect.materials || {});
+  adjustGreenbank({ threat: choice.effect.threat || 0, confidence: choice.effect.confidence || 0 });
+  if (choice.effect.questPower) {
+    state.guildPreparations.nextQuestPower = Math.min(24, state.guildPreparations.nextQuestPower + choice.effect.questPower);
+  }
+  state.rankRewards.claimed.push(rank);
+  state.rankRewards.pending = getEarnedUnclaimedRank();
+  addNews(`Guildstead chooses ${choice.name}`, `${choice.reward}. Greenbank's Rank ${rank} celebration now has a plan.`, "guild");
+  addLog(`Rank ${rank} benefit chosen: ${choice.name} (${choice.reward}).`);
+  render();
+  showToast(`Rank ${rank} benefit chosen`, choice.reward, "success");
+  return true;
+}
+
+function getEquipmentForAdventurer(adventurerId) {
+  return state.equipment.items.find((item) => item.equippedTo === adventurerId) || null;
+}
+
+function canAffordMaterials(cost = {}) {
+  return Object.entries(cost).every(([id, amount]) => (state.materials[id] || 0) >= amount);
+}
+
+function spendMaterials(cost = {}) {
+  if (!canAffordMaterials(cost)) {
+    return false;
+  }
+  Object.entries(cost).forEach(([id, amount]) => {
+    state.materials[id] -= amount;
+  });
+  return true;
+}
+
+function craftEquipment(recipeId) {
+  const recipe = equipmentCatalog[recipeId];
+  if (!recipe || state.facilities.workshop < 1 || !canAffordMaterials(recipe.cost)) {
+    return false;
+  }
+  if (!spendGuildAction("workshop crafting")) {
+    return false;
+  }
+  spendMaterials(recipe.cost);
+  state.equipment.items.push({ id: `gear-${crypto.randomUUID()}`, recipeId, equippedTo: null });
+  addLog(`The Workshop crafts ${recipe.name}.`);
+  addNews(`${recipe.name} completed in Guildstead's Workshop`, "The new equipment is ready to assign from any adventurer profile.", "guild");
+  render();
+  showToast("Equipment crafted", `${recipe.name} is ready to equip.`, "success");
+  return true;
+}
+
+function equipItem(adventurerId, itemId) {
+  const adventurer = getAdventurer(adventurerId);
+  const item = state.equipment.items.find((equipment) => equipment.id === itemId);
+  if (!adventurer || !item || item.equippedTo) {
+    return false;
+  }
+  const current = getEquipmentForAdventurer(adventurerId);
+  if (current) {
+    current.equippedTo = null;
+  }
+  item.equippedTo = adventurerId;
+  addLifeEvent(adventurer, `Equipped ${equipmentCatalog[item.recipeId].name}.`);
+  render();
+  return true;
+}
+
+function unequipItem(adventurerId) {
+  const item = getEquipmentForAdventurer(adventurerId);
+  if (!item) {
+    return false;
+  }
+  item.equippedTo = null;
+  render();
+  return true;
+}
+
 function getEnemyHealth(activeMission) {
   const progress = Math.min(1, (activeMission.elapsed || 0) / Math.max(1, activeMission.duration || 1));
   return Math.max(0, Math.round(activeMission.enemyMaxHealth * (1 - progress) - (activeMission.encounterDamage || 0)));
@@ -2797,8 +3404,18 @@ function renderLog() {
 
 function renderStores() {
   const items = Object.entries(state.inventory || {}).filter(([lootId, count]) => lootCatalog[lootId] && count > 0);
+  const materials = Object.entries(state.materials || {}).filter(([id, count]) => materialCatalog[id] && count > 0);
+  const equipment = state.equipment.items || [];
   elements.guildStores.innerHTML = `
-    <div class="stores-heading"><div><span class="eyebrow">Recovered curios</span><h3>Guild Stores</h3></div><strong>${items.reduce((total, [, count]) => total + count, 0)}</strong></div>
+    <div class="stores-heading"><div><span class="eyebrow">Materials, equipment & curios</span><h3>Guild Stores</h3></div><strong>${materials.reduce((total, [, count]) => total + count, 0) + equipment.length + items.reduce((total, [, count]) => total + count, 0)}</strong></div>
+    <div class="material-shelf">
+      ${Object.entries(materialCatalog).map(([id, material]) => `<article class="material-item"><span>${material.mark}</span><div><strong>${material.name}</strong><small>${material.description}</small></div><b>${state.materials[id] || 0}</b></article>`).join("")}
+    </div>
+    ${equipment.length ? `<div class="equipment-shelf"><p class="eyebrow">Crafted equipment</p>${equipment.map((item) => {
+      const recipe = equipmentCatalog[item.recipeId];
+      const owner = item.equippedTo ? getAdventurer(item.equippedTo)?.name : "Available";
+      return `<article class="store-item"><span>${recipe.mark}</span><div><strong>${recipe.name}</strong><small>${recipe.description}</small></div><b>${owner}</b></article>`;
+    }).join("")}</div>` : ""}
     ${items.length ? `<div class="store-grid">${items.map(([lootId, count]) => {
       const loot = lootCatalog[lootId];
       return `<article class="store-item" title="${loot.description}"><span>${loot.mark}</span><div><strong>${loot.name}</strong><small>${loot.description}</small></div><b>x${count}</b></article>`;
@@ -3489,6 +4106,7 @@ function resolveTavernLifeChoice(choiceId) {
   if (!story || !choice || state.gold < (choice.cost || 0)) {
     return false;
   }
+  const previousRank = getRank();
   state.gold -= choice.cost || 0;
   state.gold += choice.gold || 0;
   state.fame += choice.fame || 0;
@@ -3522,6 +4140,7 @@ function resolveTavernLifeChoice(choiceId) {
   state.tavernLife.resolved = state.tavernLife.resolved.slice(0, 20);
   state.tavernLife.active = null;
   tavernLifeDialogOpen = false;
+  syncRankReward(previousRank);
   addLog(outcome);
   render();
   showToast("Tavern story resolved", outcome, choice.relationship < 0 ? "info" : "success");
@@ -3570,9 +4189,12 @@ function getPotentialLabel(potential) {
 
 function getCharacterEffects(adventurer) {
   const quirkIds = [adventurer.quirks?.positive, adventurer.quirks?.negative].filter(Boolean);
-  return [...quirkIds, ...(adventurer.abilities || [])]
+  const effects = [...quirkIds, ...(adventurer.abilities || [])]
     .map((id) => quirkCatalog[id] || abilityCatalog[id])
     .filter(Boolean);
+  const equipment = getEquipmentForAdventurer(adventurer.id);
+  const equipmentEffect = equipment ? equipmentCatalog[equipment.recipeId]?.effect : null;
+  return equipmentEffect ? [...effects, equipmentEffect] : effects;
 }
 
 function getEffectMissionPower(effect, mission, partySize) {
@@ -3840,6 +4462,9 @@ function startMission(missionId) {
       currentPopupEventId = null;
     }
   }
+  if (mission.rotatingRequest) {
+    state.greenbank.requests = state.greenbank.requests.filter((request) => request.id !== mission.id);
+  }
 
   state.selectedIds = [];
   partyPickerMissionId = null;
@@ -3900,6 +4525,7 @@ function tick() {
 function resolveMission(activeMission) {
   const mission = getMissionForActive(activeMission);
   const party = activeMission.partyIds.map(getAdventurer).filter(Boolean);
+  const previousRank = getRank();
   if (activeMission.encounterStatus === "active") {
     resolveEncounterChoice(activeMission.id, "trustParty", true, false);
   }
@@ -3914,6 +4540,17 @@ function resolveMission(activeMission) {
     const fame = mission.fame + Math.floor(state.facilities.questBoard / 2) + getPartyFameBonus(party) + (activeMission.fameBonus || 0);
     state.gold += gold;
     state.fame += fame;
+    if (mission.materials) {
+      grantMaterials(mission.materials);
+    }
+    if (mission.rotatingRequest) {
+      adjustGreenbank(mission.success);
+      state.greenbank.completedRequests += 1;
+      addNews(mission.headline, `${partyNames} completed ${mission.name}. The guild also recovered ${formatMaterials(mission.materials)} for its stores.`, "success");
+    } else if (mission.localRequest) {
+      adjustGreenbank({ threat: -6, confidence: 4 });
+      addNews(`${mission.name} completed by the Wayfarer's Rest`, `${partyNames} return to Greenbank with another local problem settled.`, "success");
+    }
     party.forEach((adventurer) => {
       adventurer.status = "idle";
       addLifeEvent(adventurer, `Completed ${mission.name} and helped earn ${fame} fame.`);
@@ -3921,7 +4558,8 @@ function resolveMission(activeMission) {
     });
     addLog(`${partyNames} complete ${mission.name}, earning ${gold}G and ${fame} fame.`);
     handleChapterMissionSuccess(mission);
-    showToast("Mission complete", `${mission.name} earned ${gold}G and ${fame} fame.`, "success");
+    syncRankReward(previousRank);
+    showToast("Mission complete", `${mission.name} earned ${gold}G and ${fame} fame${mission.materials ? `, plus ${formatMaterials(mission.materials)}` : ""}.`, "success");
   } else {
     const consolationGold = Math.floor(mission.gold * 0.3);
     state.gold += consolationGold;
@@ -3930,6 +4568,10 @@ function resolveMission(activeMission) {
       addLifeEvent(adventurer, `Retreated from ${mission.name}, wiser and bruised.`);
       grantXp(adventurer, Math.round(4 * getXpRate(adventurer)));
     });
+    if (mission.rotatingRequest) {
+      adjustGreenbank(mission.failure);
+      addNews(`${mission.name} ends in a difficult retreat`, `${partyNames} return safely, but the unresolved problem weighs on Greenbank.`, "warning");
+    }
     if (activeMission.injuryShield > 0) {
       addLog(`${partyNames} retreat from ${mission.name}, but their earlier preparation prevents an injury.`);
       showToast("Party retreated safely", `The party escaped ${mission.location} without injury.`, "info");
@@ -3993,9 +4635,11 @@ function updateMissionEncounter(activeMission, now) {
 function getPartyPower(party, mission) {
   const statPower = party.reduce((total, adventurer) => {
     const stats = adventurer.stats;
-    const effectPower = getCharacterEffects(adventurer)
+    return total + stats.str + stats.mag + stats.wit + stats.cha + stats[mission.focus] * 1.5 + adventurer.level * 2 + getPotentialPower(adventurer);
+  }, 0);
+  const effectPower = party.reduce((total, adventurer) => {
+    return total + getCharacterEffects(adventurer)
       .reduce((sum, effect) => sum + getEffectMissionPower(effect, mission, party.length), 0);
-    return total + stats.str + stats.mag + stats.wit + stats.cha + stats[mission.focus] * 1.5 + adventurer.level * 2 + effectPower + getPotentialPower(adventurer);
   }, 0);
   const facilityPower =
     state.facilities.trainingYard * 2 +
@@ -4003,7 +4647,7 @@ function getPartyPower(party, mission) {
     state.facilities.kitchen * 2 +
     state.facilities.dormitory +
     state.facilities.tavern;
-  return Math.floor(statPower / 3 + facilityPower) + getRelationshipPartyPower(party);
+  return Math.floor(statPower / 3 + facilityPower) + effectPower + getRelationshipPartyPower(party);
 }
 
 function grantXp(adventurer, amount) {
@@ -4188,12 +4832,14 @@ function upgradeFacility(id) {
   }
   const current = state.facilities[id] || 0;
   const cost = upgradeCost(facility);
-  if (!isFacilityUnlocked(id) || current >= 5 || state.gold < cost) {
+  const materialCost = getFacilityMaterialCost(id);
+  if (!isFacilityUnlocked(id) || current >= 5 || state.gold < cost || !canAffordMaterials(materialCost)) {
     return;
   }
   if (!spendGuildAction(current === 0 ? "construction" : "a facility upgrade")) {
     return;
   }
+  spendMaterials(materialCost);
   state.gold -= cost;
   state.facilities[id] = current + 1;
   const built = current === 0;
@@ -4202,6 +4848,10 @@ function upgradeFacility(id) {
     state.chapter.stage = "localRequests";
     activeView = "quest";
     addLog("Mara pins the first three local requests to the new board.");
+    const newRequests = generateGreenbankRequests(2);
+    if (newRequests.length) {
+      addNews("Greenbank sends its first requests to the tavern", "The new Quest Board has barely settled on its hooks before local notices begin to arrive.", "guild");
+    }
   }
   if (id === "trainingYard" && built && state.chapter.stage === "expansion") {
     state.chapter.stage = "boss";
@@ -4211,6 +4861,74 @@ function upgradeFacility(id) {
   }
   render();
   showToast(built ? "New room built" : "Facility improved", `${facility.name} is now level ${state.facilities[id]}.`, "success");
+}
+
+function generateGreenbankRequests(count = 1) {
+  if (!state.founderCreated || state.facilities.questBoard < 1) {
+    return [];
+  }
+  const openSlots = Math.max(0, 3 - state.greenbank.requests.length);
+  const requestedCount = Math.min(count, openSlots);
+  if (requestedCount < 1) {
+    return [];
+  }
+  const activeTemplateIds = new Set([
+    ...state.greenbank.requests.map((request) => request.templateId),
+    ...state.activeMissions.map((mission) => mission.missionSnapshot?.templateId).filter(Boolean)
+  ]);
+  const available = greenbankRequestDeck.filter((template) => !activeTemplateIds.has(template.templateId));
+  const created = [];
+  for (let index = 0; index < requestedCount && available.length; index += 1) {
+    const templateIndex = Math.floor(Math.random() * available.length);
+    const template = available.splice(templateIndex, 1)[0];
+    const difficultyGrowth = Math.min(18, Math.floor(Math.max(0, state.day - 1) / 7) * 2);
+    const request = {
+      ...template,
+      id: `request-${crypto.randomUUID()}`,
+      rotatingRequest: true,
+      spawnedDay: state.day,
+      expiresDay: state.day + template.expiresIn,
+      difficulty: template.difficulty + difficultyGrowth
+    };
+    state.greenbank.requests.push(request);
+    created.push(request);
+  }
+  state.greenbank.lastRequestDay = state.day;
+  return created;
+}
+
+function expireGreenbankRequests() {
+  const expired = state.greenbank.requests.filter((request) => request.expiresDay < state.day);
+  expired.forEach((request) => {
+    adjustGreenbank(request.failure);
+    state.greenbank.missedRequests += 1;
+    addNews(request.missedHeadline, `${request.name} went unanswered. Greenbank's confidence falls as the goblin threat grows.`, "warning");
+    addLog(`${request.name} expires unanswered.`);
+  });
+  const expiredIds = new Set(expired.map((request) => request.id));
+  state.greenbank.requests = state.greenbank.requests.filter((request) => !expiredIds.has(request.id));
+  return expired;
+}
+
+function addAmbientGreenbankNews() {
+  const threat = state.greenbank.threat;
+  const confidence = state.greenbank.confidence;
+  const headlines = threat >= 70
+    ? [
+        ["Empty carts return from the north road", "Several traders turned back after spotting watchfires near Barrow Hill."],
+        ["Greenbank families bring livestock inside", "Mara reports a quieter common room and more nervous conversations after sunset."]
+      ]
+    : confidence >= 70
+      ? [
+          ["Children chalk guild crests beside the market", "The drawings are not entirely accurate, but the enthusiasm is unmistakable."],
+          ["Travellers add Guildstead to their route", "More passing merchants are asking whether the tavern has rooms to spare."]
+        ]
+      : [
+          ["Market talk turns to the new guild", "Opinions remain mixed, although Mara notes that everyone is still talking about it."],
+          ["Rain keeps Greenbank close to its hearths", "A quiet evening leaves plenty of time for rumours, repairs, and second helpings."]
+        ];
+  const selected = headlines[state.day % headlines.length];
+  return addNews(selected[0], selected[1], threat >= 70 ? "warning" : "local");
 }
 
 function scoutForEvent(force = false, useGuildAction = false) {
@@ -4308,7 +5026,32 @@ function upgradeCost(facility) {
   return level === 0 ? facility.buildCost : facility.baseCost + (level - 1) * 80;
 }
 
+function getFacilityMaterialCost(facilityId) {
+  const level = state.facilities[facilityId] || 0;
+  if (level < 1) {
+    return {};
+  }
+  const baseCosts = {
+    tavern: { timber: 2 },
+    questBoard: { timber: 1, iron: 1 },
+    dormitory: { timber: 2, herbs: 1 },
+    trainingYard: { timber: 1, iron: 2 },
+    kitchen: { timber: 1, herbs: 2 },
+    workshop: { timber: 1, iron: 3 }
+  };
+  return Object.entries(baseCosts[facilityId] || {}).reduce((cost, [id, amount]) => {
+    cost[id] = amount * level;
+    return cost;
+  }, {});
+}
+
 function advanceDays(amount) {
+  const before = {
+    gold: state.gold,
+    threat: state.greenbank.threat,
+    confidence: state.greenbank.confidence,
+    rank: getRank()
+  };
   syncGuildActionDay();
   const unusedActions = getGuildActionsRemaining();
   const administrationIncome = unusedActions * 2;
@@ -4322,7 +5065,16 @@ function advanceDays(amount) {
   checkBirthdays();
   const completedTraining = processTrainingCompletions(false);
   expireEvents();
-  const stipend = 10 + state.facilities.tavern * 3 + state.facilities.kitchen * 3;
+  if (state.facilities.questBoard > 0) {
+    adjustGreenbank({ threat: state.chapter.charterEarned ? 1 : 2 });
+  }
+  const expiredRequests = expireGreenbankRequests();
+  const requestTarget = state.greenbank.threat >= 70 ? 3 : 2;
+  const newRequests = generateGreenbankRequests(Math.max(0, requestTarget - state.greenbank.requests.length));
+  const confidenceModifier = state.greenbank.confidence >= 70 ? 2 : state.greenbank.confidence < 30 ? -2 : 0;
+  const threatModifier = state.greenbank.threat >= 70 ? -3 : state.greenbank.threat >= 45 ? -1 : 0;
+  const villageModifier = confidenceModifier + threatModifier;
+  const stipend = Math.max(5, 10 + state.facilities.tavern * 3 + state.facilities.kitchen * 3 + villageModifier);
   state.gold += stipend;
   if (state.day % 7 === 0) {
     const upkeep = Math.max(8, state.adventurers.length * 7 - state.fame);
@@ -4335,6 +5087,37 @@ function advanceDays(amount) {
   const tavernEventCreated = !recruitmentArrived && maybeCreateTavernEvent();
   if (!tavernEventCreated && state.founderCreated && state.facilities.questBoard > 0 && state.day % 3 === 0 && state.eventMissions.length < 2) {
     scoutForEvent(true, false);
+  }
+  addAmbientGreenbankNews();
+  syncRankReward(before.rank);
+  const notices = [];
+  completedOrders.forEach((order) => notices.push({ mark: "O", text: `${order.title}: ${order.result}` }));
+  completedTraining.forEach((job) => notices.push({ mark: "T", text: `${getAdventurer(job.adventurerId)?.name || "An adventurer"} completed ${getTrainingJobName(job)}.` }));
+  if (recruitmentArrived) {
+    notices.push({ mark: "R", text: "New recruitment applicants are waiting in the tavern." });
+  }
+  if (expiredRequests.length) {
+    notices.push({ mark: "!", text: `${expiredRequests.length} Greenbank request${expiredRequests.length === 1 ? "" : "s"} expired unanswered.` });
+  }
+  if (unusedActions > 0) {
+    notices.push({ mark: "G", text: `${unusedActions} unused action${unusedActions === 1 ? "" : "s"} earned ${administrationIncome}G through routine administration.` });
+  }
+  const currentNews = state.greenbank.news.filter((item) => item.day === state.day).slice(0, 3);
+  state.greenbank.lastReport = {
+    day: state.day,
+    title: state.greenbank.threat >= 70 ? "Watchfires Above Greenbank" : state.greenbank.confidence >= 70 ? "Greenbank Backs Its Guild" : "A New Day In Greenbank",
+    changes: {
+      gold: state.gold - before.gold,
+      threat: state.greenbank.threat - before.threat,
+      confidence: state.greenbank.confidence - before.confidence
+    },
+    headlines: currentNews,
+    notices,
+    newRequests: newRequests.map((request) => request.name)
+  };
+  morningReportDialogOpen = Boolean(state.founderCreated && !currentChapterMomentId);
+  if (morningReportDialogOpen) {
+    tavernLifeDialogOpen = false;
   }
   render();
   if (completedOrders.length > 0) {
@@ -4410,6 +5193,8 @@ function showChapterMoment(id) {
 
 function handleChapterMissionSuccess(mission) {
   if (mission.tutorial && state.chapter.stage === "firstQuest") {
+    adjustGreenbank({ threat: -4, confidence: 5 });
+    addNews("Stolen tavern supplies returned from Greenbank Lane", "The Wayfarer's Rest has produced its first local hero, and Mara is already making plans.", "success");
     if (state.adventurers.length > 1) {
       state.recruitment.unlocked = true;
       state.chapter.stage = "buildBoard";
@@ -4433,6 +5218,9 @@ function handleChapterMissionSuccess(mission) {
   if (mission.chapterBoss && !state.chapter.charterEarned) {
     state.chapter.stage = "chartered";
     state.chapter.charterEarned = true;
+    state.greenbank.threat = 8;
+    adjustGreenbank({ confidence: 15 });
+    addNews("Barrow Hill chief defeated", "Greenbank wakes to open roads, ringing market bells, and the news that its roadside tavern is now a chartered guild.", "success");
     showChapterMoment("charter");
   }
 }
@@ -4668,7 +5456,9 @@ function getMissionOdds(party, mission) {
 }
 
 function getMission(id) {
-  return missionDeck.find((mission) => mission.id === id) || state.eventMissions.find((mission) => mission.id === id);
+  return missionDeck.find((mission) => mission.id === id)
+    || state.greenbank.requests.find((mission) => mission.id === id)
+    || state.eventMissions.find((mission) => mission.id === id);
 }
 
 function getMissionForActive(activeMission) {

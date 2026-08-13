@@ -20,8 +20,14 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Persistent friendships and rivalries with visible expedition chemistry bonuses
 - Rank-scaled Guildmaster Actions that make each in-game day a set of meaningful choices
 - End Day resolution with room orders, unused-action administration, and a fresh daily allowance
+- A restrained Greenbank news bulletin with a full archive in the Guild Ledger
+- Optional morning reports that summarise village changes, room orders, arrivals, and new work
+- Rotating local requests with deadlines, material rewards, and visible effects on village threat and confidence
 - Two distinct orders for every facility, including income, recovery, relationships, scouting, and group training
 - Persistent expedition preparation from briefings, provisions, promoted contracts, and repair kits
+- Timber, iron, and herb stores used for upgrades and Workshop crafting
+- Equippable adventurer gear with clear power, travel, magic, and reward bonuses
+- One-time Guild Rank choices that let each promotion shape the guild differently
 - Timed Training Yard drills and teachable techniques with potential-based capacity
 - Three-person expedition parties
 - Inline quest-party selection with availability and mission-fit indicators
@@ -67,7 +73,7 @@ The latest version from `main` is automatically published through GitHub Pages:
 - `game.js`: simulation state, rendering, missions, facilities, and saves
 - `assets/`: generated sprites, the Western March map, and the map theme
 - `docs/`: design direction, visual references, and content seeds
-- `tests/`: deterministic gameplay smoke tests for progression, training, relationships, saves, and expeditions
+- `tests/`: deterministic gameplay smoke tests for progression, village requests, crafting, training, relationships, saves, and expeditions
 
 ## Testing
 
@@ -79,4 +85,4 @@ node --test tests\game-smoke.test.js
 
 ## Status
 
-Guildstead is an evolving playable prototype. More story content, equipment, region progression, deeper relationships, and generational adventurer systems are planned for later development.
+Guildstead is an evolving playable prototype. More story content, equipment variety, region progression, deeper relationships, and generational adventurer systems are planned for later development.

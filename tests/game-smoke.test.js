@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=29/);
+  assert.match(index, /styles\.css\?v=30/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=29/);
+  assert.match(index, /game\.js\?v=30/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -225,7 +225,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 15);
+  assert.equal(result.version, 16);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -337,7 +337,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 15);
+  assert.equal(result.version, 16);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -494,7 +494,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 15);
+  assert.equal(result.version, 16);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -697,13 +697,15 @@ test("the first eligible day guarantees a Tavern Life event before an automatic 
     advanceDays(1);
     ({ day: state.day, activeTemplate: state.tavernLife.active?.templateId,
        activeDay: state.tavernLife.active?.day, dialogOpen: tavernLifeDialogOpen,
+       morningOpen: morningReportDialogOpen,
        lastEventDay: state.tavernLife.lastEventDay, realmEvents: state.eventMissions.length });
   `);
 
   assert.equal(result.day, 2);
   assert.ok(["homesickLetter", "restlessEvening"].includes(result.activeTemplate));
   assert.equal(result.activeDay, 2);
-  assert.equal(result.dialogOpen, true);
+  assert.equal(result.dialogOpen, false);
+  assert.equal(result.morningOpen, true);
   assert.equal(result.lastEventDay, 2);
   assert.equal(result.realmEvents, 0);
 });
@@ -740,7 +742,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 15);
+  assert.equal(result.version, 16);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -862,7 +864,7 @@ test("version 14 saves migrate to a fresh rank-scaled action day", () => {
   const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
     remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
 
-  assert.equal(result.version, 15);
+  assert.equal(result.version, 16);
   assert.equal(result.actionDay, 5);
   assert.equal(result.remaining, 4);
   assert.equal(result.capacity, 4);
@@ -898,3 +900,161 @@ test("painted facility emblems replace letter badges and false room occupants", 
   assert.match(result.map, /facility-emblem emblem-tavern map-guild-emblem/);
   assert.doesNotMatch(result.guildhall, /room-scene/);
 });
+
+test("Greenbank requests rotate at daybreak and missed work changes the village mood", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.screen = "game";
+    state.chapter.stage = "localRequests";
+    state.facilities.questBoard = 1;
+    const template = greenbankRequestDeck[0];
+    state.greenbank.requests = [{ ...template, id: "expiring-request", rotatingRequest: true, spawnedDay: 1, expiresDay: 1 }];
+    const before = { threat: state.greenbank.threat, confidence: state.greenbank.confidence };
+    advanceDays(1);
+    ({ day: state.day, requestCount: state.greenbank.requests.length,
+       allRotating: state.greenbank.requests.every((request) => request.rotatingRequest),
+       missed: state.greenbank.missedRequests,
+       threatDelta: state.greenbank.threat - before.threat,
+       confidenceDelta: state.greenbank.confidence - before.confidence,
+       missedHeadline: state.greenbank.news.some((item) => item.headline === template.missedHeadline),
+       reportDay: state.greenbank.lastReport.day, reportOpen: morningReportDialogOpen });
+  `);
+
+  assert.equal(result.day, 2);
+  assert.equal(result.requestCount, 2);
+  assert.equal(result.allRotating, true);
+  assert.equal(result.missed, 1);
+  assert.equal(result.threatDelta, 2 + greenbankFailureThreat(context, 0));
+  assert.equal(result.confidenceDelta, -2);
+  assert.equal(result.missedHeadline, true);
+  assert.equal(result.reportDay, 2);
+  assert.equal(result.reportOpen, true);
+});
+
+test("successful village requests award materials and improve Greenbank", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    founder.status = "busy";
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.facilities.questBoard = 1;
+    const request = { ...greenbankRequestDeck[1], id: "request-success", rotatingRequest: true, guaranteedSuccess: true };
+    const active = normaliseActiveMission({
+      id: "active-request", missionId: request.id, missionSnapshot: request, partyIds: [founder.id],
+      elapsed: request.duration, duration: request.duration, encounterStatus: "resolved"
+    });
+    state.activeMissions = [active];
+    const before = { threat: state.greenbank.threat, confidence: state.greenbank.confidence };
+    resolveMission(active);
+    ({ materials: { ...state.materials }, completed: state.greenbank.completedRequests,
+       threatDelta: state.greenbank.threat - before.threat,
+       confidenceDelta: state.greenbank.confidence - before.confidence,
+       heroStatus: founder.status,
+       hasHeadline: state.greenbank.news.some((item) => item.headline === request.headline) });
+  `);
+
+  assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 3 });
+  assert.equal(result.completed, 1);
+  assert.equal(result.threatDelta, -2);
+  assert.equal(result.confidenceDelta, 4);
+  assert.equal(result.heroStatus, "idle");
+  assert.equal(result.hasHeadline, true);
+});
+
+test("the Workshop turns quest materials into equipment with honest power bonuses", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.screen = "game";
+    state.facilities.workshop = 1;
+    state.materials = { timber: 2, iron: 4, herbs: 1 };
+    const mission = missionDeck[0];
+    const baseline = getPartyPower([founder], mission);
+    const crafted = craftEquipment("ironEdge");
+    const item = state.equipment.items[0];
+    const equipped = equipItem(founder.id, item.id);
+    const equippedPower = getPartyPower([founder], mission);
+    ({ crafted, equipped, baseline, equippedPower, materials: { ...state.materials },
+       actionSpent: state.guildActions.spent, equippedTo: item.equippedTo,
+       effectPower: getCharacterEffects(founder).find((effect) => effect.power === 2)?.power });
+  `);
+
+  assert.equal(result.crafted, true);
+  assert.equal(result.equipped, true);
+  assert.equal(result.equippedPower, result.baseline + 2);
+  assert.deepEqual({ ...result.materials }, { timber: 1, iron: 1, herbs: 1 });
+  assert.equal(result.actionSpent, 1);
+  assert.ok(result.equippedTo);
+  assert.equal(result.effectPower, 2);
+});
+
+test("Guild Rank promotions offer one lasting reward choice", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    state.founderCreated = true;
+    state.screen = "game";
+    state.fame = 18;
+    const pending = syncRankReward("F");
+    const selected = selectRankReward("buildersGift");
+    ({ pending, selected, rank: getRank(), claimed: [...state.rankRewards.claimed],
+       nextPending: state.rankRewards.pending, materials: { ...state.materials },
+       news: state.greenbank.news.map((item) => item.headline) });
+  `);
+
+  assert.equal(result.pending, "D");
+  assert.equal(result.selected, true);
+  assert.equal(result.rank, "D");
+  assert.deepEqual([...result.claimed], ["D"]);
+  assert.equal(result.nextPending, null);
+  assert.deepEqual({ ...result.materials }, { timber: 3, iron: 2, herbs: 0 });
+  assert.ok(result.news.some((headline) => headline.includes("Builder's Gift")));
+});
+
+test("version 15 saves gain village, materials, equipment, and promotion defaults", () => {
+  const context = createGameContext({
+    version: 15,
+    screen: "game",
+    day: 8,
+    gold: 140,
+    fame: 20,
+    adventurers: [],
+    activeMissions: [],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: [], charterEarned: false },
+    log: [],
+    founderCreated: true
+  });
+  const result = run(context, `({ version: state.version, threat: state.greenbank.threat,
+    confidence: state.greenbank.confidence, materials: { ...state.materials },
+    equipmentCount: state.equipment.items.length, pendingRank: state.rankRewards.pending })`);
+
+  assert.equal(result.version, 16);
+  assert.equal(result.threat, 24);
+  assert.equal(result.confidence, 42);
+  assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 0 });
+  assert.equal(result.equipmentCount, 0);
+  assert.equal(result.pendingRank, "D");
+});
+
+test("Greenbank news and morning reports ship with responsive management UI", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+  assert.match(index, /id="greenbankNewsPanel"/);
+  assert.match(index, /id="greenbankNewsArchive"/);
+  assert.match(index, /id="morningReportDialog"/);
+  assert.match(styles, /\.greenbank-bulletin/);
+  assert.match(styles, /\.morning-report-sheet/);
+  assert.match(styles, /\.rank-choice-grid/);
+  assert.match(styles, /@media \(max-width: 480px\)[\s\S]*\.morning-report-sheet/);
+});
+
+function greenbankFailureThreat(context, index) {
+  return run(context, `greenbankRequestDeck[${index}].failure.threat`);
+}

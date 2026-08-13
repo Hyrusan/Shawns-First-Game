@@ -22,6 +22,9 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - End Day resolution with room orders, unused-action administration, and a fresh daily allowance
 - A restrained Greenbank news bulletin with a full archive in the Guild Ledger
 - Optional morning reports that summarise village changes, room orders, arrivals, and new work
+- Weekly Guildstead Chronicle editions with quest, finance, growth, and standout-adventurer summaries
+- Four-week seasonal reviews stored permanently in the Guild Ledger
+- Seasonal Guildmaster focuses for protection, recruitment, prosperity, or training
 - Rotating local requests with deadlines, material rewards, and visible effects on village threat and confidence
 - Two distinct orders for every facility, including income, recovery, relationships, scouting, and group training
 - Persistent expedition preparation from briefings, provisions, promoted contracts, and repair kits
@@ -73,7 +76,7 @@ The latest version from `main` is automatically published through GitHub Pages:
 - `game.js`: simulation state, rendering, missions, facilities, and saves
 - `assets/`: generated sprites, the Western March map, and the map theme
 - `docs/`: design direction, visual references, and content seeds
-- `tests/`: deterministic gameplay smoke tests for progression, village requests, crafting, training, relationships, saves, and expeditions
+- `tests/`: deterministic gameplay smoke tests for progression, Chronicle reports, seasonal focuses, village requests, crafting, training, relationships, saves, and expeditions
 
 ## Testing
 

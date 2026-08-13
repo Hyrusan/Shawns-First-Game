@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 16;
+const SAVE_VERSION = 17;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -995,6 +995,33 @@ const rankChoiceCatalog = {
   ]
 };
 
+const seasonFocusCatalog = {
+  protectGreenbank: {
+    name: "Protect Greenbank",
+    mark: "P",
+    description: "Organise village watches and reinforce the roads.",
+    benefit: "Goblin threat grows 1 point more slowly each day."
+  },
+  growGuild: {
+    name: "Grow The Guild",
+    mark: "R",
+    description: "Put Mara's best notices on every road into Greenbank.",
+    benefit: "Recruitment costs 10G less and applicants gain 1 potential."
+  },
+  prosperTogether: {
+    name: "Prosper Together",
+    mark: "G",
+    description: "Strengthen trade between the tavern and nearby villages.",
+    benefit: "+8% quest gold and +3G daily income."
+  },
+  trainRoster: {
+    name: "Train The Roster",
+    mark: "T",
+    description: "Make this a season of practice, study, and fieldcraft.",
+    benefit: "Training costs 20% less and adventurers earn 10% more experience."
+  }
+};
+
 const lootCatalog = {
   goblinToken: { name: "Goblin Token", mark: "GT", description: "Proof that Guildstead has made Greenbank Road safer." },
   oldRoadMap: { name: "Old Road Map", mark: "RM", description: "A weathered map with useful paths marked in charcoal." },
@@ -1174,6 +1201,7 @@ let mapModeOverride = null;
 let toastTimer = null;
 let tavernLifeDialogOpen = false;
 let morningReportDialogOpen = false;
+let activeChronicleReport = null;
 const state = loadState();
 
 const elements = {
@@ -1198,6 +1226,7 @@ const elements = {
   guildhallRoomDetail: document.querySelector("#guildhallRoomDetail"),
   greenbankNewsPanel: document.querySelector("#greenbankNewsPanel"),
   greenbankNewsArchive: document.querySelector("#greenbankNewsArchive"),
+  chronicleArchive: document.querySelector("#chronicleArchive"),
   tavernEventPanel: document.querySelector("#tavernEventPanel"),
   realmMap: document.querySelector("#realmMap"),
   contextScene: document.querySelector("#contextScene"),
@@ -1301,7 +1330,7 @@ render();
 setInterval(tick, 1000);
 
 function defaultState() {
-  return {
+  const fresh = {
     version: SAVE_VERSION,
     screen: "title",
     introStep: 0,
@@ -1373,13 +1402,15 @@ function defaultState() {
     founderCreated: false,
     musicMuted: false
   };
+  fresh.chronicle = createChronicleState(fresh);
+  return fresh;
 }
 
 function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1427,6 +1458,7 @@ function loadState() {
     loaded.materials = normaliseMaterials(saved.materials);
     loaded.equipment = normaliseEquipment(saved.equipment, loaded.adventurers);
     loaded.rankRewards = normaliseRankRewards(saved.rankRewards, loaded.fame);
+    loaded.chronicle = normaliseChronicle(saved.chronicle, loaded);
     loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
     loaded.trainingJobs = (saved.trainingJobs || [])
       .map(normaliseTrainingJob)
@@ -1540,6 +1572,152 @@ function normaliseRankRewards(savedRewards, fame) {
   return { claimed, pending: pending || getEarnedUnclaimedRank(fame, claimed) };
 }
 
+function createChronicleTracker(startDay, source) {
+  return {
+    startDay,
+    baseline: {
+      gold: Number(source.gold) || 0,
+      fame: Number(source.fame) || 0,
+      threat: Number(source.greenbank?.threat) || 0,
+      confidence: Number(source.greenbank?.confidence) || 0,
+      materials: { timber: 0, iron: 0, herbs: 0, ...(source.materials || {}) },
+      facilities: { ...(source.facilities || {}) }
+    },
+    missionsCompleted: 0,
+    missionsFailed: 0,
+    questGold: 0,
+    questFame: 0,
+    missedRequests: 0,
+    trainingCompleted: 0,
+    recruitsJoined: 0,
+    equipmentCrafted: 0,
+    tavernStories: 0,
+    materialsGathered: { timber: 0, iron: 0, herbs: 0 },
+    heroScores: {},
+    focusCounts: { str: 0, mag: 0, wit: 0, cha: 0 },
+    facilityChanges: [],
+    highlights: []
+  };
+}
+
+function createChronicleState(source) {
+  const day = Math.max(1, Number(source.day) || 1);
+  return {
+    weeklyReports: [],
+    seasonReports: [],
+    week: createChronicleTracker(day - ((day - 1) % 7), source),
+    season: createChronicleTracker(day - ((day - 1) % 28), source),
+    activeFocus: null
+  };
+}
+
+function normaliseChronicleTracker(savedTracker, fallbackStartDay, source) {
+  const fresh = createChronicleTracker(fallbackStartDay, source);
+  if (!savedTracker || typeof savedTracker !== "object") {
+    return fresh;
+  }
+  const heroScores = Object.entries(savedTracker.heroScores || {}).reduce((scores, [id, score]) => {
+    if (source.adventurers.some((adventurer) => adventurer.id === id)) {
+      scores[id] = {
+        score: Math.max(0, Number(score?.score) || 0),
+        quests: Math.max(0, Number(score?.quests) || 0),
+        training: Math.max(0, Number(score?.training) || 0)
+      };
+    }
+    return scores;
+  }, {});
+  return {
+    ...fresh,
+    ...savedTracker,
+    startDay: Math.max(1, Number(savedTracker.startDay) || fallbackStartDay),
+    baseline: {
+      ...fresh.baseline,
+      ...(savedTracker.baseline || {}),
+      materials: { ...fresh.baseline.materials, ...(savedTracker.baseline?.materials || {}) },
+      facilities: { ...fresh.baseline.facilities, ...(savedTracker.baseline?.facilities || {}) }
+    },
+    materialsGathered: { ...fresh.materialsGathered, ...(savedTracker.materialsGathered || {}) },
+    focusCounts: { ...fresh.focusCounts, ...(savedTracker.focusCounts || {}) },
+    heroScores,
+    facilityChanges: Array.isArray(savedTracker.facilityChanges) ? savedTracker.facilityChanges.slice(-12) : [],
+    highlights: Array.isArray(savedTracker.highlights) ? savedTracker.highlights.slice(-12) : []
+  };
+}
+
+function normaliseChronicle(savedChronicle, source) {
+  const fresh = createChronicleState(source);
+  const weeklyReports = Array.isArray(savedChronicle?.weeklyReports)
+    ? savedChronicle.weeklyReports.filter((report) => report?.id && report.kind === "weekly").slice(0, 24)
+    : [];
+  const seasonReports = Array.isArray(savedChronicle?.seasonReports)
+    ? savedChronicle.seasonReports.filter((report) => report?.id && report.kind === "seasonal").slice(0, 12)
+    : [];
+  const activeFocus = seasonFocusCatalog[savedChronicle?.activeFocus?.id] && Number(savedChronicle.activeFocus.endsDay) >= source.day
+    ? { ...savedChronicle.activeFocus }
+    : null;
+  return {
+    weeklyReports,
+    seasonReports,
+    week: normaliseChronicleTracker(savedChronicle?.week, fresh.week.startDay, source),
+    season: normaliseChronicleTracker(savedChronicle?.season, fresh.season.startDay, source),
+    activeFocus
+  };
+}
+
+function recordChronicleEvent(event) {
+  if (!state.chronicle || !event?.type) {
+    return;
+  }
+  [state.chronicle.week, state.chronicle.season].forEach((tracker) => {
+    if (event.type === "mission") {
+      tracker[event.success ? "missionsCompleted" : "missionsFailed"] += 1;
+      tracker.questGold += Math.max(0, event.gold || 0);
+      tracker.questFame += Math.max(0, event.fame || 0);
+      if (tracker.focusCounts[event.focus] !== undefined) {
+        tracker.focusCounts[event.focus] += 1;
+      }
+      Object.entries(event.materials || {}).forEach(([id, amount]) => {
+        if (tracker.materialsGathered[id] !== undefined) {
+          tracker.materialsGathered[id] += amount;
+        }
+      });
+      (event.heroIds || []).forEach((id) => addChronicleHeroScore(tracker, id, event.success ? 3 : 1, "quests"));
+    } else if (event.type === "training") {
+      tracker.trainingCompleted += 1;
+      addChronicleHeroScore(tracker, event.heroId, 2, "training");
+    } else if (event.type === "recruit") {
+      tracker.recruitsJoined += 1;
+      addChronicleHeroScore(tracker, event.heroId, 1);
+    } else if (event.type === "facility") {
+      tracker.facilityChanges.push(event.label);
+      tracker.facilityChanges = tracker.facilityChanges.slice(-12);
+    } else if (event.type === "craft") {
+      tracker.equipmentCrafted += 1;
+    } else if (event.type === "story") {
+      tracker.tavernStories += 1;
+      (event.heroIds || []).forEach((id) => addChronicleHeroScore(tracker, id, 1));
+    } else if (event.type === "missedRequest") {
+      tracker.missedRequests += 1;
+    }
+    if (event.highlight) {
+      tracker.highlights.push(event.highlight);
+      tracker.highlights = tracker.highlights.slice(-12);
+    }
+  });
+}
+
+function addChronicleHeroScore(tracker, heroId, amount, counter = null) {
+  if (!heroId) {
+    return;
+  }
+  const score = tracker.heroScores[heroId] || { score: 0, quests: 0, training: 0 };
+  score.score += amount;
+  if (counter) {
+    score[counter] += 1;
+  }
+  tracker.heroScores[heroId] = score;
+}
+
 function resetGame() {
   try {
     localStorage.removeItem(STORAGE_KEY);
@@ -1556,6 +1734,7 @@ function resetGame() {
   mapModeOverride = null;
   tavernLifeDialogOpen = false;
   morningReportDialogOpen = false;
+  activeChronicleReport = null;
   const fresh = defaultState();
   Object.keys(state).forEach((key) => delete state[key]);
   Object.assign(state, fresh);
@@ -1603,6 +1782,7 @@ function render() {
   renderRooms();
   renderFacilities();
   renderGreenbankNews();
+  renderChronicleArchive();
   renderTavernEventPanel();
   renderGuildhallInterior();
   renderMap();
@@ -1667,7 +1847,7 @@ function renderScreens() {
   const eventOpen = Boolean(currentPopupEventId);
   const chapterOpen = Boolean(currentChapterMomentId);
   const tavernLifeOpen = Boolean(tavernLifeDialogOpen && state.tavernLife.active);
-  const morningReportOpen = Boolean(morningReportDialogOpen && state.greenbank.lastReport);
+  const morningReportOpen = Boolean(morningReportDialogOpen && getDisplayedReport());
   elements.titleScreen.classList.toggle("hidden", !titleOpen);
   elements.introScene.classList.toggle("hidden", !introOpen);
   document.body.classList.toggle("modal-open", titleOpen || introOpen || eventOpen || chapterOpen || tavernLifeOpen || morningReportOpen);
@@ -2129,11 +2309,12 @@ function renderGreenbankNews() {
   const threatTone = state.greenbank.threat >= 70 ? "danger" : state.greenbank.threat >= 40 ? "watch" : "calm";
   const confidenceTone = state.greenbank.confidence >= 70 ? "high" : state.greenbank.confidence >= 40 ? "steady" : "low";
   const pendingRank = state.rankRewards.pending;
+  const seasonFocus = getSeasonFocus();
   elements.greenbankNewsPanel.innerHTML = `
     <section class="greenbank-bulletin ${threatTone}">
       <div class="bulletin-masthead">
         <span class="bulletin-mark" aria-hidden="true">N</span>
-        <div><p class="eyebrow">Greenbank Morning Post</p><strong>${latest?.headline || "The village waits for news"}</strong></div>
+        <div><p class="eyebrow">Greenbank Morning Post</p><strong>${latest?.headline || "The village waits for news"}</strong>${seasonFocus ? `<small class="season-focus-note">${seasonFocusCatalog[seasonFocus.id].name} | ${seasonFocus.endsDay - state.day + 1} days</small>` : ""}</div>
       </div>
       <div class="village-pulse">
         <span class="pulse-stat threat"><small>Goblin threat</small><b>${state.greenbank.threat}</b><i><em style="width:${state.greenbank.threat}%"></em></i></span>
@@ -2167,8 +2348,50 @@ function renderGreenbankNews() {
   elements.greenbankNewsPanel.querySelector("[data-open-news-ledger]")?.addEventListener("click", () => setActiveView("log"));
 }
 
+function renderChronicleArchive() {
+  if (!elements.chronicleArchive) {
+    return;
+  }
+  const reports = [...state.chronicle.weeklyReports, ...state.chronicle.seasonReports]
+    .sort((first, second) => second.endDay - first.endDay || (second.kind === "seasonal" ? 1 : -1));
+  const activeFocus = getSeasonFocus();
+  elements.chronicleArchive.innerHTML = `
+    <div class="chronicle-archive-heading">
+      <div><p class="eyebrow">Guildstead Chronicle</p><h3>The Guild Record</h3><span>Weekly editions and season reviews, filed by Mara.</span></div>
+      ${activeFocus ? `<span class="archive-focus"><b>${seasonFocusCatalog[activeFocus.id].mark}</b><span>Current focus<strong>${seasonFocusCatalog[activeFocus.id].name}</strong></span></span>` : `<span class="archive-count"><b>${reports.length}</b> editions</span>`}
+    </div>
+    ${reports.length ? `<div class="chronicle-edition-list">${reports.slice(0, 10).map((report) => `
+      <button class="chronicle-edition ${report.kind}" data-open-chronicle="${report.id}" type="button">
+        <span class="edition-mark" aria-hidden="true">${report.kind === "seasonal" ? "S" : `W${report.week}`}</span>
+        <span><small>${report.kind === "seasonal" ? "Season review" : `Week ${report.week}`} | ${report.season}, Year ${report.year}</small><strong>${report.title}</strong><em>${report.metrics.missionsCompleted} quests | ${report.metrics.netGold >= 0 ? "+" : ""}${report.metrics.netGold}G${report.standout ? ` | ${report.standout.name}` : ""}</em></span>
+        <i aria-hidden="true">&rsaquo;</i>
+      </button>
+    `).join("")}</div>` : `<div class="chronicle-empty"><span aria-hidden="true">C</span><div><strong>The first edition is still being written</strong><p>Mara will file a Chronicle after Guildstead's first seven days.</p></div></div>`}
+  `;
+  elements.chronicleArchive.querySelectorAll("[data-open-chronicle]").forEach((button) => {
+    button.addEventListener("click", () => openArchivedChronicle(button.dataset.openChronicle));
+  });
+}
+
+function openArchivedChronicle(reportId) {
+  activeChronicleReport = [...state.chronicle.weeklyReports, ...state.chronicle.seasonReports]
+    .find((report) => report.id === reportId) || null;
+  if (!activeChronicleReport) {
+    return;
+  }
+  currentPopupEventId = null;
+  currentChapterMomentId = null;
+  tavernLifeDialogOpen = false;
+  morningReportDialogOpen = true;
+  render();
+}
+
+function getDisplayedReport() {
+  return activeChronicleReport || state.greenbank.lastReport;
+}
+
 function renderMorningReport() {
-  const report = state.greenbank.lastReport;
+  const report = getDisplayedReport();
   const visible = Boolean(report && morningReportDialogOpen);
   elements.morningReportDialog.classList.toggle("hidden", !visible);
   if (!visible) {
@@ -2177,9 +2400,26 @@ function renderMorningReport() {
   const pendingRank = state.rankRewards.pending;
   const changes = report.changes || {};
   const signed = (value) => `${value > 0 ? "+" : ""}${value}`;
+  if (report.kind === "weekly" || report.kind === "seasonal") {
+    elements.morningReportEyebrow.textContent = report.kind === "seasonal" ? "Guildstead Season Review" : "Mara's Weekly Chronicle";
+    elements.morningReportTitle.textContent = report.title;
+    elements.morningReportDate.textContent = report.kind === "seasonal" ? `${report.season}, Year ${report.year}` : `Week ${report.week} | ${report.season}`;
+    elements.morningReportBody.innerHTML = `${renderChronicleReport(report)}${pendingRank ? renderRankChoice(pendingRank) : ""}`;
+    elements.closeMorningReport.textContent = activeChronicleReport
+      ? "Return To Ledger"
+      : report.kind === "seasonal" ? `Begin ${getCalendar().season}` : `Begin Week ${Math.ceil(getCalendar().seasonDay / 7)}`;
+    elements.morningReportBody.querySelectorAll("[data-season-focus]").forEach((button) => {
+      button.addEventListener("click", () => selectSeasonFocus(button.dataset.seasonFocus));
+    });
+    elements.morningReportBody.querySelectorAll("[data-rank-choice]").forEach((button) => {
+      button.addEventListener("click", () => selectRankReward(button.dataset.rankChoice));
+    });
+    return;
+  }
   elements.morningReportEyebrow.textContent = pendingRank ? `Rank ${pendingRank} Promotion Edition` : "Mara's Morning Post";
   elements.morningReportTitle.textContent = report.title || "A New Day In Greenbank";
   elements.morningReportDate.textContent = `Day ${report.day}`;
+  elements.closeMorningReport.textContent = "Begin The Day";
   elements.morningReportBody.innerHTML = `
     <section class="report-lead">
       <div class="report-pulse-card threat"><span>Goblin threat</span><strong>${state.greenbank.threat}</strong><small>${signed(changes.threat || 0)} since yesterday</small></div>
@@ -2204,6 +2444,60 @@ function renderMorningReport() {
   });
 }
 
+function renderChronicleReport(report) {
+  const metrics = report.metrics;
+  const standout = report.standout;
+  const standoutHero = standout ? getAdventurer(standout.id) : null;
+  const materialText = formatMaterials(metrics.materialsGathered) || "No materials gathered";
+  const focusLabel = report.dominantFocus ? `${report.dominantFocus.toUpperCase()} work led the board` : "A balanced spread of guild work";
+  const highlights = report.highlights.length ? report.highlights : ["The tavern kept its lamps lit and its doors open."];
+  return `
+    <section class="chronicle-lead ${report.kind}">
+      <div><p class="eyebrow">${report.kind === "seasonal" ? "Four weeks in review" : `Days ${report.startDay}-${report.endDay}`}</p><h3>${report.summary}</h3></div>
+      <span class="chronicle-seal" aria-hidden="true">${report.kind === "seasonal" ? "S" : `W${report.week}`}</span>
+    </section>
+    <section class="report-lead chronicle-metrics">
+      <div class="report-pulse-card confidence"><span>Quests completed</span><strong>${metrics.missionsCompleted}</strong><small>${metrics.missionsFailed} difficult retreat${metrics.missionsFailed === 1 ? "" : "s"}</small></div>
+      <div class="report-pulse-card gold"><span>Guild purse</span><strong>${metrics.netGold >= 0 ? "+" : ""}${metrics.netGold}G</strong><small>${metrics.questGold}G from quests</small></div>
+      <div class="report-pulse-card threat"><span>Village outlook</span><strong>${metrics.confidenceChange >= 0 ? "+" : ""}${metrics.confidenceChange}</strong><small>Threat ${metrics.threatChange >= 0 ? "+" : ""}${metrics.threatChange}</small></div>
+    </section>
+    <section class="chronicle-story-grid">
+      <article class="standout-adventurer">
+        <p class="eyebrow">Adventurer of the ${report.kind === "seasonal" ? "season" : "week"}</p>
+        <div class="standout-body">
+          ${standoutHero ? renderSprite(standoutHero, "small") : `<span class="standout-placeholder" aria-hidden="true">A</span>`}
+          <div><h3>${standout?.name || "The Guild Roster"}</h3><span>${standout ? `${classes[standout.classId]?.label || "Adventurer"} | Level ${standout.level}` : "Everyone kept the guild moving"}</span><p>${standout?.quests ? `${standout.quests} expedition${standout.quests === 1 ? "" : "s"}` : "Steady guild duty"}${standout?.training ? ` and ${standout.training} training completion${standout.training === 1 ? "" : "s"}` : ""}.</p></div>
+        </div>
+      </article>
+      <article class="chronicle-tally">
+        <p class="eyebrow">By the numbers</p>
+        <div><span><b>${metrics.questFame}</b> quest fame</span><span><b>${metrics.trainingCompleted}</b> training</span><span><b>${metrics.recruitsJoined}</b> recruits</span><span><b>${metrics.facilitiesImproved}</b> room changes</span></div>
+        <small>${materialText} | ${focusLabel}</small>
+      </article>
+    </section>
+    <section class="chronicle-highlights">
+      <p class="eyebrow">Written into guild history</p>
+      <div>${highlights.map((highlight, index) => `<p><span>${index + 1}</span>${highlight}</p>`).join("")}</div>
+    </section>
+    ${report.kind === "seasonal" ? renderSeasonFocusChoices(report) : ""}
+  `;
+}
+
+function renderSeasonFocusChoices(report) {
+  const selected = report.focusId ? seasonFocusCatalog[report.focusId] : null;
+  if (selected) {
+    return `<section class="season-focus-selected"><span>${selected.mark}</span><div><p class="eyebrow">Next season's focus</p><h3>${selected.name}</h3><p>${selected.benefit}</p></div></section>`;
+  }
+  return `
+    <section class="season-focus-choice">
+      <div><p class="eyebrow">The Guildmaster's decision</p><h3>Choose Guildstead's Focus For The Next Season</h3><span>This is optional, but the chosen benefit lasts for 28 days.</span></div>
+      <div class="season-focus-grid">${Object.entries(seasonFocusCatalog).map(([id, focus]) => `
+        <button data-season-focus="${id}" type="button"><b>${focus.mark}</b><strong>${focus.name}</strong><small>${focus.description}</small><em>${focus.benefit}</em></button>
+      `).join("")}</div>
+    </section>
+  `;
+}
+
 function renderRankChoice(rank) {
   const choices = rankChoiceCatalog[rank] || [];
   return `
@@ -2217,6 +2511,7 @@ function renderRankChoice(rank) {
 }
 
 function openMorningReport() {
+  activeChronicleReport = null;
   if (!state.greenbank.lastReport) {
     state.greenbank.lastReport = createStatusReport();
   }
@@ -2229,6 +2524,7 @@ function openMorningReport() {
 
 function closeMorningReport() {
   morningReportDialogOpen = false;
+  activeChronicleReport = null;
   render();
 }
 
@@ -2241,6 +2537,135 @@ function createStatusReport() {
     notices: [{ mark: "G", text: `${getGuildActionsRemaining()} Guild Actions remain today.` }],
     newRequests: state.greenbank.requests.map((request) => request.name).slice(0, 3)
   };
+}
+
+function completeChroniclePeriods(endedDay) {
+  if (!state.founderCreated || endedDay < 1 || endedDay % 7 !== 0) {
+    return null;
+  }
+  const weeklyReport = createChronicleReport("weekly", state.chronicle.week, endedDay);
+  state.chronicle.weeklyReports.unshift(weeklyReport);
+  state.chronicle.weeklyReports = state.chronicle.weeklyReports.slice(0, 24);
+  state.chronicle.week = createChronicleTracker(state.day, state);
+  if (endedDay % 28 !== 0) {
+    return weeklyReport;
+  }
+  const seasonReport = createChronicleReport("seasonal", state.chronicle.season, endedDay);
+  state.chronicle.seasonReports.unshift(seasonReport);
+  state.chronicle.seasonReports = state.chronicle.seasonReports.slice(0, 12);
+  state.chronicle.season = createChronicleTracker(state.day, state);
+  return seasonReport;
+}
+
+function createChronicleReport(kind, tracker, endedDay) {
+  const calendar = getCalendar(endedDay);
+  const heroEntries = Object.entries(tracker.heroScores || {}).sort(([, first], [, second]) => second.score - first.score);
+  const standoutEntry = heroEntries[0];
+  const standoutHero = standoutEntry ? getAdventurer(standoutEntry[0]) : state.adventurers.find((adventurer) => adventurer.founder) || state.adventurers[0];
+  const standoutScore = standoutEntry?.[1] || { score: 0, quests: 0, training: 0 };
+  const dominantFocus = Object.entries(tracker.focusCounts || {}).sort(([, first], [, second]) => second - first)[0];
+  const facilityChanges = [...new Set(tracker.facilityChanges || [])];
+  const metrics = {
+    missionsCompleted: tracker.missionsCompleted,
+    missionsFailed: tracker.missionsFailed,
+    missedRequests: tracker.missedRequests,
+    questGold: tracker.questGold,
+    questFame: tracker.questFame,
+    netGold: state.gold - tracker.baseline.gold,
+    fameChange: state.fame - tracker.baseline.fame,
+    threatChange: state.greenbank.threat - tracker.baseline.threat,
+    confidenceChange: state.greenbank.confidence - tracker.baseline.confidence,
+    trainingCompleted: tracker.trainingCompleted,
+    recruitsJoined: tracker.recruitsJoined,
+    equipmentCrafted: tracker.equipmentCrafted,
+    tavernStories: tracker.tavernStories,
+    materialsGathered: { ...tracker.materialsGathered },
+    facilitiesImproved: facilityChanges.length
+  };
+  const report = {
+    id: `chronicle-${kind}-${endedDay}-${crypto.randomUUID()}`,
+    kind,
+    day: state.day,
+    startDay: tracker.startDay,
+    endDay: endedDay,
+    season: calendar.season,
+    year: calendar.year,
+    week: Math.ceil(calendar.seasonDay / 7),
+    title: getChronicleTitle(kind, metrics),
+    summary: getChronicleSummary(kind, metrics, standoutHero, standoutScore.score),
+    metrics,
+    standout: standoutHero ? {
+      id: standoutHero.id,
+      name: standoutHero.name,
+      classId: standoutHero.classId,
+      level: standoutHero.level,
+      quests: standoutScore.quests,
+      training: standoutScore.training,
+      score: standoutScore.score
+    } : null,
+    dominantFocus: dominantFocus?.[1] > 0 ? dominantFocus[0] : null,
+    facilityChanges,
+    highlights: (tracker.highlights || []).slice(-4).reverse(),
+    focusId: null
+  };
+  return report;
+}
+
+function getChronicleTitle(kind, metrics) {
+  if (metrics.missionsFailed > metrics.missionsCompleted && metrics.missionsFailed > 0) {
+    return kind === "seasonal" ? "A Season Of Hard-Won Lessons" : "A Week Of Hard-Won Lessons";
+  }
+  if (metrics.missedRequests >= (kind === "seasonal" ? 5 : 2) || metrics.threatChange >= (kind === "seasonal" ? 18 : 10)) {
+    return kind === "seasonal" ? "A Season Under Gathering Clouds" : "Trouble Gathers Beyond The Tavern";
+  }
+  if (metrics.threatChange <= -8) {
+    return "Greenbank's Roads Grow Safer";
+  }
+  if (metrics.confidenceChange >= 8) {
+    return "Greenbank Backs Its Guild";
+  }
+  if (metrics.facilitiesImproved >= (kind === "seasonal" ? 2 : 1)) {
+    return kind === "seasonal" ? "Guildstead Takes Shape" : "Room To Grow";
+  }
+  if (metrics.missionsCompleted >= (kind === "seasonal" ? 8 : 3)) {
+    return kind === "seasonal" ? "A Guild In Great Demand" : "Greenbank's Busy Guardians";
+  }
+  return kind === "seasonal" ? "A Promising Season At Guildstead" : "A Promising Week At Guildstead";
+}
+
+function getChronicleSummary(kind, metrics, standoutHero, standoutScore = 0) {
+  const period = kind === "seasonal" ? "season" : "week";
+  const questText = metrics.missionsCompleted
+    ? `${metrics.missionsCompleted} quest${metrics.missionsCompleted === 1 ? "" : "s"} completed`
+    : "steady work around the tavern";
+  const heroText = standoutHero
+    ? standoutScore > 0 ? ` ${standoutHero.name} made the strongest impression.` : ` ${standoutHero.name} kept the guild steady between larger moments.`
+    : "";
+  return `The ${period} brought ${questText}, ${metrics.fameChange >= 0 ? "+" : ""}${metrics.fameChange} fame, and a ${metrics.netGold >= 0 ? "gain" : "loss"} of ${Math.abs(metrics.netGold)}G.${heroText}`;
+}
+
+function getSeasonFocus() {
+  const focus = state.chronicle?.activeFocus;
+  return focus && seasonFocusCatalog[focus.id] && focus.endsDay >= state.day ? focus : null;
+}
+
+function selectSeasonFocus(focusId) {
+  const focus = seasonFocusCatalog[focusId];
+  const report = activeChronicleReport || state.greenbank.lastReport;
+  if (!focus || report?.kind !== "seasonal" || report.focusId) {
+    return false;
+  }
+  state.chronicle.activeFocus = { id: focusId, startedDay: state.day, endsDay: state.day + 27 };
+  report.focusId = focusId;
+  const storedReport = state.chronicle.seasonReports.find((item) => item.id === report.id);
+  if (storedReport) {
+    storedReport.focusId = focusId;
+  }
+  addNews(`${focus.name} becomes Guildstead's seasonal focus`, focus.benefit, "guild");
+  addLog(`Season focus chosen: ${focus.name}. ${focus.benefit}`);
+  render();
+  showToast("Season focus chosen", focus.benefit, "success");
+  return true;
 }
 
 function renderTavernEventPanel() {
@@ -2483,6 +2908,7 @@ function selectGuildRoom(roomId) {
 }
 
 function renderRoster() {
+  const recruitmentCost = getRecruitmentCost();
   const selectedAvailable = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle");
   state.selectedIds = selectedAvailable.slice(0, 3);
   if (!getAdventurer(selectedAdventurerId)) {
@@ -2506,7 +2932,7 @@ function renderRoster() {
   const recruitmentWaiting = Boolean(state.recruitment.order);
   const candidatesReady = state.recruitment.candidates.length > 0;
   const noGuildActions = getGuildActionsRemaining() < 1;
-  elements.recruit.disabled = recruitmentLocked || recruitmentWaiting || candidatesReady || state.gold < RECRUITMENT_COST || rosterFull || noGuildActions;
+  elements.recruit.disabled = recruitmentLocked || recruitmentWaiting || candidatesReady || state.gold < recruitmentCost || rosterFull || noGuildActions;
   elements.recruit.textContent = rosterFull
     ? "Dormitory Needed"
     : recruitmentLocked
@@ -2517,7 +2943,7 @@ function renderRoster() {
           ? "Choose Applicant"
           : noGuildActions
             ? "No Guild Actions"
-            : `Post Notice ${RECRUITMENT_COST}G`;
+            : `Post Notice ${recruitmentCost}G`;
   renderRecruitmentPanel();
 
   if (state.adventurers.length === 0) {
@@ -2579,6 +3005,7 @@ function renderRoster() {
 
 function renderRecruitmentPanel() {
   const recruitment = state.recruitment;
+  const recruitmentCost = getRecruitmentCost();
   const rosterFull = state.adventurers.length >= getRosterCapacity();
   if (!recruitment.unlocked) {
     elements.recruitmentPanel.innerHTML = `
@@ -2636,8 +3063,8 @@ function renderRecruitmentPanel() {
   elements.recruitmentPanel.innerHTML = `
     <section class="recruitment-service">
       <span class="recruitment-sign" aria-hidden="true">R</span>
-      <div><p class="eyebrow">Tavern recruitment</p><h3>Post A Paid Notice</h3><p>Mara will find three applicants in one or two days. The ${RECRUITMENT_COST}G fee covers notices, food, and travel.</p></div>
-      <button class="primary-button" data-post-recruitment type="button" ${rosterFull || state.gold < RECRUITMENT_COST ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `${RECRUITMENT_COST}G`}</button>
+      <div><p class="eyebrow">Tavern recruitment</p><h3>Post A Paid Notice</h3><p>Mara will find three applicants in one or two days. The ${recruitmentCost}G fee covers notices, food, and travel.</p></div>
+      <button class="primary-button" data-post-recruitment type="button" ${rosterFull || state.gold < recruitmentCost ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `${recruitmentCost}G`}</button>
     </section>
   `;
   elements.recruitmentPanel.querySelector("[data-post-recruitment]")?.addEventListener("click", postRecruitmentNotice);
@@ -3304,6 +3731,7 @@ function selectRankReward(choiceId) {
   state.rankRewards.pending = getEarnedUnclaimedRank();
   addNews(`Guildstead chooses ${choice.name}`, `${choice.reward}. Greenbank's Rank ${rank} celebration now has a plan.`, "guild");
   addLog(`Rank ${rank} benefit chosen: ${choice.name} (${choice.reward}).`);
+  recordChronicleEvent({ type: "rank", highlight: `Guildstead reached Rank ${rank} and chose ${choice.name}.` });
   render();
   showToast(`Rank ${rank} benefit chosen`, choice.reward, "success");
   return true;
@@ -3339,6 +3767,7 @@ function craftEquipment(recipeId) {
   state.equipment.items.push({ id: `gear-${crypto.randomUUID()}`, recipeId, equippedTo: null });
   addLog(`The Workshop crafts ${recipe.name}.`);
   addNews(`${recipe.name} completed in Guildstead's Workshop`, "The new equipment is ready to assign from any adventurer profile.", "guild");
+  recordChronicleEvent({ type: "craft", highlight: `The Workshop completed ${recipe.name}.` });
   render();
   showToast("Equipment crafted", `${recipe.name} is ready to equip.`, "success");
   return true;
@@ -3535,10 +3964,11 @@ function renderTrainingCurriculum(adventurer) {
   const drillRows = Object.values(trainingDrills).map((drill) => {
     const full = completedDrills >= drillCapacity;
     const duration = getTrainingDuration(adventurer, "stat", drill.stat);
-    const disabled = full || slotsFull || state.gold < drill.cost || adventurer.status !== "idle" || noGuildActions;
+    const cost = getTrainingCost(drill.cost);
+    const disabled = full || slotsFull || state.gold < cost || adventurer.status !== "idle" || noGuildActions;
     const buttonText = full
       ? "Drill limit"
-      : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${drill.cost}G / ${duration}d`;
+      : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${cost}G / ${duration}d`;
     return `
       <div class="training-row stat-drill ${full ? "locked" : ""}">
         <span class="ability-sigil" aria-hidden="true">${drill.mark.slice(0, 1)}</span>
@@ -3554,10 +3984,11 @@ function renderTrainingCurriculum(adventurer) {
     const levelLocked = trainingLevel < ability.trainingLevel;
     const full = learned >= capacity && !known;
     const duration = getTrainingDuration(adventurer, "ability", id);
-    const disabled = known || levelLocked || full || slotsFull || state.gold < ability.cost || adventurer.status !== "idle" || noGuildActions;
+    const cost = getTrainingCost(ability.cost);
+    const disabled = known || levelLocked || full || slotsFull || state.gold < cost || adventurer.status !== "idle" || noGuildActions;
     const buttonText = known
       ? "Learned"
-      : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${ability.cost}G / ${duration}d`;
+      : levelLocked ? `Yard Lv ${ability.trainingLevel}` : full ? "Capacity full" : slotsFull ? "Yard full" : adventurer.status !== "idle" ? "Unavailable" : noGuildActions ? "No actions" : `${cost}G / ${duration}d`;
     return `
       <div class="training-row ${known ? "known" : ""} ${levelLocked ? "locked" : ""}">
         <span class="ability-sigil" aria-hidden="true">T</span>
@@ -3678,20 +4109,25 @@ function randomiseFounder() {
   renderFounderPreview();
 }
 
+function getRecruitmentCost() {
+  return Math.max(0, RECRUITMENT_COST - (getSeasonFocus()?.id === "growGuild" ? 10 : 0));
+}
+
 function postRecruitmentNotice() {
-  if (!state.recruitment.unlocked || state.recruitment.order || state.recruitment.candidates.length > 0 || state.gold < RECRUITMENT_COST || state.adventurers.length >= getRosterCapacity()) {
+  const recruitmentCost = getRecruitmentCost();
+  if (!state.recruitment.unlocked || state.recruitment.order || state.recruitment.candidates.length > 0 || state.gold < recruitmentCost || state.adventurers.length >= getRosterCapacity()) {
     return;
   }
   if (!spendGuildAction("a recruitment notice")) {
     return;
   }
   const travelDays = 1 + Math.floor(Math.random() * 2);
-  state.gold -= RECRUITMENT_COST;
+  state.gold -= recruitmentCost;
   state.recruitment.order = {
     postedDay: state.day,
     readyDay: state.day + travelDays
   };
-  addLog(`Mara posts a recruitment notice and pays ${RECRUITMENT_COST}G in food and travel costs. Applicants should arrive in ${travelDays} day${travelDays === 1 ? "" : "s"}.`);
+  addLog(`Mara posts a recruitment notice and pays ${recruitmentCost}G in food and travel costs. Applicants should arrive in ${travelDays} day${travelDays === 1 ? "" : "s"}.`);
   render();
   showToast("Recruitment notice posted", `Mara expects applicants by day ${state.recruitment.order.readyDay}.`, "info");
 }
@@ -3705,6 +4141,9 @@ function makeRecruit(seed, nameOverride = "") {
   Object.keys(recruit.stats).forEach((stat) => {
     recruit.stats[stat] += Math.floor(Math.random() * (2 + tavernBonus));
   });
+  if (getSeasonFocus()?.id === "growGuild") {
+    recruit.potential = Math.min(5, recruit.potential + 1);
+  }
   return recruit;
 }
 
@@ -3749,6 +4188,7 @@ function hireRecruitmentCandidate(candidateId) {
   state.recruitment.hires += 1;
   selectedAdventurerId = candidate.id;
   addLog(`${candidate.name} the ${classes[candidate.classId].label} is chosen from Mara's tavern shortlist.`);
+  recordChronicleEvent({ type: "recruit", heroId: candidate.id, highlight: `${candidate.name} joined Guildstead as a ${classes[candidate.classId].label}.` });
   if (state.chapter.stage === "recruitment") {
     state.chapter.stage = "buildBoard";
     showChapterMoment("questBoard");
@@ -4142,6 +4582,7 @@ function resolveTavernLifeChoice(choiceId) {
   tavernLifeDialogOpen = false;
   syncRankReward(previousRank);
   addLog(outcome);
+  recordChronicleEvent({ type: "story", heroIds: story.participants.map((adventurer) => adventurer.id), highlight: outcome });
   render();
   showToast("Tavern story resolved", outcome, choice.relationship < 0 ? "info" : "success");
   return true;
@@ -4232,9 +4673,10 @@ function getPartyRollBonus(party) {
 }
 
 function getPartyGoldRate(party) {
-  return 1 + party.reduce((total, adventurer) => {
+  const partyRate = 1 + party.reduce((total, adventurer) => {
     return total + getCharacterEffects(adventurer).reduce((sum, effect) => sum + (effect.goldRate || 0), 0);
   }, 0);
+  return partyRate * (getSeasonFocus()?.id === "prosperTogether" ? 1.08 : 1);
 }
 
 function getPartyFameBonus(party) {
@@ -4244,7 +4686,8 @@ function getPartyFameBonus(party) {
 }
 
 function getXpRate(adventurer) {
-  return getCharacterEffects(adventurer).reduce((rate, effect) => rate * (effect.xpRate || 1), 1);
+  const characterRate = getCharacterEffects(adventurer).reduce((rate, effect) => rate * (effect.xpRate || 1), 1);
+  return characterRate * (getSeasonFocus()?.id === "trainRoster" ? 1.1 : 1);
 }
 
 function getRecoveryReduction(adventurer) {
@@ -4337,6 +4780,8 @@ function startTraining(adventurerId, kind, targetId) {
     return;
   }
 
+  cost = getTrainingCost(cost);
+
   if (state.gold < cost) {
     return;
   }
@@ -4390,6 +4835,7 @@ function processTrainingCompletions(announce = true) {
     }
     adventurer.status = "idle";
     addLog(`${adventurer.name} completes ${getTrainingJobName(job)} and returns to guild duty.`);
+    recordChronicleEvent({ type: "training", heroId: adventurer.id, highlight: `${adventurer.name} completed ${getTrainingJobName(job)}.` });
   });
   const completedIds = new Set(completed.map((job) => job.id));
   state.trainingJobs = getActiveTrainingJobs().filter((job) => !completedIds.has(job.id));
@@ -4398,6 +4844,10 @@ function processTrainingCompletions(announce = true) {
     showToast("Training complete", `${names.join(", ")} ${names.length === 1 ? "is" : "are"} ready for duty.`, "success");
   }
   return completed;
+}
+
+function getTrainingCost(baseCost) {
+  return getSeasonFocus()?.id === "trainRoster" ? Math.ceil(baseCost * 0.8) : baseCost;
 }
 
 function toggleAdventurer(id) {
@@ -4557,6 +5007,16 @@ function resolveMission(activeMission) {
       grantXp(adventurer, Math.round((9 + mission.fame + state.facilities.trainingYard * 2 + (activeMission.xpBonus || 0)) * getXpRate(adventurer)));
     });
     addLog(`${partyNames} complete ${mission.name}, earning ${gold}G and ${fame} fame.`);
+    recordChronicleEvent({
+      type: "mission",
+      success: true,
+      heroIds: party.map((adventurer) => adventurer.id),
+      focus: mission.focus,
+      gold,
+      fame,
+      materials: mission.materials || {},
+      highlight: `${partyNames} completed ${mission.name}.`
+    });
     handleChapterMissionSuccess(mission);
     syncRankReward(previousRank);
     showToast("Mission complete", `${mission.name} earned ${gold}G and ${fame} fame${mission.materials ? `, plus ${formatMaterials(mission.materials)}` : ""}.`, "success");
@@ -4572,6 +5032,15 @@ function resolveMission(activeMission) {
       adjustGreenbank(mission.failure);
       addNews(`${mission.name} ends in a difficult retreat`, `${partyNames} return safely, but the unresolved problem weighs on Greenbank.`, "warning");
     }
+    recordChronicleEvent({
+      type: "mission",
+      success: false,
+      heroIds: party.map((adventurer) => adventurer.id),
+      focus: mission.focus,
+      gold: consolationGold,
+      fame: 0,
+      highlight: `${partyNames} returned from ${mission.name} with hard-earned lessons.`
+    });
     if (activeMission.injuryShield > 0) {
       addLog(`${partyNames} retreat from ${mission.name}, but their earlier preparation prevents an injury.`);
       showToast("Party retreated safely", `The party escaped ${mission.location} without injury.`, "info");
@@ -4844,6 +5313,11 @@ function upgradeFacility(id) {
   state.facilities[id] = current + 1;
   const built = current === 0;
   addLog(built ? `${facility.name} is built at the Wayfarer's Rest.` : `${facility.name} improves to level ${state.facilities[id]}.`);
+  recordChronicleEvent({
+    type: "facility",
+    label: built ? `${facility.name} built` : `${facility.name} Level ${state.facilities[id]}`,
+    highlight: built ? `${facility.name} opened at the Wayfarer's Rest.` : `${facility.name} reached Level ${state.facilities[id]}.`
+  });
   if (id === "questBoard" && built && state.chapter.stage === "buildBoard") {
     state.chapter.stage = "localRequests";
     activeView = "quest";
@@ -4904,6 +5378,7 @@ function expireGreenbankRequests() {
     state.greenbank.missedRequests += 1;
     addNews(request.missedHeadline, `${request.name} went unanswered. Greenbank's confidence falls as the goblin threat grows.`, "warning");
     addLog(`${request.name} expires unanswered.`);
+    recordChronicleEvent({ type: "missedRequest", highlight: `${request.name} expired before the guild could respond.` });
   });
   const expiredIds = new Set(expired.map((request) => request.id));
   state.greenbank.requests = state.greenbank.requests.filter((request) => !expiredIds.has(request.id));
@@ -5046,6 +5521,7 @@ function getFacilityMaterialCost(facilityId) {
 }
 
 function advanceDays(amount) {
+  const endingDay = state.day;
   const before = {
     gold: state.gold,
     threat: state.greenbank.threat,
@@ -5066,7 +5542,9 @@ function advanceDays(amount) {
   const completedTraining = processTrainingCompletions(false);
   expireEvents();
   if (state.facilities.questBoard > 0) {
-    adjustGreenbank({ threat: state.chapter.charterEarned ? 1 : 2 });
+    const baseThreatGrowth = state.chapter.charterEarned ? 1 : 2;
+    const focusReduction = getSeasonFocus()?.id === "protectGreenbank" ? 1 : 0;
+    adjustGreenbank({ threat: Math.max(0, baseThreatGrowth - focusReduction) });
   }
   const expiredRequests = expireGreenbankRequests();
   const requestTarget = state.greenbank.threat >= 70 ? 3 : 2;
@@ -5074,9 +5552,10 @@ function advanceDays(amount) {
   const confidenceModifier = state.greenbank.confidence >= 70 ? 2 : state.greenbank.confidence < 30 ? -2 : 0;
   const threatModifier = state.greenbank.threat >= 70 ? -3 : state.greenbank.threat >= 45 ? -1 : 0;
   const villageModifier = confidenceModifier + threatModifier;
-  const stipend = Math.max(5, 10 + state.facilities.tavern * 3 + state.facilities.kitchen * 3 + villageModifier);
+  const focusIncome = getSeasonFocus()?.id === "prosperTogether" ? 3 : 0;
+  const stipend = Math.max(5, 10 + state.facilities.tavern * 3 + state.facilities.kitchen * 3 + villageModifier + focusIncome);
   state.gold += stipend;
-  if (state.day % 7 === 0) {
+  if (endingDay % 7 === 0) {
     const upkeep = Math.max(8, state.adventurers.length * 7 - state.fame);
     state.gold = Math.max(0, state.gold - upkeep);
     addLog(`Weekly upkeep costs ${upkeep}G. The guild accountant looks heroic for once.`);
@@ -5103,7 +5582,7 @@ function advanceDays(amount) {
     notices.push({ mark: "G", text: `${unusedActions} unused action${unusedActions === 1 ? "" : "s"} earned ${administrationIncome}G through routine administration.` });
   }
   const currentNews = state.greenbank.news.filter((item) => item.day === state.day).slice(0, 3);
-  state.greenbank.lastReport = {
+  const dailyReport = {
     day: state.day,
     title: state.greenbank.threat >= 70 ? "Watchfires Above Greenbank" : state.greenbank.confidence >= 70 ? "Greenbank Backs Its Guild" : "A New Day In Greenbank",
     changes: {
@@ -5115,6 +5594,8 @@ function advanceDays(amount) {
     notices,
     newRequests: newRequests.map((request) => request.name)
   };
+  const chronicleReport = completeChroniclePeriods(endingDay);
+  state.greenbank.lastReport = chronicleReport || dailyReport;
   morningReportDialogOpen = Boolean(state.founderCreated && !currentChapterMomentId);
   if (morningReportDialogOpen) {
     tavernLifeDialogOpen = false;
@@ -5152,7 +5633,7 @@ function getChapterObjective() {
     tavern: { title: "Open the tavern", detail: "A quiet morning is about to become rather less quiet.", progress: 0 },
     hero: { title: "Choose your first hero", detail: "Find someone willing to investigate the goblin raid.", progress: 8 },
     firstQuest: { title: "Recover the stolen supplies", detail: "Select a party and follow the tracks along Greenbank Lane.", progress: 18 },
-    recruitment: { title: "Recruit a second adventurer", detail: "Post a 45G tavern notice, wait for applicants, then choose one.", progress: 27 },
+    recruitment: { title: "Recruit a second adventurer", detail: `Post a ${getRecruitmentCost()}G tavern notice, wait for applicants, then choose one.`, progress: 27 },
     buildBoard: { title: "Build the Quest Board", detail: "Spend 55G to turn Mara's idea into a proper local service.", progress: 32 },
     localRequests: { title: `Complete local requests (${completed}/3)`, detail: "Help Greenbank and earn enough trust to expand the tavern.", progress: 38 + completed * 12 },
     expansion: { title: "Build the Training Yard", detail: "Spend 95G to prepare your adventurers for the goblin chief.", progress: 78 },
@@ -5426,14 +5907,14 @@ function getRankProgress() {
   return Math.round(((fame - lower) / (upper - lower)) * 100);
 }
 
-function getCalendar() {
+function getCalendar(day = state.day) {
   const seasons = ["Spring", "Summer", "Autumn", "Winter"];
   const yearLength = 112;
-  const dayOfYear = (state.day - 1) % yearLength;
+  const dayOfYear = (day - 1) % yearLength;
   return {
     season: seasons[Math.floor(dayOfYear / 28)],
     seasonDay: (dayOfYear % 28) + 1,
-    year: Math.floor((state.day - 1) / yearLength) + 1
+    year: Math.floor((day - 1) / yearLength) + 1
   };
 }
 

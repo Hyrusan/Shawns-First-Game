@@ -32,6 +32,571 @@
   }
 }
 
+@layer management {
+  .season-focus-note {
+    overflow: hidden;
+    color: #386047;
+    font-size: 0.56rem;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .chronicle-archive {
+    margin-bottom: 11px;
+    padding: 11px;
+    border: 2px solid #2a190f;
+    border-radius: 5px;
+    background:
+      linear-gradient(110deg, rgb(54 91 72 / 8%), transparent 32%),
+      repeating-linear-gradient(90deg, rgb(83 45 23 / 5%) 0 1px, transparent 1px 21px),
+      var(--parchment);
+    box-shadow: 0 3px 0 #050708, inset 0 0 0 1px rgb(255 246 211 / 30%);
+    color: var(--parchment-ink);
+  }
+
+  .chronicle-archive-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 9px;
+    border-bottom: 3px double #604124;
+  }
+
+  .chronicle-archive-heading > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .chronicle-archive-heading .eyebrow {
+    color: #7a4c28;
+  }
+
+  .chronicle-archive-heading h3 {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+  }
+
+  .chronicle-archive-heading span {
+    color: #6d5138;
+    font-size: 0.62rem;
+  }
+
+  .archive-count {
+    display: grid;
+    min-width: 70px;
+    padding: 5px 8px;
+    border: 1px solid #765331;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .archive-count b {
+    color: #315d48;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+  }
+
+  .archive-focus {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    max-width: 190px;
+    padding: 5px 7px;
+    border: 1px solid #55705a;
+    background: rgb(53 97 72 / 9%);
+  }
+
+  .archive-focus > b {
+    display: grid;
+    width: 28px;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50% 50% 5px 50%;
+    background: #31584a;
+    color: #f4d17a;
+    font-family: Georgia, serif;
+  }
+
+  .archive-focus > span {
+    display: grid;
+    font-size: 0.54rem;
+    text-transform: uppercase;
+  }
+
+  .archive-focus strong {
+    overflow: hidden;
+    color: #2f2117;
+    font-size: 0.65rem;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
+  }
+
+  .chronicle-edition-list {
+    display: grid;
+    gap: 5px;
+    margin-top: 9px;
+  }
+
+  .chronicle-edition {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid #8c6741;
+    border-radius: 3px;
+    background: rgb(255 247 218 / 30%);
+    color: var(--parchment-ink);
+    text-align: left;
+    transition: background 140ms ease, border-color 140ms ease, translate 140ms ease;
+  }
+
+  .chronicle-edition:hover,
+  .chronicle-edition:focus-visible {
+    border-color: #456952;
+    background: rgb(100 139 91 / 13%);
+    translate: 2px 0;
+  }
+
+  .chronicle-edition.seasonal {
+    border-left: 4px solid #b2762f;
+    background: linear-gradient(90deg, rgb(216 159 60 / 13%), rgb(255 247 218 / 27%));
+  }
+
+  .edition-mark {
+    display: grid;
+    width: 36px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #352117;
+    border-radius: 50% 50% 5px 50%;
+    background: #31584d;
+    color: #f5d37d;
+    font-family: Georgia, serif;
+    font-size: 0.68rem;
+    font-weight: 900;
+  }
+
+  .chronicle-edition.seasonal .edition-mark {
+    background: #8a5329;
+  }
+
+  .chronicle-edition > span:nth-child(2) {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  .chronicle-edition small,
+  .chronicle-edition em {
+    overflow: hidden;
+    color: #775738;
+    font-size: 0.56rem;
+    font-style: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chronicle-edition strong {
+    overflow: hidden;
+    font-family: Georgia, serif;
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chronicle-edition > i {
+    color: #725033;
+    font-family: Georgia, serif;
+    font-size: 1.1rem;
+    font-style: normal;
+    text-align: center;
+  }
+
+  .chronicle-empty {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    padding: 12px 3px 3px;
+  }
+
+  .chronicle-empty > span {
+    display: grid;
+    width: 36px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px dashed #86623d;
+    color: #6e4d2f;
+    font-family: Georgia, serif;
+    font-weight: 900;
+  }
+
+  .chronicle-empty div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .chronicle-empty strong { font-size: 0.68rem; }
+  .chronicle-empty p { color: #71543a; font-size: 0.6rem; }
+}
+
+@layer overlays {
+  .chronicle-lead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 52px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0 11px;
+    border-bottom: 1px solid rgb(78 45 24 / 25%);
+  }
+
+  .chronicle-lead > div {
+    display: grid;
+    gap: 3px;
+  }
+
+  .chronicle-lead h3 {
+    color: #3c2819;
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .chronicle-seal {
+    display: grid;
+    width: 50px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 2px solid #3c2517;
+    border-radius: 50% 50% 7px 50%;
+    background: #31584d;
+    box-shadow: inset 0 0 0 3px rgb(255 224 147 / 10%), 0 3px 0 #875b32;
+    color: #f7d983;
+    font-family: Georgia, serif;
+    font-size: 0.86rem;
+    font-weight: 900;
+  }
+
+  .chronicle-lead.seasonal .chronicle-seal {
+    background: #89512a;
+  }
+
+  .chronicle-metrics {
+    margin-top: 11px;
+  }
+
+  .chronicle-story-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 14px;
+    margin-top: 12px;
+  }
+
+  .standout-adventurer,
+  .chronicle-tally {
+    padding: 9px;
+    border-top: 3px solid #52705a;
+    background: rgb(255 248 220 / 27%);
+  }
+
+  .chronicle-tally {
+    border-top-color: #b57b32;
+  }
+
+  .standout-body {
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    margin-top: 6px;
+  }
+
+  .standout-body .sprite-wrap,
+  .standout-placeholder {
+    display: grid;
+    width: 56px;
+    height: 64px;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #5f4329;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #506c61, #1e3c37);
+    box-shadow: 0 2px 0 #58371f;
+  }
+
+  .standout-placeholder {
+    color: #f3d47d;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    font-weight: 900;
+  }
+
+  .standout-body > div:last-child {
+    display: grid;
+    gap: 2px;
+  }
+
+  .standout-body h3,
+  .chronicle-tally h3,
+  .season-focus-choice h3,
+  .season-focus-selected h3 {
+    color: #382317;
+    font-family: Georgia, serif;
+    font-size: 0.8rem;
+  }
+
+  .standout-body span,
+  .standout-body p,
+  .chronicle-tally small {
+    color: #6b5038;
+    font-size: 0.6rem;
+    line-height: 1.35;
+  }
+
+  .chronicle-tally > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    margin: 7px 0;
+  }
+
+  .chronicle-tally > div span {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid rgb(96 64 37 / 24%);
+    color: #5f4631;
+    font-size: 0.58rem;
+  }
+
+  .chronicle-tally b {
+    color: #315a45;
+    font-family: Georgia, serif;
+    font-size: 0.82rem;
+  }
+
+  .chronicle-highlights {
+    margin-top: 12px;
+    padding-top: 9px;
+    border-top: 3px double #614326;
+  }
+
+  .chronicle-highlights > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 12px;
+    margin-top: 5px;
+  }
+
+  .chronicle-highlights > div p {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    color: #604932;
+    font-size: 0.61rem;
+    line-height: 1.35;
+  }
+
+  .chronicle-highlights > div span {
+    display: grid;
+    width: 20px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid #7b5834;
+    border-radius: 50%;
+    color: #725033;
+    font-family: Georgia, serif;
+    font-size: 0.55rem;
+    font-weight: 900;
+  }
+
+  .season-focus-choice {
+    margin-top: 13px;
+    padding: 10px;
+    border: 2px solid #6b4a27;
+    background: linear-gradient(90deg, rgb(216 163 61 / 14%), rgb(75 111 83 / 8%));
+  }
+
+  .season-focus-choice > div:first-child {
+    display: grid;
+    gap: 2px;
+  }
+
+  .season-focus-choice > div:first-child > span {
+    color: #6b5038;
+    font-size: 0.6rem;
+  }
+
+  .season-focus-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 8px;
+  }
+
+  .season-focus-grid button {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 2px 7px;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid #735032;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #ffedb6, #d9ad61);
+    box-shadow: 0 2px 0 #654120;
+    color: #321e12;
+    text-align: left;
+  }
+
+  .season-focus-grid button:hover,
+  .season-focus-grid button:focus-visible {
+    border-color: #315b48;
+    filter: brightness(1.04);
+    translate: 0 -1px;
+  }
+
+  .season-focus-grid button > b {
+    display: grid;
+    grid-row: 1 / span 3;
+    width: 28px;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50% 50% 5px 50%;
+    background: #31584d;
+    color: #f5d27a;
+    font-family: Georgia, serif;
+  }
+
+  .season-focus-grid strong { font-family: Georgia, serif; font-size: 0.68rem; }
+  .season-focus-grid small { color: #6c5036; font-size: 0.56rem; line-height: 1.3; }
+  .season-focus-grid em { grid-column: 2; color: #315a45; font-size: 0.57rem; font-style: normal; font-weight: 900; }
+
+  .season-focus-selected {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    margin-top: 13px;
+    padding: 9px;
+    border: 2px solid #527057;
+    background: rgb(68 108 77 / 12%);
+  }
+
+  .season-focus-selected > span {
+    display: grid;
+    width: 42px;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50% 50% 6px 50%;
+    background: #31584d;
+    color: #f6d47c;
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+  }
+
+  .season-focus-selected > div {
+    display: grid;
+    gap: 2px;
+  }
+
+  .season-focus-selected p:last-child {
+    color: #5e4933;
+    font-size: 0.61rem;
+  }
+}
+
+@layer responsive {
+  @media (max-width: 720px) {
+    .chronicle-story-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .chronicle-highlights > div {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .chronicle-archive-heading {
+      align-items: flex-start;
+    }
+
+    .archive-focus {
+      max-width: 140px;
+    }
+
+    .chronicle-edition {
+      grid-template-columns: 34px minmax(0, 1fr) 14px;
+    }
+
+    .edition-mark {
+      width: 32px;
+    }
+
+    .chronicle-lead {
+      grid-template-columns: minmax(0, 1fr) 40px;
+    }
+
+    .chronicle-seal {
+      width: 38px;
+    }
+
+    .season-focus-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .season-focus-grid button {
+      min-height: 72px;
+    }
+
+    .chronicle-tally > div {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+@layer readability {
+  .season-focus-note,
+  .chronicle-archive-heading span,
+  .chronicle-edition small,
+  .chronicle-edition em,
+  .chronicle-empty p,
+  .standout-body span,
+  .standout-body p,
+  .chronicle-tally small,
+  .chronicle-tally > div span,
+  .chronicle-highlights > div p,
+  .season-focus-choice > div:first-child > span,
+  .season-focus-grid small,
+  .season-focus-grid em,
+  .season-focus-selected p:last-child {
+    font-size: var(--type-caption);
+  }
+
+  .chronicle-edition strong,
+  .chronicle-empty strong,
+  .chronicle-lead h3,
+  .standout-body h3,
+  .season-focus-choice h3,
+  .season-focus-selected h3,
+  .season-focus-grid strong {
+    font-size: var(--type-small);
+  }
+}
+
 @layer foundation {
   :root {
     --night: #080c0d;

@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=30/);
+  assert.match(index, /styles\.css\?v=31/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=30/);
+  assert.match(index, /game\.js\?v=31/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -225,7 +225,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 16);
+  assert.equal(result.version, 17);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -337,7 +337,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 16);
+  assert.equal(result.version, 17);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -494,7 +494,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 16);
+  assert.equal(result.version, 17);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -742,7 +742,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 16);
+  assert.equal(result.version, 17);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -864,7 +864,7 @@ test("version 14 saves migrate to a fresh rank-scaled action day", () => {
   const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
     remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
 
-  assert.equal(result.version, 16);
+  assert.equal(result.version, 17);
   assert.equal(result.actionDay, 5);
   assert.equal(result.remaining, 4);
   assert.equal(result.capacity, 4);
@@ -1034,7 +1034,7 @@ test("version 15 saves gain village, materials, equipment, and promotion default
     confidence: state.greenbank.confidence, materials: { ...state.materials },
     equipmentCount: state.equipment.items.length, pendingRank: state.rankRewards.pending })`);
 
-  assert.equal(result.version, 16);
+  assert.equal(result.version, 17);
   assert.equal(result.threat, 24);
   assert.equal(result.confidence, 42);
   assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 0 });
@@ -1053,6 +1053,179 @@ test("Greenbank news and morning reports ship with responsive management UI", ()
   assert.match(styles, /\.morning-report-sheet/);
   assert.match(styles, /\.rank-choice-grid/);
   assert.match(styles, /@media \(max-width: 480px\)[\s\S]*\.morning-report-sheet/);
+});
+
+test("ending the seventh day publishes a weekly Chronicle and resets its tracker", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.screen = "game";
+    state.day = 7;
+    state.gold = 100;
+    state.fame = 4;
+    state.chronicle = createChronicleState(state);
+    state.gold += 42;
+    state.fame += 3;
+    recordChronicleEvent({ type: "mission", success: true, heroIds: [founder.id], focus: "str", gold: 42, fame: 3,
+      materials: { timber: 2 }, highlight: "Jenny guarded Greenbank Mill Road." });
+    advanceDays(1);
+    const report = state.greenbank.lastReport;
+    ({ day: state.day, kind: report.kind, endDay: report.endDay, week: report.week,
+       completed: report.metrics.missionsCompleted, questGold: report.metrics.questGold,
+       timber: report.metrics.materialsGathered.timber, standout: report.standout.name,
+       highlight: report.highlights[0], stored: state.chronicle.weeklyReports.length,
+       nextStart: state.chronicle.week.startDay, reportOpen: morningReportDialogOpen,
+       markup: renderChronicleReport(report) });
+  `);
+
+  assert.equal(result.day, 8);
+  assert.equal(result.kind, "weekly");
+  assert.equal(result.endDay, 7);
+  assert.equal(result.week, 1);
+  assert.equal(result.completed, 1);
+  assert.equal(result.questGold, 42);
+  assert.equal(result.timber, 2);
+  assert.equal(result.standout, "Jenny");
+  assert.match(result.highlight, /Jenny guarded/);
+  assert.equal(result.stored, 1);
+  assert.equal(result.nextStart, 8);
+  assert.equal(result.reportOpen, true);
+  assert.match(result.markup, /Adventurer of the week/);
+});
+
+test("ending day 28 creates a season review with a meaningful focus choice", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.screen = "game";
+    state.day = 28;
+    state.gold = 220;
+    state.fame = 20;
+    state.chronicle = createChronicleState(state);
+    recordChronicleEvent({ type: "facility", label: "Training Yard built", highlight: "The Training Yard opened." });
+    recordChronicleEvent({ type: "training", heroId: founder.id, highlight: "Jenny mastered fieldcraft." });
+    advanceDays(1);
+    const report = state.greenbank.lastReport;
+    const choiceMarkup = renderChronicleReport(report);
+    const selected = selectSeasonFocus("protectGreenbank");
+    ({ day: state.day, kind: report.kind, season: report.season, year: report.year,
+       facilities: report.metrics.facilitiesImproved, training: report.metrics.trainingCompleted,
+       weeklyStored: state.chronicle.weeklyReports.length, seasonStored: state.chronicle.seasonReports.length,
+       choiceMarkup, selected, focus: { ...state.chronicle.activeFocus }, storedFocus: state.chronicle.seasonReports[0].focusId,
+       selectedMarkup: renderSeasonFocusChoices(report), nextSeasonStart: state.chronicle.season.startDay });
+  `);
+
+  assert.equal(result.day, 29);
+  assert.equal(result.kind, "seasonal");
+  assert.equal(result.season, "Spring");
+  assert.equal(result.year, 1);
+  assert.equal(result.facilities, 1);
+  assert.equal(result.training, 1);
+  assert.equal(result.weeklyStored, 1);
+  assert.equal(result.seasonStored, 1);
+  assert.match(result.choiceMarkup, /Choose Guildstead's Focus For The Next Season/);
+  assert.equal(result.selected, true);
+  assert.equal(result.focus.id, "protectGreenbank");
+  assert.equal(result.focus.endsDay, 56);
+  assert.equal(result.storedFocus, "protectGreenbank");
+  assert.match(result.selectedMarkup, /Next season's focus/);
+  assert.equal(result.nextSeasonStart, 29);
+});
+
+test("season focuses alter protection, prosperity, recruitment, and training", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const hero = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [hero];
+    state.founderCreated = true;
+    state.facilities.questBoard = 1;
+    state.day = 2;
+    state.chronicle.activeFocus = { id: "protectGreenbank", startedDay: 1, endsDay: 28 };
+    const threatBefore = state.greenbank.threat;
+    advanceDays(1);
+    const protectedGrowth = state.greenbank.threat - threatBefore;
+    state.chronicle.activeFocus = null;
+    const baselineGoldRate = getPartyGoldRate([hero]);
+    const baselineXpRate = getXpRate(hero);
+    state.chronicle.activeFocus = { id: "prosperTogether", startedDay: 3, endsDay: 30 };
+    const prosperousGoldRate = getPartyGoldRate([hero]);
+    state.chronicle.activeFocus = { id: "growGuild", startedDay: 3, endsDay: 30 };
+    const recruitmentCost = getRecruitmentCost();
+    state.chronicle.activeFocus = { id: "trainRoster", startedDay: 3, endsDay: 30 };
+    const trainingCost = getTrainingCost(45);
+    const xpRate = getXpRate(hero);
+    ({ protectedGrowth, baselineGoldRate, prosperousGoldRate, recruitmentCost, trainingCost, baselineXpRate, xpRate });
+  `);
+
+  assert.equal(result.protectedGrowth, 1);
+  assert.ok(Math.abs(result.prosperousGoldRate / result.baselineGoldRate - 1.08) < 0.0001);
+  assert.equal(result.recruitmentCost, 35);
+  assert.equal(result.trainingCost, 36);
+  assert.ok(Math.abs(result.xpRate / result.baselineXpRate - 1.1) < 0.0001);
+});
+
+test("version 16 saves migrate to an empty but correctly aligned Chronicle", () => {
+  const context = createGameContext({
+    version: 16,
+    screen: "game",
+    day: 18,
+    gold: 170,
+    fame: 12,
+    adventurers: [],
+    activeMissions: [],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: [], charterEarned: false },
+    greenbank: { threat: 31, confidence: 46, requests: [], news: [], completedRequests: 2, missedRequests: 1 },
+    materials: { timber: 2, iron: 1, herbs: 3 },
+    log: [],
+    founderCreated: true
+  });
+  const result = run(context, `({ version: state.version, weekly: state.chronicle.weeklyReports.length,
+    seasonal: state.chronicle.seasonReports.length, weekStart: state.chronicle.week.startDay,
+    seasonStart: state.chronicle.season.startDay, focus: state.chronicle.activeFocus,
+    baselineGold: state.chronicle.week.baseline.gold, baselineThreat: state.chronicle.week.baseline.threat })`);
+
+  assert.equal(result.version, 17);
+  assert.equal(result.weekly, 0);
+  assert.equal(result.seasonal, 0);
+  assert.equal(result.weekStart, 15);
+  assert.equal(result.seasonStart, 1);
+  assert.equal(result.focus, null);
+  assert.equal(result.baselineGold, 170);
+  assert.equal(result.baselineThreat, 31);
+});
+
+test("the Ledger and report sheet include responsive Chronicle presentation", () => {
+  const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
+  const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+  assert.match(index, /id="chronicleArchive"/);
+  assert.match(styles, /\.chronicle-archive/);
+  assert.match(styles, /\.chronicle-story-grid/);
+  assert.match(styles, /\.season-focus-grid/);
+  assert.match(styles, /@media \(max-width: 480px\)[\s\S]*\.season-focus-grid/);
+});
+
+test("a promotion choice remains available inside a weekly Chronicle", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    state.founderCreated = true;
+    state.screen = "game";
+    state.fame = 18;
+    syncRankReward("F");
+    state.greenbank.lastReport = createChronicleReport("weekly", state.chronicle.week, 7);
+    morningReportDialogOpen = true;
+    renderMorningReport();
+    ({ pending: state.rankRewards.pending, markup: elements.morningReportBody.innerHTML });
+  `);
+
+  assert.equal(result.pending, "D");
+  assert.match(result.markup, /Choose How Greenbank Marks The Promotion/);
+  assert.match(result.markup, /data-rank-choice="buildersGift"/);
 });
 
 function greenbankFailureThreat(context, index) {

@@ -1,5 +1,5 @@
 const STORAGE_KEY = "guildstead-demo-save";
-const SAVE_VERSION = 17;
+const SAVE_VERSION = 18;
 const RECRUITMENT_COST = 45;
 
 const classes = {
@@ -676,6 +676,8 @@ const missionDeck = [
     unlockFame: 0,
     focus: "wit",
     tutorial: true,
+    storyEncounter: true,
+    encounterId: "supplyTrail",
     guaranteedSuccess: true,
     marker: { left: "56%", top: "47%" }
   },
@@ -691,6 +693,8 @@ const missionDeck = [
     unlockFame: 0,
     focus: "str",
     localRequest: true,
+    storyEncounter: true,
+    encounterId: "cartCrossroads",
     marker: { left: "63%", top: "56%" }
   },
   {
@@ -705,6 +709,8 @@ const missionDeck = [
     unlockFame: 0,
     focus: "wit",
     localRequest: true,
+    storyEncounter: true,
+    encounterId: "woodcutterCamp",
     marker: { left: "69%", top: "36%" }
   },
   {
@@ -719,6 +725,8 @@ const missionDeck = [
     unlockFame: 0,
     focus: "mag",
     localRequest: true,
+    storyEncounter: true,
+    encounterId: "mooncapNest",
     marker: { left: "76%", top: "44%" }
   },
   {
@@ -733,6 +741,8 @@ const missionDeck = [
     unlockFame: 0,
     focus: "str",
     chapterBoss: true,
+    storyEncounter: true,
+    encounterId: "barrowAssault",
     marker: { left: "84%", top: "23%" }
   },
   {
@@ -1030,6 +1040,247 @@ const lootCatalog = {
 };
 
 const encounterDeck = {
+  supplyTrail: {
+    id: "supplyTrail",
+    title: "The Tracks Split At Saffron Brook",
+    enemyName: "Goblin Runners",
+    description: "The stolen sacks are close, but a captive carter calls from the reeds while goblin runners flee towards Barrow Hill. There is only time to set one priority.",
+    dangerous: false,
+    storyChoices: [
+      {
+        id: "secureProvisions",
+        badge: "Protect the tavern",
+        label: "Secure the provisions",
+        detail: "Recover every sack before the goblins can scatter them through the marsh.",
+        result: "{hero} secures the stolen provisions and marks the tavern as a place Greenbank can rely upon.",
+        powerBonus: 3,
+        enemyDamage: 16,
+        goldBonus: 12,
+        world: { support: 1, confidence: 2 },
+        consequence: "+1 Village Support, +2 confidence, +12G"
+      },
+      {
+        id: "shadowRunners",
+        badge: "Gather intelligence",
+        label: "Shadow the runners",
+        detail: "Leave the heaviest sacks and follow the retreating goblins towards their hidden trail.",
+        result: "{hero} follows the runners far enough to sketch the first reliable route towards Barrow Hill.",
+        powerBonus: 8,
+        enemyDamage: 30,
+        lootId: "oldRoadMap",
+        world: { intel: 1, threat: 2 },
+        consequence: "+1 Goblin Intel, +2 threat"
+      },
+      {
+        id: "freeCarter",
+        badge: "Save a traveller",
+        label: "Free the captive carter",
+        detail: "Break formation to pull the merchant from a goblin snare before it tightens.",
+        result: "{hero} frees the carter under fire, giving Greenbank its first story about a true local hero.",
+        powerBonus: 4,
+        enemyDamage: 20,
+        fameBonus: 2,
+        injuryShield: 1,
+        world: { support: 1, confidence: 4 },
+        consequence: "+1 Village Support, +4 confidence, +2 fame"
+      }
+    ]
+  },
+  cartCrossroads: {
+    id: "cartCrossroads",
+    title: "A Barricade At Millstone Cross",
+    enemyName: "Goblin Toll Gang",
+    description: "A goblin toll gang blocks the flour cart while scouts watch from both hedgerows. Saving the cargo, breaking the gang, and learning who commands them cannot all be done at once.",
+    dangerous: true,
+    storyChoices: [
+      {
+        id: "shieldTheVillagers",
+        badge: "Protect Greenbank",
+        label: "Shield the villagers",
+        detail: "Keep the escort tight and walk every frightened traveller through the barricade.",
+        result: "{hero} holds the road until the final villager and flour sack are safely through.",
+        powerBonus: 5,
+        enemyDamage: 22,
+        injuryShield: 1,
+        world: { support: 1, confidence: 3 },
+        consequence: "+1 Village Support, +3 confidence, injury protection"
+      },
+      {
+        id: "springChalkTrap",
+        badge: "Break their patrol",
+        label: "Spring a chalk-pit trap",
+        detail: "Abandon the road briefly and lure the goblin scouts into the old quarry cut.",
+        result: "{hero} turns the ambush around and captures a patrol map bearing the chief's mark.",
+        powerBonus: 9,
+        enemyDamage: 34,
+        world: { intel: 1, threat: -2 },
+        consequence: "+1 Goblin Intel, -2 threat, stronger attack"
+      },
+      {
+        id: "saveTheFlour",
+        badge: "Secure the reward",
+        label: "Rush the flour to safety",
+        detail: "Use the cart as cover and push straight through before the goblins regroup.",
+        result: "{hero} gets the valuable cargo through intact, though the scouts escape into the hills.",
+        powerBonus: 3,
+        enemyDamage: 15,
+        goldBonus: 18,
+        world: { threat: 2, confidence: 1 },
+        consequence: "+18G, +1 confidence, +2 threat"
+      }
+    ]
+  },
+  woodcutterCamp: {
+    id: "woodcutterCamp",
+    title: "Prisoners Beneath The Old Oak",
+    enemyName: "Mushroomwood Trappers",
+    description: "The missing woodcutter is alive beside two other prisoners. A scarred goblin scout is preparing to leave with orders from Barrow Hill.",
+    dangerous: true,
+    storyChoices: [
+      {
+        id: "freeEveryPrisoner",
+        badge: "No one left behind",
+        label: "Free every prisoner",
+        detail: "Attack now and carry the injured home before the camp can raise an alarm.",
+        result: "{hero} breaks the cages and brings every missing villager back through Mushroomwood.",
+        powerBonus: 6,
+        enemyDamage: 28,
+        fameBonus: 1,
+        world: { support: 1, confidence: 4 },
+        consequence: "+1 Village Support, +4 confidence, +1 fame"
+      },
+      {
+        id: "followScarredScout",
+        badge: "Risk the rescue",
+        label: "Follow the scarred scout",
+        detail: "Wait for the messenger to leave, then follow them towards the chief's unguarded route.",
+        result: "{hero} risks a slower rescue to uncover the chief's supply trail and night watch pattern.",
+        powerBonus: 8,
+        enemyDamage: 31,
+        xpBonus: 3,
+        world: { intel: 2, threat: 3 },
+        consequence: "+2 Goblin Intel, +3 threat, +3 XP"
+      },
+      {
+        id: "hearNibOut",
+        badge: "Unlikely bargain",
+        label: "Hear the young goblin out",
+        detail: "A terrified lookout offers the camp key and a route map in exchange for safe passage.",
+        result: "{hero} accepts Nib's bargain, frees the prisoners quietly, and learns where the chief posts his guards.",
+        powerBonus: 5,
+        enemyDamage: 20,
+        fameBonus: 1,
+        lootId: "oldRoadMap",
+        world: { intel: 1, threat: -3 },
+        consequence: "+1 Goblin Intel, -3 threat"
+      }
+    ]
+  },
+  mooncapNest: {
+    id: "mooncapNest",
+    title: "Mooncaps In The Warrens",
+    enemyName: "Spore Warden",
+    description: "The remedy grows beside a warm tunnel used by the Barrow Hill clan. Smoke from deeper within suggests the goblins are preparing for a larger raid.",
+    dangerous: false,
+    storyChoices: [
+      {
+        id: "gatherForHealer",
+        badge: "Medicine first",
+        label: "Gather the healer's remedy",
+        detail: "Take only the ripe mooncaps and leave before the warrens are disturbed.",
+        result: "{hero} returns with a clean harvest and enough remedy for every Greenbank household.",
+        powerBonus: 3,
+        enemyDamage: 14,
+        lootId: "healingHerbs",
+        world: { support: 1, confidence: 4 },
+        consequence: "+1 Village Support, +4 confidence"
+      },
+      {
+        id: "studyWarPaint",
+        badge: "Read the signs",
+        label: "Study the war paint",
+        detail: "Remain inside the warrens long enough to decode the painted route markers.",
+        result: "{hero} copies the clan markings and identifies which Barrow Hill paths carry reinforcements.",
+        powerBonus: 7,
+        enemyDamage: 27,
+        xpBonus: 4,
+        world: { intel: 1, threat: 1 },
+        consequence: "+1 Goblin Intel, +1 threat, +4 XP"
+      },
+      {
+        id: "collapseRaidTunnel",
+        badge: "Strike early",
+        label: "Collapse the raid tunnel",
+        detail: "Use the volatile spores to destroy a route aimed directly at Greenbank.",
+        result: "{hero} brings the tunnel down before the raiding band can use it, scattering the warren guard.",
+        powerBonus: 10,
+        enemyDamage: 38,
+        world: { threat: -5, confidence: 1 },
+        consequence: "-5 threat, +1 confidence, strongest attack"
+      }
+    ]
+  },
+  barrowAssault: {
+    id: "barrowAssault",
+    title: "How Will Guildstead Take Barrow Hill?",
+    enemyName: "Barrow Hill Chief",
+    description: "The chief's war horn sounds above the stockade. Every choice made on Greenbank Road has led to this final order.",
+    dangerous: true,
+    storyChoices: [
+      {
+        id: "challengeChief",
+        badge: "Always available",
+        label: "Challenge the chief",
+        detail: "Take the main road, break the gate, and settle the matter face to face.",
+        result: "{hero} answers the war horn openly and leads Guildstead straight through the stockade gate.",
+        powerBonus: 10,
+        enemyDamage: 40,
+        fameBonus: 2,
+        consequence: "+10 mission power, +2 fame"
+      },
+      {
+        id: "takeHiddenApproach",
+        badge: "Requires 2 Intel",
+        label: "Use the hidden approach",
+        detail: "Follow the routes learned from goblin patrols and enter above the chief's camp.",
+        result: "{hero} uses Guildstead's hard-won intelligence to strike from the ridge before the chief can rally his guard.",
+        requiresChapter: { intel: 2 },
+        powerBonus: 16,
+        enemyDamage: 49,
+        xpBonus: 4,
+        injuryShield: 1,
+        consequence: "+16 mission power, +4 XP, injury protection"
+      },
+      {
+        id: "soundGreenbankHorn",
+        badge: "Requires 2 Support",
+        label: "Sound Greenbank's horn",
+        detail: "Call on the carters, hunters, and villagers who promised to stand behind the guild.",
+        result: "{hero} sounds Greenbank's horn and the whole valley answers, surrounding the stockade with lanterns.",
+        requiresChapter: { support: 2 },
+        powerBonus: 13,
+        enemyDamage: 44,
+        fameBonus: 5,
+        injuryShield: 1,
+        consequence: "+13 mission power, +5 fame, injury protection"
+      },
+      {
+        id: "coordinatedStrike",
+        badge: "Requires 3 Intel + 3 Support",
+        label: "Launch the coordinated strike",
+        detail: "Use every mapped path and every willing Greenbank hand to isolate the chief without a long siege.",
+        result: "{hero} combines Guildstead's intelligence with Greenbank's support and dismantles the chief's defences in one precise assault.",
+        requiresChapter: { intel: 3, support: 3 },
+        powerBonus: 20,
+        enemyDamage: 58,
+        goldBonus: 25,
+        fameBonus: 6,
+        xpBonus: 5,
+        injuryShield: 1,
+        consequence: "+20 mission power, +25G, +6 fame"
+      }
+    ]
+  },
   goblinAmbush: {
     id: "goblinAmbush",
     title: "Goblin Archers On The Ridge",
@@ -1391,6 +1642,10 @@ function defaultState() {
     chapter: {
       stage: "tavern",
       completedLocalMissions: [],
+      completedStoryMissions: [],
+      goblinIntel: 0,
+      villageSupport: 0,
+      goblinDecisions: [],
       charterEarned: false
     },
     log: [
@@ -1410,7 +1665,7 @@ function loadState() {
   const fresh = defaultState();
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, SAVE_VERSION].includes(saved.version)) {
+    if (!saved || typeof saved !== "object" || ![4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, SAVE_VERSION].includes(saved.version)) {
       return fresh;
     }
     const chapterLegacySave = saved.version < 7;
@@ -1430,16 +1685,20 @@ function loadState() {
       ? progressedLegacySave ? {
           stage: "chartered",
           completedLocalMissions: ["greenbankCart", "lostWoodcutter", "mooncapRemedy"],
+          completedStoryMissions: ["stolenSupplies", "greenbankCart", "lostWoodcutter", "mooncapRemedy", "barrowHill"],
+          goblinIntel: 3,
+          villageSupport: 3,
+          goblinDecisions: [],
           charterEarned: true
         } : fresh.chapter
-      : { ...fresh.chapter, ...(saved.chapter || {}) };
+      : saved.chapter || fresh.chapter;
     const loaded = {
       ...fresh,
       ...saved,
       version: SAVE_VERSION,
       screen: saved.screen || (saved.founderCreated ? "game" : "title"),
       facilities: migratedFacilities,
-      chapter: migratedChapter,
+      chapter: normaliseChapter(migratedChapter, fresh.chapter),
       trainingJobs: [],
       eventMissions: saved.eventMissions || [],
       inventory: saved.inventory || {},
@@ -1519,6 +1778,45 @@ function normaliseGuildPreparations(savedPreparations) {
     nextQuestPower: Math.min(24, Math.max(0, Number(savedPreparations?.nextQuestPower) || 0)),
     nextQuestGoldBonus: Math.min(80, Math.max(0, Number(savedPreparations?.nextQuestGoldBonus) || 0)),
     nextQuestInjuryShield: Math.min(1, Math.max(0, Number(savedPreparations?.nextQuestInjuryShield) || 0))
+  };
+}
+
+function normaliseChapter(savedChapter, fallbackChapter) {
+  const storyMissionIds = new Set(missionDeck.filter((mission) => mission.storyEncounter).map((mission) => mission.id));
+  const completedLocalMissions = Array.isArray(savedChapter?.completedLocalMissions)
+    ? [...new Set(savedChapter.completedLocalMissions.filter((id) => missionDeck.some((mission) => mission.id === id && mission.localRequest)))]
+    : [];
+  const completedStoryMissions = Array.isArray(savedChapter?.completedStoryMissions)
+    ? [...new Set(savedChapter.completedStoryMissions.filter((id) => storyMissionIds.has(id)))]
+    : [...completedLocalMissions];
+  if (!["tavern", "hero", "firstQuest"].includes(savedChapter?.stage) && !completedStoryMissions.includes("stolenSupplies")) {
+    completedStoryMissions.push("stolenSupplies");
+  }
+  if (savedChapter?.charterEarned) {
+    storyMissionIds.forEach((id) => {
+      if (!completedStoryMissions.includes(id)) {
+        completedStoryMissions.push(id);
+      }
+    });
+  }
+  const seenMissions = new Set();
+  const goblinDecisions = Array.isArray(savedChapter?.goblinDecisions)
+    ? savedChapter.goblinDecisions.filter((decision) => {
+        if (!decision?.missionId || !decision?.choiceId || !storyMissionIds.has(decision.missionId) || seenMissions.has(decision.missionId)) {
+          return false;
+        }
+        seenMissions.add(decision.missionId);
+        return true;
+      }).slice(0, 5)
+    : [];
+  return {
+    ...fallbackChapter,
+    ...(savedChapter || {}),
+    completedLocalMissions,
+    completedStoryMissions,
+    goblinIntel: Math.min(4, Math.max(0, Math.floor(Number(savedChapter?.goblinIntel) || 0))),
+    villageSupport: Math.min(4, Math.max(0, Math.floor(Number(savedChapter?.villageSupport) || 0))),
+    goblinDecisions
   };
 }
 
@@ -3268,6 +3566,7 @@ function renderEquipmentSection(adventurer) {
 function renderMissions() {
   state.selectedIds = state.selectedIds.filter((id) => getAdventurer(id)?.status === "idle").slice(0, 3);
   const selectedParty = state.selectedIds.map(getAdventurer).filter((adventurer) => adventurer?.status === "idle");
+  const campaignMarkup = renderGoblinCampaignPanel();
   const partyMarkup = `
     <section class="party-tray">
       <div class="party-tray-heading">
@@ -3300,6 +3599,7 @@ function renderMissions() {
     .map((mission) => {
       const lockReason = getMissionLockReason(mission);
       const locked = Boolean(lockReason);
+      const resolved = lockReason === "Story resolved";
       const active = state.activeMissions.find((activeMission) => activeMission.missionId === mission.id);
       const progress = active ? Math.round((active.elapsed / active.duration) * 100) : 0;
       const odds = selectedParty.length ? getMissionOdds(selectedParty, mission) : 0;
@@ -3307,7 +3607,7 @@ function renderMissions() {
       const oddsLabel = odds >= 75 ? "Promising" : odds >= 45 ? "Risky" : "Dangerous";
       const pickerOpen = partyPickerMissionId === mission.id && !locked && !active;
       return `
-        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.rotatingRequest ? "greenbank-request" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
+        <article class="mission-card ${mission.isEvent ? "event" : ""} ${mission.rotatingRequest ? "greenbank-request" : ""} ${mission.tutorial ? "tutorial" : ""} ${mission.chapterBoss ? "boss" : ""} ${mission.storyEncounter ? "story-mission" : ""} ${resolved ? "resolved" : ""} ${locked ? "locked" : ""} ${pickerOpen ? "party-open" : ""}" data-mission-card="${mission.id}">
           <div class="mission-card-main">
             <div class="mission-title-row">
               <div>
@@ -3317,6 +3617,7 @@ function renderMissions() {
               <span class="focus-chip">${mission.focus.toUpperCase()}</span>
             </div>
             ${mission.description ? `<p class="mission-description">${mission.description}</p>` : ""}
+            ${mission.storyEncounter ? renderMissionStoryNote(mission, resolved) : ""}
             <div class="reward-row">
               <span>Risk ${mission.difficulty}</span>
               <span>${formatMissionTime(selectedParty.length ? getMissionDuration(mission, selectedParty) : mission.duration)}</span>
@@ -3333,7 +3634,7 @@ function renderMissions() {
             ${!locked && !active && selectedParty.length ? `<span class="odds ${oddsTone}"><b>${odds}%</b>${oddsLabel}</span>` : ""}
             ${!locked && !active ? `<button class="secondary-button mission-party-button" data-compose-party="${mission.id}" type="button" aria-expanded="${pickerOpen}">${pickerOpen ? "Close party" : selectedParty.length ? "Change party" : "Choose party"}</button>` : ""}
             <button class="primary-button" data-mission="${mission.id}" type="button" ${missionButtonDisabled(locked, active, selectedParty.length > 0)}>
-              ${locked ? "Locked" : active ? "In progress" : "Dispatch"}
+              ${resolved ? "Resolved" : locked ? "Locked" : active ? "In progress" : "Dispatch"}
             </button>
           </div>
           ${pickerOpen ? renderQuestPartyPicker(mission) : ""}
@@ -3359,7 +3660,7 @@ function renderMissions() {
     })
     .join("");
 
-  elements.missionList.innerHTML = `${partyMarkup}${preparationMarkup}${activeCards ? `<div class="active-expeditions">${activeCards}</div>` : ""}<div class="mission-deck">${missionCards}</div>`;
+  elements.missionList.innerHTML = `${campaignMarkup}${partyMarkup}${preparationMarkup}${activeCards ? `<div class="active-expeditions">${activeCards}</div>` : ""}<div class="mission-deck">${missionCards}</div>`;
   elements.missionList.querySelector("[data-open-roster]")?.addEventListener("click", () => setActiveView("adventurers"));
   elements.missionList.querySelectorAll("[data-compose-party]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -3378,6 +3679,52 @@ function renderMissions() {
   elements.missionList.querySelectorAll("[data-mission]").forEach((button) => {
     button.addEventListener("click", () => startMission(button.dataset.mission));
   });
+}
+
+function renderGoblinCampaignPanel() {
+  if (!state.founderCreated || ["tavern", "hero"].includes(state.chapter.stage) || state.chapter.charterEarned) {
+    return "";
+  }
+  const intel = state.chapter.goblinIntel || 0;
+  const support = state.chapter.villageSupport || 0;
+  const bossEncounter = encounterDeck.barrowAssault;
+  const routeMarkup = bossEncounter.storyChoices.slice(1).map((choice) => {
+    const ready = isStoryChoiceUnlocked(choice);
+    return `<span class="campaign-route ${ready ? "ready" : "locked"}"><i>${ready ? "OK" : "--"}</i>${choice.label}</span>`;
+  }).join("");
+  const decisions = state.chapter.goblinDecisions.filter((decision) => decision.missionId !== "barrowHill").slice(-3);
+  return `
+    <section class="goblin-campaign" aria-label="Barrow Hill campaign preparation">
+      <header>
+        <div><span class="mission-kicker">Chapter campaign</span><h3>Prepare For Barrow Hill</h3></div>
+        <strong>${state.chapter.completedLocalMissions.length}/3 local stories</strong>
+      </header>
+      <div class="campaign-resources">
+        <div class="campaign-resource intel">
+          <span class="campaign-resource-mark" aria-hidden="true">I</span>
+          <div><strong>Goblin Intel <b>${intel}/4</b></strong><small>Unlocks safer routes into the chief's camp.</small><i style="--campaign-progress:${intel * 25}%"></i></div>
+        </div>
+        <div class="campaign-resource support">
+          <span class="campaign-resource-mark" aria-hidden="true">S</span>
+          <div><strong>Village Support <b>${support}/4</b></strong><small>Brings Greenbank's people into the final battle.</small><i style="--campaign-progress:${support * 25}%"></i></div>
+        </div>
+      </div>
+      <div class="campaign-routes"><span>Finale approaches</span>${routeMarkup}</div>
+      ${decisions.length ? `<div class="campaign-decisions"><span>Road so far</span>${decisions.map((decision) => `<b title="${decision.consequence}">${decision.label}</b>`).join("")}</div>` : ""}
+    </section>
+  `;
+}
+
+function renderMissionStoryNote(mission, resolved) {
+  const decision = state.chapter.goblinDecisions.find((item) => item.missionId === mission.id);
+  if (resolved) {
+    return `<p class="mission-story-note resolved"><span>Decision recorded</span>${decision?.label || "Story complete"}</p>`;
+  }
+  if (mission.chapterBoss) {
+    const routeCount = encounterDeck.barrowAssault.storyChoices.filter((choice) => isStoryChoiceUnlocked(choice)).length;
+    return `<p class="mission-story-note"><span>Chapter finale</span>${routeCount} approach${routeCount === 1 ? "" : "es"} available during the expedition</p>`;
+  }
+  return `<p class="mission-story-note"><span>Story decision</span>Your order during this expedition will shape the Barrow Hill finale</p>`;
 }
 
 function renderQuestPartyPicker(mission) {
@@ -3488,7 +3835,8 @@ function renderEncounterPanel(activeMission, encounter, party) {
       outcome.powerBonus ? `+${outcome.powerBonus} mission power` : "",
       outcome.goldBonus ? `+${outcome.goldBonus}G` : "",
       outcome.fameBonus ? `+${outcome.fameBonus} fame` : "",
-      outcome.lootId ? lootCatalog[outcome.lootId]?.name : ""
+      outcome.lootId ? `${lootCatalog[outcome.lootId]?.name}${outcome.storyDecisionId ? " on success" : ""}` : "",
+      outcome.consequence ? `On success: ${outcome.consequence}` : ""
     ].filter(Boolean);
     return `
       <div class="encounter-result" role="status">
@@ -3513,6 +3861,7 @@ function renderEncounterPanel(activeMission, encounter, party) {
             <span class="choice-badge">${choice.badge}</span>
             <strong>${choice.label}</strong>
             <small>${choice.detail}</small>
+            ${choice.consequence ? `<span class="choice-consequence">${choice.consequence}</span>` : ""}
           </button>
         `).join("")}
       </div>
@@ -3521,6 +3870,12 @@ function renderEncounterPanel(activeMission, encounter, party) {
 }
 
 function getAvailableEncounterChoices(encounter, party) {
+  if (encounter.storyChoices?.length) {
+    const storyChoices = encounter.storyChoices
+      .filter((choice) => isStoryChoiceUnlocked(choice))
+      .map((choice) => ({ ...choice, badge: choice.badge || "Guildmaster order" }));
+    return [...storyChoices, getTrustPartyChoice(true)];
+  }
   const choices = [];
   const specialLeader = getEncounterChoiceLeader(encounter.special, party);
   if (specialLeader) {
@@ -3542,16 +3897,27 @@ function getAvailableEncounterChoices(encounter, party) {
       badge: `${classes[member.classId].label} | ${member.name}`
     });
   });
-  choices.push({
+  choices.push(getTrustPartyChoice(false));
+  return choices;
+}
+
+function getTrustPartyChoice(storyDecision = false) {
+  return {
     id: "trustParty",
     label: "Let the party decide",
     detail: "They will choose a cautious response and continue without waiting.",
     result: "The party makes a cautious call together and keeps the expedition moving.",
     powerBonus: 2,
     enemyDamage: 10,
-    badge: "Party instinct"
-  });
-  return choices;
+    badge: "Party instinct",
+    consequence: storyDecision ? "No Barrow Hill advantage" : ""
+  };
+}
+
+function isStoryChoiceUnlocked(choice, chapter = state.chapter) {
+  const requirements = choice.requiresChapter || {};
+  return (chapter.goblinIntel || 0) >= (requirements.intel || 0)
+    && (chapter.villageSupport || 0) >= (requirements.support || 0);
 }
 
 function getEncounterChoiceLeader(choice, party) {
@@ -3640,8 +4006,19 @@ function resolveEncounterChoice(activeMissionId, choiceId, automatic = false, sh
   activeMission.encounterResolvedAt = Date.now();
   activeMission.encounterAutoResolved = automatic;
   activeMission.encounterResult = resultWithQuirk;
-  activeMission.encounterOutcome = { powerBonus, goldBonus: choice.goldBonus || 0, fameBonus, xpBonus, injuryShield, lootId: choice.lootId || "" };
-  if (choice.lootId) {
+  activeMission.encounterOutcome = {
+    powerBonus,
+    goldBonus: choice.goldBonus || 0,
+    fameBonus,
+    xpBonus,
+    injuryShield,
+    lootId: choice.lootId || "",
+    storyDecisionId: encounter.storyChoices?.length ? choice.id : "",
+    storyDecisionLabel: encounter.storyChoices?.length ? choice.label : "",
+    storyWorld: encounter.storyChoices?.length ? { ...(choice.world || {}) } : null,
+    consequence: encounter.storyChoices?.length ? choice.consequence || "" : ""
+  };
+  if (choice.lootId && !encounter.storyChoices?.length) {
     grantLoot(choice.lootId);
   }
 
@@ -4993,6 +5370,7 @@ function resolveMission(activeMission) {
     if (mission.materials) {
       grantMaterials(mission.materials);
     }
+    commitStoryMissionDecision(activeMission, mission);
     if (mission.rotatingRequest) {
       adjustGreenbank(mission.success);
       state.greenbank.completedRequests += 1;
@@ -5074,6 +5452,9 @@ function normaliseActiveMission(activeMission) {
 }
 
 function getEncounterIdForMission(mission) {
+  if (mission.encounterId && encounterDeck[mission.encounterId]) {
+    return mission.encounterId;
+  }
   const label = `${mission.id || ""} ${mission.name || ""} ${mission.location || ""}`.toLowerCase();
   if (mission.tutorial || mission.chapterBoss || label.includes("goblin")) {
     return "goblinAmbush";
@@ -5085,6 +5466,35 @@ function getEncounterIdForMission(mission) {
     return "woundedTraveller";
   }
   return "hiddenCache";
+}
+
+function commitStoryMissionDecision(activeMission, mission) {
+  if (!mission.storyEncounter || state.chapter.goblinDecisions.some((decision) => decision.missionId === mission.id)) {
+    return null;
+  }
+  const outcome = activeMission.encounterOutcome || {};
+  if (!outcome.storyDecisionId) {
+    return null;
+  }
+  const world = outcome.storyWorld || {};
+  state.chapter.goblinIntel = Math.min(4, Math.max(0, state.chapter.goblinIntel + (world.intel || 0)));
+  state.chapter.villageSupport = Math.min(4, Math.max(0, state.chapter.villageSupport + (world.support || 0)));
+  adjustGreenbank({ threat: world.threat || 0, confidence: world.confidence || 0 });
+  if (outcome.lootId) {
+    grantLoot(outcome.lootId);
+  }
+  const decision = {
+    missionId: mission.id,
+    encounterId: activeMission.encounterId,
+    choiceId: outcome.storyDecisionId,
+    label: outcome.storyDecisionLabel || "Party decision",
+    result: activeMission.encounterResult || "The party chose its own path.",
+    consequence: outcome.consequence || "No lasting campaign advantage",
+    day: state.day
+  };
+  state.chapter.goblinDecisions.push(decision);
+  addLog(`${mission.name}: ${decision.label}. ${decision.consequence}.`);
+  return decision;
 }
 
 function updateMissionEncounter(activeMission, now) {
@@ -5673,6 +6083,9 @@ function showChapterMoment(id) {
 }
 
 function handleChapterMissionSuccess(mission) {
+  if (mission.storyEncounter && !state.chapter.completedStoryMissions.includes(mission.id)) {
+    state.chapter.completedStoryMissions.push(mission.id);
+  }
   if (mission.tutorial && state.chapter.stage === "firstQuest") {
     adjustGreenbank({ threat: -4, confidence: 5 });
     addNews("Stolen tavern supplies returned from Greenbank Lane", "The Wayfarer's Rest has produced its first local hero, and Mara is already making plans.", "success");
@@ -5766,6 +6179,9 @@ function isMissionVisible(mission) {
 }
 
 function getMissionLockReason(mission) {
+  if (mission.storyEncounter && state.chapter.completedStoryMissions.includes(mission.id)) {
+    return "Story resolved";
+  }
   if (mission.isEvent) {
     return state.fame < (mission.unlockFame || 0) ? `Requires ${mission.unlockFame} fame` : "";
   }

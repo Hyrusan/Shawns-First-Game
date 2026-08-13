@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=31/);
+  assert.match(index, /styles\.css\?v=32/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=31/);
+  assert.match(index, /game\.js\?v=32/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -190,6 +190,124 @@ test("quirk-gated cache choices add loot to persistent Guild Stores", () => {
   assert.equal(result.outcomeLoot, "silverCharm");
 });
 
+test("the goblin chapter gives every story mission a bespoke decision and unlockable finale routes", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.chapter.stage = "localRequests";
+    const encounterIds = missionDeck.slice(0, 5).map((mission) => getEncounterIdForMission(mission));
+    const openingChoices = getAvailableEncounterChoices(encounterDeck.supplyTrail, [founder]).map((choice) => choice.id);
+    const bossChoicesBefore = getAvailableEncounterChoices(encounterDeck.barrowAssault, [founder]).map((choice) => choice.id);
+    state.chapter.goblinIntel = 2;
+    state.chapter.villageSupport = 2;
+    const bossChoicesAfter = getAvailableEncounterChoices(encounterDeck.barrowAssault, [founder]).map((choice) => choice.id);
+    const campaignMarkup = renderGoblinCampaignPanel();
+    ({ encounterIds, openingChoices, bossChoicesBefore, bossChoicesAfter, campaignMarkup });
+  `);
+
+  assert.equal(new Set(result.encounterIds).size, 5);
+  assert.deepEqual([...result.encounterIds], ["supplyTrail", "cartCrossroads", "woodcutterCamp", "mooncapNest", "barrowAssault"]);
+  assert.deepEqual([...result.openingChoices], ["secureProvisions", "shadowRunners", "freeCarter", "trustParty"]);
+  assert.deepEqual([...result.bossChoicesBefore], ["challengeChief", "trustParty"]);
+  assert.deepEqual([...result.bossChoicesAfter], ["challengeChief", "takeHiddenApproach", "soundGreenbankHorn", "trustParty"]);
+  assert.match(result.campaignMarkup, /Goblin Intel/);
+  assert.match(result.campaignMarkup, /Village Support/);
+  assert.match(result.campaignMarkup, /Use the hidden approach/);
+});
+
+test("a successful goblin story decision changes the campaign once and resolves that quest", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    founder.status = "busy";
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.facilities.questBoard = 1;
+    state.chapter.stage = "localRequests";
+    const mission = { ...missionDeck.find((item) => item.id === "greenbankCart"), guaranteedSuccess: true };
+    const active = normaliseActiveMission({
+      id: "story-cart", missionId: mission.id, missionSnapshot: mission, partyIds: [founder.id],
+      elapsed: mission.duration, duration: mission.duration, encounterId: mission.encounterId,
+      encounterStatus: "active", encounterTriggerAt: 10, encounterExpiresAt: Date.now() + 10000
+    });
+    state.activeMissions = [active];
+    resolveEncounterChoice(active.id, "springChalkTrap", false, false);
+    const intelBeforeSuccess = state.chapter.goblinIntel;
+    resolveMission(active);
+    const intelAfterSuccess = state.chapter.goblinIntel;
+    const firstDecisionCount = state.chapter.goblinDecisions.length;
+    commitStoryMissionDecision(active, mission);
+    ({ intelBeforeSuccess, intelAfterSuccess, threat: state.greenbank.threat,
+       decisionCount: state.chapter.goblinDecisions.length, firstDecisionCount,
+       decision: state.chapter.goblinDecisions[0], completed: state.chapter.completedStoryMissions.includes(mission.id),
+       lockReason: getMissionLockReason(mission) });
+  `);
+
+  assert.equal(result.intelBeforeSuccess, 0);
+  assert.equal(result.intelAfterSuccess, 1);
+  assert.equal(result.threat, 16);
+  assert.equal(result.firstDecisionCount, 1);
+  assert.equal(result.decisionCount, 1);
+  assert.equal(result.decision.choiceId, "springChalkTrap");
+  assert.equal(result.completed, true);
+  assert.equal(result.lockReason, "Story resolved");
+});
+
+test("story encounter loot waits for a successful quest result", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    founder.status = "busy";
+    state.adventurers = [founder];
+    const mission = missionDeck.find((item) => item.id === "stolenSupplies");
+    const active = normaliseActiveMission({
+      id: "story-supplies", missionId: mission.id, missionSnapshot: { ...mission }, partyIds: [founder.id],
+      elapsed: 8, duration: mission.duration, encounterId: mission.encounterId,
+      encounterStatus: "active", encounterTriggerAt: 7, encounterExpiresAt: Date.now() + 10000
+    });
+    state.activeMissions = [active];
+    resolveEncounterChoice(active.id, "shadowRunners", false, false);
+    const lootBeforeSuccess = state.inventory.oldRoadMap || 0;
+    commitStoryMissionDecision(active, mission);
+    ({ lootBeforeSuccess, lootAfterSuccess: state.inventory.oldRoadMap,
+       intel: state.chapter.goblinIntel, decisionCount: state.chapter.goblinDecisions.length });
+  `);
+
+  assert.equal(result.lootBeforeSuccess, 0);
+  assert.equal(result.lootAfterSuccess, 1);
+  assert.equal(result.intel, 1);
+  assert.equal(result.decisionCount, 1);
+});
+
+test("version 17 saves migrate into the goblin campaign without replaying completed opening quests", () => {
+  const context = createGameContext({
+    version: 17,
+    screen: "game",
+    day: 6,
+    gold: 100,
+    fame: 8,
+    adventurers: [],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: { stage: "localRequests", completedLocalMissions: ["greenbankCart"], charterEarned: false },
+    founderCreated: true
+  });
+  const result = run(context, `({
+    version: state.version,
+    intel: state.chapter.goblinIntel,
+    support: state.chapter.villageSupport,
+    completedStoryMissions: state.chapter.completedStoryMissions,
+    decisions: state.chapter.goblinDecisions
+  })`);
+
+  assert.equal(result.version, 18);
+  assert.equal(result.intel, 0);
+  assert.equal(result.support, 0);
+  assert.deepEqual([...result.completedStoryMissions], ["greenbankCart", "stolenSupplies"]);
+  assert.deepEqual([...result.decisions], []);
+});
+
 test("version 9 saves gain current systems without losing active missions", () => {
   const now = Date.now();
   const context = createGameContext({
@@ -225,7 +343,7 @@ test("version 9 saves gain current systems without losing active missions", () =
     enemyMaxHealth: state.activeMissions[0].enemyMaxHealth
   })`);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(Object.keys(result.inventory).length, 0);
   assert.equal(result.missionCount, 1);
   assert.equal(result.encounterId, "collapsedBridge");
@@ -337,7 +455,7 @@ test("version 12 saves preserve an active training job and settle it on the save
        hasTrainingStats: Object.hasOwn(state.adventurers[0], "trainingStats") });
   `);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(result.statusOnLoad, "training");
   assert.equal(result.jobsOnLoad, 1);
   assert.equal(result.statusAfter, "idle");
@@ -494,7 +612,7 @@ test("legacy race data is removed from characters and never rendered", () => {
        profileMarkup: elements.adventurerDetail.innerHTML });
   `);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(result.heroHasRace, false);
   assert.equal(result.candidateHasRace, false);
   assert.doesNotMatch(result.rosterMarkup, /Lizardfolk|Elf/);
@@ -742,7 +860,7 @@ test("version 13 saves gain relationship and Tavern Life defaults without losing
     lastEventDay: state.tavernLife.lastEventDay
   })`);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(result.heroName, "Jenny");
   assert.equal(result.relationshipKeys, 0);
   assert.equal(result.activeStory, null);
@@ -864,7 +982,7 @@ test("version 14 saves migrate to a fresh rank-scaled action day", () => {
   const result = run(context, `({ version: state.version, actionDay: state.guildActions.day,
     remaining: getGuildActionsRemaining(), capacity: getGuildActionCapacity(), preparations: { ...state.guildPreparations } })`);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(result.actionDay, 5);
   assert.equal(result.remaining, 4);
   assert.equal(result.capacity, 4);
@@ -1034,7 +1152,7 @@ test("version 15 saves gain village, materials, equipment, and promotion default
     confidence: state.greenbank.confidence, materials: { ...state.materials },
     equipmentCount: state.equipment.items.length, pendingRank: state.rankRewards.pending })`);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(result.threat, 24);
   assert.equal(result.confidence, 42);
   assert.deepEqual({ ...result.materials }, { timber: 0, iron: 0, herbs: 0 });
@@ -1189,7 +1307,7 @@ test("version 16 saves migrate to an empty but correctly aligned Chronicle", () 
     seasonStart: state.chronicle.season.startDay, focus: state.chronicle.activeFocus,
     baselineGold: state.chronicle.week.baseline.gold, baselineThreat: state.chronicle.week.baseline.threat })`);
 
-  assert.equal(result.version, 17);
+  assert.equal(result.version, 18);
   assert.equal(result.weekly, 0);
   assert.equal(result.seasonal, 0);
   assert.equal(result.weekStart, 15);

@@ -9,7 +9,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Interactive pixel-art world map and guildhall interior
 - Looping map theme with an in-game music control
 - Three-scene tavern prologue and guided Chapter One progression
-- Goblin quest chain culminating in the Barrow Hill chief
+- Branching goblin quest chain with bespoke decisions and a Barrow Hill finale shaped by Goblin Intel and Village Support
 - Male and female hero creation across four visual classes
 - Gender-consistent class sprites for every named adventurer
 - Human adventurer cast while distinctive fantasy-race artwork is deferred
@@ -36,7 +36,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Inline quest-party selection with availability and mission-fit indicators
 - Class-specific expedition battle animations
 - Real-time mission clocks that continue while managing other screens
-- Timed expedition encounters with class, ability, and quirk responses
+- Timed expedition encounters with story decisions plus class, ability, and quirk responses
 - Enemy health, encounter consequences, and an optional auto-decision fallback
 - Recoverable curios stored in the Guild Stores ledger
 - Mission odds, rewards, injuries, experience, and levelling

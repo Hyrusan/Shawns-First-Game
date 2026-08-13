@@ -1504,6 +1504,7 @@ let tavernLifeDialogOpen = false;
 let morningReportDialogOpen = false;
 let activeChronicleReport = null;
 let activeExpeditionReportId = null;
+let renderedExpeditionReportId = null;
 const state = loadState();
 currentChapterMomentId = chapterMoments[state.storyEvents.pending] ? state.storyEvents.pending : null;
 
@@ -4049,8 +4050,14 @@ function renderExpeditionReportDialog() {
   const report = activeExpeditionReportId ? getExpeditionReport(activeExpeditionReportId) : null;
   elements.expeditionReportDialog.classList.toggle("hidden", !report);
   if (!report) {
+    renderedExpeditionReportId = null;
     return;
   }
+  elements.closeExpeditionReport.textContent = activeView === "log" ? "Return To Ledger" : "Return To Guild";
+  if (renderedExpeditionReportId === report.id) {
+    return;
+  }
+  renderedExpeditionReportId = report.id;
   const materials = formatMaterials(report.rewards.materials);
   const loot = report.rewards.lootId ? lootCatalog[report.rewards.lootId] : null;
   const threatTone = report.village.threatDelta < 0 ? "good" : report.village.threatDelta > 0 ? "bad" : "steady";
@@ -4060,7 +4067,6 @@ function renderExpeditionReportDialog() {
   elements.expeditionReportEyebrow.textContent = report.success ? "Contract Completed" : "Difficult Retreat";
   elements.expeditionReportTitle.textContent = report.mission.name;
   elements.expeditionReportDate.textContent = `Day ${report.day}`;
-  elements.closeExpeditionReport.textContent = activeView === "log" ? "Return To Ledger" : "Return To Guild";
   elements.expeditionReportBody.innerHTML = `
     <section class="expedition-return-scene ${report.success ? "success" : "retreat"}">
       <div class="return-scene-copy">

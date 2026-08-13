@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=36/);
+  assert.match(index, /styles\.css\?v=37/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=36/);
+  assert.match(index, /game\.js\?v=37/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -987,6 +987,47 @@ test("a victorious party returns with a persistent report, level-up, and story i
   assert.match(result.ledgerMarkup, /Field Reports/);
   assert.match(result.ledgerMarkup, /Recover the Stolen Supplies/);
   assert.equal(result.closeLabel, "Return To Ledger");
+});
+
+test("an open expedition report does not restart during background simulation ticks", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    founder.status = "busy";
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    const mission = { ...missionDeck.find((item) => item.id === "stolenSupplies"), guaranteedSuccess: true };
+    const active = normaliseActiveMission({
+      id: "stable-report", missionId: mission.id, missionSnapshot: mission, partyIds: [founder.id],
+      elapsed: mission.duration, duration: mission.duration, encounterStatus: "resolved"
+    });
+    resolveMission(active);
+    const report = state.expeditionReports.entries[0];
+    openExpeditionReport(report.id);
+
+    let bodyMarkup = elements.expeditionReportBody.innerHTML;
+    let bodyWrites = 0;
+    Object.defineProperty(elements.expeditionReportBody, "innerHTML", {
+      configurable: true,
+      get() { return bodyMarkup; },
+      set(value) { bodyWrites += 1; bodyMarkup = value; }
+    });
+
+    founder.status = "injured";
+    founder.recovery = 5;
+    tick();
+    tick();
+    const writesDuringTicks = bodyWrites;
+    closeExpeditionReport();
+    openExpeditionReport(report.id);
+    ({ writesDuringTicks, writesAfterReopen: bodyWrites, recovery: founder.recovery,
+       activeReport: activeExpeditionReportId, renderedReport: renderedExpeditionReportId });
+  `);
+
+  assert.equal(result.writesDuringTicks, 0);
+  assert.equal(result.writesAfterReopen, 1);
+  assert.equal(result.recovery, 3);
+  assert.equal(result.activeReport, result.renderedReport);
 });
 
 test("a failed expedition report records consolation rewards, village harm, and injury", () => {

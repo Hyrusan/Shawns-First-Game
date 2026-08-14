@@ -188,6 +188,86 @@ const chapterMoments = {
 };
 
 const tavernLifeEvents = {
+  firstWeekTable: {
+    eyebrow: "Hero Request",
+    mark: "A favour",
+    title: "A Place At The Table",
+    description: "{a} waits until the common room is quiet, then asks for one small promise: keep a table by the hearth for the adventurers at the end of each day, somewhere they can speak honestly before the next road.",
+    participantCount: 1,
+    minHeroes: 1,
+    anchorFounder: true,
+    heroRequest: true,
+    firstWeekOnly: true,
+    choices: [
+      {
+        id: "setHeroTable",
+        label: "Set Aside The Hearth Table",
+        note: "10G | A proper evening meal builds loyalty and confidence.",
+        cost: 10,
+        xp: 4,
+        traits: { loyal: 1 },
+        world: { confidence: 1 },
+        outcome: "You reserve the warmest table and put supper on the guild's account. {a} sits a little taller when the first bowl arrives."
+      },
+      {
+        id: "askWhatMatters",
+        label: "Ask What They Need From You",
+        note: "A thoughtful conversation grants experience and curiosity.",
+        xp: 5,
+        traits: { curious: 1 },
+        outcome: "Instead of making a grand promise, you listen. {a} speaks about fear, ambition, and the sort of guild worth coming home to."
+      },
+      {
+        id: "earnTheSeat",
+        label: "Ask Them To Help Mara First",
+        note: "+8G | Practical work earns coin, but feels less welcoming.",
+        gold: 8,
+        traits: { brave: 1, loyal: -1 },
+        outcome: "{a} spends the evening hauling barrels and mending chairs. The work helps the tavern, though the promised conversation never quite happens."
+      }
+    ]
+  },
+  firstWeekPromise: {
+    eyebrow: "Hero Request",
+    mark: "A promise",
+    title: "When Greenbank Calls",
+    description: "With the goblin roads growing busier, {a} asks what should come first when frightened villagers call for help and a contract points in the other direction.",
+    participantCount: 1,
+    minHeroes: 1,
+    anchorFounder: true,
+    heroRequest: true,
+    firstWeekOnly: true,
+    choices: [
+      {
+        id: "peopleFirst",
+        label: "Put Greenbank's People First",
+        note: "8G | Village confidence rises and the goblin threat eases.",
+        cost: 8,
+        xp: 3,
+        traits: { loyal: 1 },
+        world: { threat: -1, confidence: 3 },
+        outcome: "You promise that a frightened knock at the tavern door will always be heard. By morning, {a} has already organised a village patrol."
+      },
+      {
+        id: "trustTheHero",
+        label: "Trust Their Judgement",
+        note: "Strong experience and curiosity, with a small confidence gain.",
+        xp: 6,
+        traits: { curious: 1, brave: 1 },
+        world: { confidence: 1 },
+        outcome: "You tell {a} that no noticeboard can replace judgement in the field. The responsibility is daunting, but the trust clearly matters."
+      },
+      {
+        id: "guildFirst",
+        label: "Protect The Guild First",
+        note: "+6G | Paid work comes first, but Greenbank notices.",
+        gold: 6,
+        traits: { proud: 1 },
+        world: { threat: 2, confidence: -2 },
+        outcome: "You tell {a} that the guild cannot help anyone if it collapses. The purse is healthier by closing time, while the village road feels a little colder."
+      }
+    ]
+  },
   sharedMeal: {
     eyebrow: "Tavern Life",
     mark: "Supper",
@@ -1794,6 +1874,12 @@ function loadState() {
     loaded.equipment = normaliseEquipment(saved.equipment, loaded.adventurers);
     loaded.rankRewards = normaliseRankRewards(saved.rankRewards, loaded.fame);
     loaded.chronicle = normaliseChronicle(saved.chronicle, loaded);
+    if (loaded.day <= 7 && loaded.chapter.stage === "expansion" && loaded.facilities.trainingYard < 1) {
+      loaded.chapter.stage = "localRequests";
+      if (loaded.storyEvents.pending === "expansion") {
+        loaded.storyEvents.pending = null;
+      }
+    }
     loaded.recruitment.candidates = (saved.recruitment?.candidates || []).map((candidate) => normaliseAdventurer(candidate, loaded.day));
     loaded.trainingJobs = (saved.trainingJobs || [])
       .map(normaliseTrainingJob)
@@ -2434,6 +2520,9 @@ function renderContextScene() {
   }
   elements.contextScene.innerHTML = renderLivingTavern(sceneMeta);
   elements.contextScene.setAttribute("aria-label", `${getVenueName()} ${sceneMeta.title}`);
+  elements.contextScene.querySelectorAll("[data-talk-hero]").forEach((button) => {
+    button.addEventListener("click", () => interactWithTavernHero(button.dataset.talkHero));
+  });
 }
 
 function getContextSceneMeta(view) {
@@ -2446,7 +2535,7 @@ function getContextSceneMeta(view) {
     guildhall: {
       eyebrow: state.chapter.charterEarned ? "Guildstead Hall" : "The Wayfarer's Rest",
       title: "The Tavern At Work",
-      note: "A living view of the guild between expeditions."
+      note: state.day <= 7 ? "Click an adventurer to hear what is on their mind." : "A living view of the guild between expeditions."
     },
     adventurers: {
       eyebrow: "Tavern common room",
@@ -2512,12 +2601,28 @@ function renderLivingTavern(sceneMeta) {
 function renderContextPatron(adventurer, index, role) {
   const activities = ["Sharing a meal", "Trading stories", "Studying notices", "Warming by the fire", "Helping Mara"];
   const activity = role === "Applicant" ? "Waiting for a decision" : adventurer.status === "injured" ? "Recovering" : activities[index % activities.length];
+  const needsAttention = role === "Story";
+  const roleLabel = needsAttention ? "Wants to talk" : role === "Applicant" ? "Applicant" : adventurer.status === "injured" ? "Resting" : "Talk";
+  const interactionLabel = needsAttention ? `Speak with ${adventurer.name} about their request` : role === "Applicant" ? `View ${adventurer.name}'s application` : `Talk to ${adventurer.name}`;
   return `
-    <span class="context-patron patron-${index} ${role === "Applicant" ? "applicant" : ""} ${role === "Story" ? "story" : ""} ${adventurer.status === "injured" ? "resting" : ""}" title="${adventurer.name}: ${activity}">
+    <button class="context-patron patron-${index} ${role === "Applicant" ? "applicant" : ""} ${needsAttention ? "story" : ""} ${adventurer.status === "injured" ? "resting" : ""}" data-talk-hero="${adventurer.id}" type="button" aria-label="${interactionLabel}" title="${adventurer.name}: ${activity}">
       ${renderSprite(adventurer, "context-sprite")}
-      <span class="patron-label"><strong>${adventurer.name}</strong><small>${role}</small></span>
-    </span>
+      <span class="patron-label"><strong>${adventurer.name}</strong><small>${roleLabel}</small></span>
+    </button>
   `;
+}
+
+function interactWithTavernHero(adventurerId) {
+  const activeStory = state.tavernLife.active;
+  if (activeStory?.participantIds?.includes(adventurerId)) {
+    openTavernLifeEvent();
+    return;
+  }
+  activeView = "adventurers";
+  if (state.adventurers.some((adventurer) => adventurer.id === adventurerId)) {
+    selectedAdventurerId = adventurerId;
+  }
+  render();
 }
 
 function renderFacilityCutaway(sceneMeta) {
@@ -3110,18 +3215,19 @@ function renderTavernEventPanel() {
     return;
   }
   const names = story.participants.map((adventurer) => adventurer.name).join(" & ");
+  const isHeroRequest = Boolean(story.template.heroRequest);
   elements.tavernEventPanel.innerHTML = `
-    <section class="tavern-story-callout">
+    <section class="tavern-story-callout ${isHeroRequest ? "hero-request" : ""}">
       <span class="tavern-story-mark" aria-hidden="true">${story.template.mark}</span>
       <div class="tavern-story-faces" aria-hidden="true">
         ${story.participants.map((adventurer) => renderSprite(adventurer, "small")).join("")}
       </div>
       <div class="tavern-story-copy">
-        <p class="eyebrow">A moment at the tavern | Day ${active.day}</p>
+        <p class="eyebrow">${isHeroRequest ? "A hero wants to speak" : "A moment at the tavern"} | Day ${active.day}</p>
         <h3>${story.template.title}</h3>
         <span>${names || "Mara"} ${story.participants.length === 1 ? "needs" : "need"} the Guildmaster's attention.</span>
       </div>
-      <button class="primary-button" data-open-tavern-story type="button">See What Happened</button>
+      <button class="primary-button" data-open-tavern-story type="button">${isHeroRequest ? `Speak With ${story.participants[0]?.name || "Them"}` : "See What Happened"}</button>
     </section>
   `;
   elements.tavernEventPanel.querySelector("[data-open-tavern-story]")?.addEventListener("click", openTavernLifeEvent);
@@ -5141,6 +5247,12 @@ function getEligibleTavernLifeTemplates(idleHeroes) {
     if (template.requiresFacility && (state.facilities[template.requiresFacility] || 0) < 1) {
       return false;
     }
+    if (template.firstWeekOnly && state.day > 7) {
+      return false;
+    }
+    if (template.anchorFounder && !idleHeroes.some((adventurer) => adventurer.founder)) {
+      return false;
+    }
     if (template.anchorClass && !idleHeroes.some((adventurer) => adventurer.classId === template.anchorClass)) {
       return false;
     }
@@ -5153,7 +5265,9 @@ function getEligibleTavernLifeTemplates(idleHeroes) {
 
 function pickTavernLifeParticipants(template, idleHeroes) {
   let anchorPool = idleHeroes;
-  if (template.anchorClass) {
+  if (template.anchorFounder) {
+    anchorPool = idleHeroes.filter((adventurer) => adventurer.founder);
+  } else if (template.anchorClass) {
     anchorPool = idleHeroes.filter((adventurer) => adventurer.classId === template.anchorClass);
   } else if (template.anchorQuirk) {
     anchorPool = idleHeroes.filter((adventurer) => Object.values(adventurer.quirks || {}).includes(template.anchorQuirk));
@@ -5167,6 +5281,24 @@ function pickTavernLifeParticipants(template, idleHeroes) {
     }
   }
   return participants;
+}
+
+function getScheduledFirstWeekTavernTemplate(eligible, idleHeroes) {
+  if (state.day < 2 || state.day > 7) {
+    return null;
+  }
+  const resolvedTemplates = new Set(state.tavernLife.resolved.map((story) => story.templateId));
+  const findEligible = (templateId) => eligible.find(([id]) => id === templateId) || null;
+  if (!resolvedTemplates.has("firstWeekTable")) {
+    return findEligible("firstWeekTable");
+  }
+  if (state.day >= 4 && idleHeroes.length > 1 && !resolvedTemplates.has("sharedMeal")) {
+    return findEligible("sharedMeal");
+  }
+  if (state.day >= 6 && !resolvedTemplates.has("firstWeekPromise")) {
+    return findEligible("firstWeekPromise");
+  }
+  return null;
 }
 
 function createTavernLifeEvent(templateId, participantIds = null, openDialog = true) {
@@ -5202,12 +5334,16 @@ function maybeCreateTavernEvent(force = false, preferredTemplateId = null) {
   if (!idleHeroes.length) {
     return false;
   }
+  let eligible = getEligibleTavernLifeTemplates(idleHeroes);
+  const scheduledFirstWeekStory = getScheduledFirstWeekTavernTemplate(eligible, idleHeroes);
+  if (scheduledFirstWeekStory) {
+    return createTavernLifeEvent(scheduledFirstWeekStory[0]);
+  }
   const daysSinceLastEvent = state.day - state.tavernLife.lastEventDay;
   const firstStory = state.tavernLife.resolved.length === 0 && state.tavernLife.lastEventDay === 0;
   if (!force && !firstStory && (daysSinceLastEvent < 2 || Math.random() > 0.62)) {
     return false;
   }
-  let eligible = getEligibleTavernLifeTemplates(idleHeroes);
   if (idleHeroes.length > 1) {
     const socialEvents = eligible.filter(([, template]) => template.participantCount > 1);
     eligible = socialEvents.length ? socialEvents : eligible;
@@ -5227,6 +5363,9 @@ function resolveTavernLifeChoice(choiceId) {
   state.gold -= choice.cost || 0;
   state.gold += choice.gold || 0;
   state.fame += choice.fame || 0;
+  if (choice.world) {
+    adjustGreenbank(choice.world);
+  }
   story.participants.forEach((adventurer) => {
     if (choice.xp) {
       grantXp(adventurer, choice.xp);
@@ -6370,6 +6509,7 @@ function advanceDays(amount) {
   }
   state.day += amount;
   state.guildActions = normaliseGuildActions(null, state.day);
+  unlockPostFirstWeekExpansion();
   checkBirthdays();
   const completedTraining = processTrainingCompletions(false);
   expireEvents();
@@ -6406,6 +6546,11 @@ function advanceDays(amount) {
   completedTraining.forEach((job) => notices.push({ mark: "T", text: `${getAdventurer(job.adventurerId)?.name || "An adventurer"} completed ${getTrainingJobName(job)}.` }));
   if (recruitmentArrived) {
     notices.push({ mark: "R", text: "New recruitment applicants are waiting in the tavern." });
+  }
+  const waitingTavernStory = getTavernLifeStory(state.tavernLife.active);
+  if (waitingTavernStory) {
+    const names = waitingTavernStory.participants.map((adventurer) => adventurer.name).join(" and ");
+    notices.push({ mark: "H", text: `${names} ${waitingTavernStory.participants.length === 1 ? "wants" : "want"} to speak with you in the tavern.` });
   }
   if (expiredRequests.length) {
     notices.push({ mark: "!", text: `${expiredRequests.length} Greenbank request${expiredRequests.length === 1 ? "" : "s"} expired unanswered.` });
@@ -6461,13 +6606,31 @@ function renderChapterProgress() {
 
 function getChapterObjective() {
   const completed = state.chapter.completedLocalMissions.length;
+  const waitingTavernStory = state.day <= 7 ? getTavernLifeStory(state.tavernLife.active) : null;
+  if (waitingTavernStory) {
+    const names = waitingTavernStory.participants.map((adventurer) => adventurer.name).join(" and ");
+    return {
+      title: `Speak with ${names}`,
+      detail: "Visit the tavern and click the highlighted adventurer to hear their request.",
+      progress: Math.max(24, 40 + completed * 10)
+    };
+  }
+  if (state.day <= 7 && state.chapter.stage === "expansion") {
+    return {
+      title: `Finish Guildstead's first week (Day ${state.day}/7)`,
+      detail: "Return to the tavern, speak with your heroes, and decide what sort of guild this will become.",
+      progress: 74
+    };
+  }
   const objectives = {
     tavern: { title: "Open the tavern", detail: "A quiet morning is about to become rather less quiet.", progress: 0 },
     hero: { title: "Choose your first hero", detail: "Find someone willing to investigate the goblin raid.", progress: 8 },
     firstQuest: { title: "Recover the stolen supplies", detail: "Select a party and follow the tracks along Greenbank Lane.", progress: 18 },
     recruitment: { title: "Recruit a second adventurer", detail: `Post a ${getRecruitmentCost()}G tavern notice, wait for applicants, then choose one.`, progress: 27 },
     buildBoard: { title: "Build the Quest Board", detail: "Spend 55G to turn Mara's idea into a proper local service.", progress: 32 },
-    localRequests: { title: `Complete local requests (${completed}/3)`, detail: "Help Greenbank and earn enough trust to expand the tavern.", progress: 38 + completed * 12 },
+    localRequests: completed >= 3 && state.day <= 7
+      ? { title: `Finish Guildstead's first week (Day ${state.day}/7)`, detail: "Return to the tavern, speak with your heroes, and decide what sort of guild this will become.", progress: 74 }
+      : { title: `Complete local requests (${completed}/3)`, detail: state.day <= 7 ? "Help Greenbank, then return to the tavern to check on your heroes." : "Help Greenbank and earn enough trust to expand the tavern.", progress: 38 + completed * 12 },
     expansion: { title: "Build the Training Yard", detail: "Spend 95G to prepare your adventurers for the goblin chief.", progress: 78 },
     boss: { title: "Defeat the Barrow Hill Chief", detail: "End the goblin threat and earn an official guild charter.", progress: 90 },
     chartered: { title: "Guildstead is officially open", detail: "The Western March now has an adventurers' guild of its own.", progress: 100 }
@@ -6561,8 +6724,13 @@ function handleChapterMissionSuccess(mission) {
   if (mission.localRequest && !state.chapter.completedLocalMissions.includes(mission.id)) {
     state.chapter.completedLocalMissions.push(mission.id);
     if (state.chapter.completedLocalMissions.length >= 3 && !state.chapter.charterEarned) {
-      state.chapter.stage = "expansion";
-      showChapterMoment("expansion");
+      if (state.day >= 8) {
+        state.chapter.stage = "expansion";
+        showChapterMoment("expansion");
+      } else if (state.chapter.completedLocalMissions.length === 3) {
+        addNews("Greenbank's first requests are settled", "Mara suggests spending the rest of Guildstead's first week listening to the heroes who made it possible.", "guild");
+        addLog("The first three local requests are complete. Mara keeps the rest of the week focused on the tavern and its heroes.");
+      }
     }
     return;
   }
@@ -6576,6 +6744,16 @@ function handleChapterMissionSuccess(mission) {
   }
 }
 
+function unlockPostFirstWeekExpansion() {
+  if (state.day < 8 || state.chapter.stage !== "localRequests" || state.chapter.completedLocalMissions.length < 3 || state.chapter.charterEarned) {
+    return false;
+  }
+  state.chapter.stage = "expansion";
+  showChapterMoment("expansion");
+  addLog("Guildstead's first week is complete. Mara brings out the plans for the old training yard.");
+  return true;
+}
+
 function isFacilityUnlocked(id) {
   if ((state.facilities[id] || 0) > 0) {
     return true;
@@ -6587,7 +6765,7 @@ function isFacilityUnlocked(id) {
     return ["buildBoard", "localRequests", "expansion", "boss", "chartered"].includes(state.chapter.stage);
   }
   if (id === "trainingYard") {
-    return state.chapter.completedLocalMissions.length >= 3 || state.chapter.charterEarned;
+    return (state.day >= 8 && state.chapter.completedLocalMissions.length >= 3) || state.chapter.charterEarned;
   }
   if (["dormitory", "kitchen"].includes(id)) {
     return state.chapter.stage === "boss" || state.facilities.trainingYard > 0 || state.chapter.charterEarned;
@@ -6607,7 +6785,13 @@ function getFacilityUnlockText(id) {
   }
   if (id === "trainingYard") {
     const remaining = Math.max(0, 3 - state.chapter.completedLocalMissions.length);
-    return isFacilityUnlocked(id) ? "Mara's Training Yard blueprint is ready to build." : `Complete ${remaining} more local request${remaining === 1 ? "" : "s"}.`;
+    if (isFacilityUnlocked(id)) {
+      return "Mara's Training Yard blueprint is ready to build.";
+    }
+    if (remaining > 0) {
+      return `Complete ${remaining} more local request${remaining === 1 ? "" : "s"}.`;
+    }
+    return `Available after Guildstead's first weekly review in ${Math.max(1, 8 - state.day)} day${8 - state.day === 1 ? "" : "s"}.`;
   }
   if (["dormitory", "kitchen"].includes(id)) {
     return isFacilityUnlocked(id) ? "Blueprint unlocked by the tavern's first expansion." : "Build the Training Yard first.";

@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=37/);
+  assert.match(index, /styles\.css\?v=38/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=37/);
+  assert.match(index, /game\.js\?v=38/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -558,6 +558,7 @@ test("version 12 saves preserve an active training job and settle it on the save
 test("the first expansion specifically guides players through the Training Yard", () => {
   const context = createGameContext();
   const result = run(context, `
+    state.day = 8;
     state.chapter.stage = "expansion";
     state.chapter.completedLocalMissions = ["greenbankCart", "lostWoodcutter", "mooncapRemedy"];
     state.gold = 200;
@@ -576,6 +577,59 @@ test("the first expansion specifically guides players through the Training Yard"
   assert.equal(result.chapterMoment, "trainingYard");
   assert.equal(result.kitchenUnlockedAfter, true);
   assert.equal(result.bossLockAfter, "");
+});
+
+test("the Training Yard waits until the first weekly review", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    state.day = 7;
+    state.screen = "game";
+    state.chapter.stage = "localRequests";
+    state.chapter.completedLocalMissions = ["greenbankCart", "lostWoodcutter", "mooncapRemedy"];
+    const unlockedOnDaySeven = isFacilityUnlocked("trainingYard");
+    const daySevenCopy = getFacilityUnlockText("trainingYard");
+    const daySevenObjective = getChapterObjective();
+    advanceDays(1);
+    ({ unlockedOnDaySeven, daySevenCopy, daySevenObjective, day: state.day,
+       unlockedOnDayEight: isFacilityUnlocked("trainingYard"), stage: state.chapter.stage,
+       chapterMoment: currentChapterMomentId });
+  `);
+
+  assert.equal(result.unlockedOnDaySeven, false);
+  assert.match(result.daySevenCopy, /first weekly review in 1 day/);
+  assert.match(result.daySevenObjective.title, /first week/);
+  assert.equal(result.day, 8);
+  assert.equal(result.unlockedOnDayEight, true);
+  assert.equal(result.stage, "expansion");
+  assert.equal(result.chapterMoment, "expansion");
+});
+
+test("early expansion saves return to the first-week tavern objective", () => {
+  const context = createGameContext({
+    version: 21,
+    screen: "game",
+    day: 5,
+    gold: 180,
+    fame: 8,
+    adventurers: [],
+    activeMissions: [],
+    facilities: { tavern: 1, questBoard: 1, dormitory: 0, trainingYard: 0, kitchen: 0, workshop: 0 },
+    chapter: {
+      stage: "expansion",
+      completedLocalMissions: ["greenbankCart", "lostWoodcutter", "mooncapRemedy"],
+      completedStoryMissions: ["stolenSupplies"],
+      charterEarned: false
+    },
+    storyEvents: { pending: "expansion", seen: [] },
+    founderCreated: true
+  });
+  const result = run(context, `({ stage: state.chapter.stage, pending: state.storyEvents.pending,
+    yardUnlocked: isFacilityUnlocked("trainingYard"), objective: getChapterObjective() })`);
+
+  assert.equal(result.stage, "localRequests");
+  assert.equal(result.pending, null);
+  assert.equal(result.yardUnlocked, false);
+  assert.match(result.objective.title, /first week/);
 });
 
 test("new games begin with one founder and tavern notices produce a shortlist after one or two days", () => {
@@ -1164,7 +1218,7 @@ test("friendships and rivalries symmetrically modify expedition power within lim
   assert.equal(result.keyForward, result.keyReverse);
 });
 
-test("the first eligible day guarantees a Tavern Life event before an automatic realm event", () => {
+test("the first eligible day gives the founder a clickable personal request", () => {
   const context = createGameContext();
   const result = run(context, `
     const founder = makeAdventurer("Jenny", "ranger", true, "female");
@@ -1172,19 +1226,76 @@ test("the first eligible day guarantees a Tavern Life event before an automatic 
     state.founderCreated = true;
     state.screen = "game";
     advanceDays(1);
-    ({ day: state.day, activeTemplate: state.tavernLife.active?.templateId,
-       activeDay: state.tavernLife.active?.day, dialogOpen: tavernLifeDialogOpen,
+    const activeTemplateBeforeChoice = state.tavernLife.active?.templateId;
+    const activeDayBeforeChoice = state.tavernLife.active?.day;
+    const confidenceBeforeChoice = state.greenbank.confidence;
+    const objective = getChapterObjective();
+    const tavernScene = elements.contextScene.innerHTML;
+    closeMorningReport();
+    interactWithTavernHero(founder.id);
+    const choiceMarkup = elements.tavernLifeChoices.innerHTML;
+    resolveTavernLifeChoice("setHeroTable");
+    ({ day: state.day, activeTemplate: activeTemplateBeforeChoice,
+       activeDay: activeDayBeforeChoice, dialogOpen: tavernLifeDialogOpen,
        morningOpen: morningReportDialogOpen,
-       lastEventDay: state.tavernLife.lastEventDay, realmEvents: state.eventMissions.length });
+       lastEventDay: state.tavernLife.lastEventDay, realmEvents: state.eventMissions.length,
+       objective, tavernScene, choiceMarkup, resolved: state.tavernLife.resolved[0],
+       founderXp: founder.xp, confidenceChange: state.greenbank.confidence - confidenceBeforeChoice,
+       gold: state.gold });
   `);
 
   assert.equal(result.day, 2);
-  assert.ok(["homesickLetter", "restlessEvening"].includes(result.activeTemplate));
+  assert.equal(result.activeTemplate, "firstWeekTable");
   assert.equal(result.activeDay, 2);
   assert.equal(result.dialogOpen, false);
-  assert.equal(result.morningOpen, true);
+  assert.equal(result.morningOpen, false);
   assert.equal(result.lastEventDay, 2);
   assert.equal(result.realmEvents, 0);
+  assert.match(result.objective.title, /Speak with Jenny/);
+  assert.match(result.tavernScene, /data-talk-hero=/);
+  assert.match(result.tavernScene, /Wants to talk/);
+  assert.match(result.choiceMarkup, /Set Aside The Hearth Table/);
+  assert.equal(result.resolved.templateId, "firstWeekTable");
+  assert.equal(result.resolved.choiceId, "setHeroTable");
+  assert.equal(result.founderXp, 4);
+  assert.equal(result.confidenceChange, 1);
+  assert.ok(result.gold >= 70);
+});
+
+test("the first week progresses from a shared meal to a second founder request", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    const companion = makeAdventurer("Corin", "ranger", false, "male");
+    state.adventurers = [founder, companion];
+    state.founderCreated = true;
+    state.gold = 100;
+    state.day = 4;
+    state.tavernLife.resolved = [{ templateId: "firstWeekTable", day: 2 }];
+    const social = maybeCreateTavernEvent();
+    const socialTemplate = social?.templateId;
+    resolveTavernLifeChoice("swapStories");
+    state.day = 6;
+    const request = maybeCreateTavernEvent();
+    const threatBefore = state.greenbank.threat;
+    const confidenceBefore = state.greenbank.confidence;
+    const requestParticipant = request?.participantIds?.[0];
+    renderTavernLifeDialog();
+    const requestChoices = elements.tavernLifeChoices.innerHTML;
+    resolveTavernLifeChoice("peopleFirst");
+    ({ socialTemplate, requestTemplate: request?.templateId, requestParticipant,
+       founderId: founder.id, requestChoices, threatChange: state.greenbank.threat - threatBefore,
+       confidenceChange: state.greenbank.confidence - confidenceBefore,
+       resolvedTemplates: state.tavernLife.resolved.map((story) => story.templateId) });
+  `);
+
+  assert.equal(result.socialTemplate, "sharedMeal");
+  assert.equal(result.requestTemplate, "firstWeekPromise");
+  assert.equal(result.requestParticipant, result.founderId);
+  assert.match(result.requestChoices, /Put Greenbank's People First/);
+  assert.equal(result.threatChange, -1);
+  assert.equal(result.confidenceChange, 3);
+  assert.deepEqual([...result.resolvedTemplates].slice(0, 3), ["firstWeekPromise", "sharedMeal", "firstWeekTable"]);
 });
 
 test("version 13 saves gain relationship and Tavern Life defaults without losing heroes", () => {

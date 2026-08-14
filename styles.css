@@ -3959,9 +3959,28 @@
     position: absolute;
     display: grid;
     width: 98px;
+    padding: 0;
     justify-items: center;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    pointer-events: auto;
     transform-origin: bottom center;
     animation: tavern-patron-idle 2.1s ease-in-out calc(var(--patron-delay, 0) * -1s) infinite;
+  }
+
+  .context-patron:hover .context-sprite,
+  .context-patron:focus-visible .context-sprite {
+    filter: drop-shadow(0 0 11px rgb(255 213 118 / 62%)) drop-shadow(0 6px 3px rgb(20 11 7 / 64%));
+    translate: 0 -3px;
+  }
+
+  .context-patron:focus-visible {
+    outline: 2px solid #f0c765;
+    outline-offset: 3px;
+    border-radius: 4px;
   }
 
   .context-patron::before {
@@ -8272,6 +8291,14 @@
     font-size: 0.7rem;
     font-weight: 900;
     animation: tavern-story-pulse 1.5s ease-in-out infinite;
+  }
+
+  .tavern-story-callout.hero-request {
+    border-color: #d6a84f;
+    background:
+      linear-gradient(90deg, rgb(221 165 72 / 16%), transparent 45%),
+      linear-gradient(180deg, #26372f, #14251f);
+    box-shadow: inset 4px 0 0 #e0b45c, 0 3px 0 #080c0a;
   }
 
   @keyframes tavern-story-pulse {

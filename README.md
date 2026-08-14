@@ -19,6 +19,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Persistent adventurer profiles and two complementary sprite atlases
 - Positive and negative quirks with real quest effects
 - Choice-driven Tavern Life events that shape gold, experience, traits, and character history
+- Guided first-week tavern routine with clickable heroes and personal requests
 - Persistent friendships and rivalries with visible expedition chemistry bonuses
 - Rank-scaled Guildmaster Actions that make each in-game day a set of meaningful choices
 - End Day resolution with room orders, unused-action administration, and a fresh daily allowance
@@ -34,6 +35,7 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Equippable adventurer gear with clear power, travel, magic, and reward bonuses
 - One-time Guild Rank choices that let each promotion shape the guild differently
 - Timed Training Yard drills and teachable techniques with potential-based capacity
+- Training Yard progression held until after Guildstead's first weekly review
 - Three-person expedition parties
 - Inline quest-party selection with availability and mission-fit indicators
 - Priority styling for story quests and expiring contracts, with party-size guidance

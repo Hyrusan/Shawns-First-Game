@@ -137,6 +137,26 @@ const chapterMoments = {
     button: "Visit The Tavern",
     view: "adventurers"
   },
+  firstRecruit: {
+    kind: "celebration",
+    eyebrow: "A New Face At The Hearth",
+    title: "Welcome To The Wayfarer's Rest, {recruit}",
+    speaker: "Mara",
+    role: "Innkeeper, The Wayfarer's Rest",
+    portrait: "mara",
+    copy: [
+      "{recruit} accepts the guild badge, claims a chair near the fire, and tries not to look too relieved when {hero} offers the first handshake.",
+      "With two adventurers under this roof, Mara drags an old noticeboard from the cellar. Greenbank finally has somewhere to bring its troubles."
+    ],
+    callout: {
+      label: "Your first recruit",
+      title: "{recruit}, {recruitClass}",
+      detail: "Your choice joins the tavern permanently. Build the Quest Board next to start accepting local requests.",
+      facts: ["A new relationship begins", "Available for expeditions", "Part of Guildstead's history"]
+    },
+    button: "Give {recruit} A Place At The Table",
+    view: "guildhall"
+  },
   questBoard: {
     kind: "unlock",
     eyebrow: "Chapter One: Goblin Trouble",
@@ -184,6 +204,33 @@ const chapterMoments = {
     callout: { label: "Chapter complete", title: "Guildstead Is Chartered", detail: "New facilities, contracts and the wider Western March can now open to the guild." },
     button: "Raise the Guild Banner",
     view: "guildhall"
+  }
+};
+
+const firstWeekNews = {
+  2: {
+    headline: "Greenbank learns the tavern has a hero",
+    body: "By breakfast, three different versions of yesterday's adventure are circulating through the village. Mara insists the one involving a dragon is an exaggeration."
+  },
+  3: {
+    headline: "A guild sign appears beside the road",
+    body: "Someone has painted a shield beneath the Wayfarer's Rest sign. The paint is still wet and the handwriting is suspiciously small."
+  },
+  4: {
+    headline: "Villagers begin leaving requests at the bar",
+    body: "A missing hen, a broken cart and a worrying set of tracks arrive before lunch. Greenbank is testing whether its new guild truly listens."
+  },
+  5: {
+    headline: "The Wayfarer's Rest keeps its lamps lit",
+    body: "Travellers linger later now that adventurers share the common room. Mara quietly adds another pot of stew to the evening fire."
+  },
+  6: {
+    headline: "Watchfires flicker above Barrow Hill",
+    body: "The goblins have noticed Greenbank fighting back. Their distant fires are a warning, but the village road no longer empties at sunset."
+  },
+  7: {
+    headline: "Mara opens Guildstead's first ledger",
+    body: "One week of names, promises, repairs and narrow victories fills the first pages. Tonight, the tavern decides what kind of guild it wants to become."
   }
 };
 
@@ -1581,6 +1628,7 @@ let partyPickerMissionId = null;
 let mapModeOverride = null;
 let toastTimer = null;
 let tavernLifeDialogOpen = false;
+let tavernConversation = null;
 let morningReportDialogOpen = false;
 let activeChronicleReport = null;
 let activeExpeditionReportId = null;
@@ -2231,6 +2279,7 @@ function resetGame() {
   partyPickerMissionId = null;
   mapModeOverride = null;
   tavernLifeDialogOpen = false;
+  tavernConversation = null;
   morningReportDialogOpen = false;
   activeChronicleReport = null;
   activeExpeditionReportId = null;
@@ -2347,7 +2396,7 @@ function renderScreens() {
   const introOpen = state.screen === "intro";
   const eventOpen = Boolean(currentPopupEventId);
   const chapterOpen = Boolean(currentChapterMomentId);
-  const tavernLifeOpen = Boolean(tavernLifeDialogOpen && state.tavernLife.active);
+  const tavernLifeOpen = Boolean(tavernLifeDialogOpen && (state.tavernLife.active || tavernConversation));
   const morningReportOpen = Boolean(morningReportDialogOpen && getDisplayedReport());
   const expeditionReportOpen = Boolean(activeExpeditionReportId && getExpeditionReport(activeExpeditionReportId));
   elements.titleScreen.classList.toggle("hidden", !titleOpen);
@@ -2526,6 +2575,7 @@ function renderContextScene() {
 }
 
 function getContextSceneMeta(view) {
+  const keepsake = getFirstWeekTavernKeepsake();
   const scenes = {
     hero: {
       eyebrow: "Before the guild",
@@ -2535,7 +2585,9 @@ function getContextSceneMeta(view) {
     guildhall: {
       eyebrow: state.chapter.charterEarned ? "Guildstead Hall" : "The Wayfarer's Rest",
       title: "The Tavern At Work",
-      note: state.day <= 7 ? "Click an adventurer to hear what is on their mind." : "A living view of the guild between expeditions."
+      note: keepsake
+        ? `${keepsake.label}: ${keepsake.detail}`
+        : state.day <= 7 ? "Click an adventurer to hear what is on their mind." : "A living view of the guild between expeditions."
     },
     adventurers: {
       eyebrow: "Tavern common room",
@@ -2556,6 +2608,32 @@ function getContextSceneMeta(view) {
   return scenes[view] || scenes.guildhall;
 }
 
+function getResolvedTavernStory(templateId) {
+  return state.tavernLife.resolved.find((story) => story.templateId === templateId) || null;
+}
+
+function getFirstWeekTavernKeepsake() {
+  const decision = getResolvedTavernStory("firstWeekTable");
+  const keepsakes = {
+    setHeroTable: {
+      id: "hearth-table",
+      label: "Heroes' Hearth Table",
+      detail: "A warm place is always kept for returning adventurers."
+    },
+    askWhatMatters: {
+      id: "listening-table",
+      label: "The Listening Table",
+      detail: "Two mugs wait beside the fire whenever someone needs to talk."
+    },
+    earnTheSeat: {
+      id: "working-table",
+      label: "Mara's Working Table",
+      detail: "Repaired chairs and honest work keep the young guild standing."
+    }
+  };
+  return decision ? keepsakes[decision.choiceId] || null : null;
+}
+
 function renderLivingTavern(sceneMeta) {
   const heroesAtHome = state.adventurers.filter((adventurer) => ["idle", "injured"].includes(adventurer.status));
   const applicants = activeView === "adventurers" ? state.recruitment.candidates.slice(0, 2) : [];
@@ -2571,9 +2649,10 @@ function renderLivingTavern(sceneMeta) {
   const awayCount = state.adventurers.filter((adventurer) => adventurer.status === "busy").length;
   const trainingCount = state.trainingJobs.length;
   const detailCount = Math.min(5, tavernLevel + (state.chapter.charterEarned ? 1 : 0));
+  const keepsake = getFirstWeekTavernKeepsake();
 
   return `
-    <section class="living-tavern scene-${activeView} venue-level-${tavernLevel} ${state.chapter.charterEarned ? "chartered" : ""}">
+    <section class="living-tavern scene-${activeView} venue-level-${tavernLevel} ${state.chapter.charterEarned ? "chartered" : ""} ${keepsake ? `has-keepsake keepsake-${keepsake.id}` : ""}">
       <div class="tavern-wall" aria-hidden="true">
         <span class="tavern-window"><i></i></span>
         <span class="tavern-banner" aria-hidden="true"></span>
@@ -2584,6 +2663,7 @@ function renderLivingTavern(sceneMeta) {
       <div class="tavern-bar" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="tavern-table table-near" aria-hidden="true"><i></i></div>
       <div class="tavern-table table-far" aria-hidden="true"><i></i></div>
+      ${keepsake ? `<div class="first-week-keepsake" title="${keepsake.label}: ${keepsake.detail}" aria-label="${keepsake.label}. ${keepsake.detail}"><i></i><i></i><span></span></div>` : ""}
       ${activeView === "log" ? `<div class="ledger-desk" aria-hidden="true"><i></i><b></b></div>` : ""}
       ${activeView === "adventurers" && state.recruitment.unlocked ? `<div class="recruitment-table" aria-hidden="true"><i></i></div>` : ""}
       <div class="context-patrons">
@@ -2618,10 +2698,12 @@ function interactWithTavernHero(adventurerId) {
     openTavernLifeEvent();
     return;
   }
-  activeView = "adventurers";
-  if (state.adventurers.some((adventurer) => adventurer.id === adventurerId)) {
-    selectedAdventurerId = adventurerId;
+  const adventurer = getAdventurer(adventurerId);
+  if (adventurer) {
+    openTavernConversation(adventurerId);
+    return;
   }
+  activeView = "adventurers";
   render();
 }
 
@@ -2991,6 +3073,7 @@ function renderChronicleReport(report) {
     <section class="chronicle-lead ${report.kind}">
       <div><p class="eyebrow">${report.kind === "seasonal" ? "Four weeks in review" : `Days ${report.startDay}-${report.endDay}`}</p><h3>${report.summary}</h3></div>
     </section>
+    ${report.firstWeek ? renderFirstWeekLegacy(report.firstWeek) : ""}
     <section class="report-lead chronicle-metrics">
       <div class="report-pulse-card confidence"><span>Quests completed</span><strong>${metrics.missionsCompleted}</strong><small>${metrics.missionsFailed} difficult retreat${metrics.missionsFailed === 1 ? "" : "s"}</small></div>
       <div class="report-pulse-card gold"><span>Guild purse</span><strong>${metrics.netGold >= 0 ? "+" : ""}${metrics.netGold}G</strong><small>${metrics.questGold}G from quests</small></div>
@@ -3015,6 +3098,29 @@ function renderChronicleReport(report) {
       <div>${highlights.map((highlight, index) => `<p><span>${index + 1}</span>${highlight}</p>`).join("")}</div>
     </section>
     ${report.kind === "seasonal" ? renderSeasonFocusChoices(report) : ""}
+  `;
+}
+
+function renderFirstWeekLegacy(legacy) {
+  const founder = legacy.founderId ? getAdventurer(legacy.founderId) : null;
+  const companion = legacy.companionId ? getAdventurer(legacy.companionId) : null;
+  return `
+    <section class="first-week-legacy">
+      <div class="first-week-cast" aria-hidden="true">
+        ${founder ? `<span>${renderSprite(founder, "small")}</span>` : ""}
+        ${companion ? `<span>${renderSprite(companion, "small")}</span>` : ""}
+      </div>
+      <div class="first-week-legacy-copy">
+        <p class="eyebrow">Guildstead's founding week</p>
+        <h3>${legacy.title}</h3>
+        <p>${legacy.summary}</p>
+        <blockquote>&ldquo;${legacy.quote}&rdquo; <span>${legacy.founderName}</span></blockquote>
+      </div>
+      <div class="first-week-values">
+        <div><small>Life at the tavern</small><strong>${legacy.table.title}</strong><span>${legacy.table.detail}</span></div>
+        <div><small>The founding promise</small><strong>${legacy.promise.title}</strong><span>${legacy.promise.detail}</span></div>
+      </div>
+    </section>
   `;
 }
 
@@ -3092,6 +3198,57 @@ function completeChroniclePeriods(endedDay) {
   return seasonReport;
 }
 
+function createFirstWeekLegacy() {
+  const founder = state.adventurers.find((adventurer) => adventurer.founder) || state.adventurers[0];
+  const companion = state.adventurers.find((adventurer) => !adventurer.founder) || null;
+  const tableDecision = getResolvedTavernStory("firstWeekTable")?.choiceId;
+  const promiseDecision = getResolvedTavernStory("firstWeekPromise")?.choiceId;
+  const tableLegacies = {
+    setHeroTable: { title: "The Heroes' Hearth", detail: "A warm table is kept for adventurers at the end of every road." },
+    askWhatMatters: { title: "An Open Ear", detail: "Guildstead begins by listening before it makes grand promises." },
+    earnTheSeat: { title: "Honest Work", detail: "Everyone earns their place by helping the tavern stand." }
+  };
+  const promiseLegacies = {
+    peopleFirst: {
+      title: "Greenbank Comes First",
+      detail: "The guild promises that a frightened knock will always be answered.",
+      quote: "Let people say Guildstead came when Greenbank called."
+    },
+    trustTheHero: {
+      title: "Trust The Road",
+      detail: "Adventurers are trusted to use judgement when rules cannot see the whole path.",
+      quote: "Give us responsibility, and we will give you reasons to trust us."
+    },
+    guildFirst: {
+      title: "Built To Endure",
+      detail: "Guildstead will protect its foundations so it can survive the difficult seasons.",
+      quote: "We cannot shelter anyone if we let the roof fall in."
+    }
+  };
+  const table = tableLegacies[tableDecision] || {
+    title: "A Place Still Waiting",
+    detail: "The heroes are still deciding what home at Guildstead should mean."
+  };
+  const promise = promiseLegacies[promiseDecision] || {
+    title: "The Promise Ahead",
+    detail: "The guild's values remain unwritten after its first seven days.",
+    quote: "We have begun. What we become is still ours to decide."
+  };
+  return {
+    title: "An Ordinary Tavern Becomes A Guild",
+    summary: companion
+      ? `${founder?.name || "One brave adventurer"} began alone. By week's end, ${companion.name} had taken the next chair by the fire.`
+      : `${founder?.name || "One brave adventurer"} kept the first watch alone, while the empty chairs waited for the guild still to come.`,
+    founderId: founder?.id || null,
+    founderName: founder?.name || "Guildstead's founder",
+    companionId: companion?.id || null,
+    companionName: companion?.name || null,
+    table,
+    promise,
+    quote: promise.quote
+  };
+}
+
 function createChronicleReport(kind, tracker, endedDay) {
   const calendar = getCalendar(endedDay);
   const heroEntries = Object.entries(tracker.heroScores || {}).sort(([, first], [, second]) => second.score - first.score);
@@ -3141,6 +3298,7 @@ function createChronicleReport(kind, tracker, endedDay) {
     dominantFocus: dominantFocus?.[1] > 0 ? dominantFocus[0] : null,
     facilityChanges,
     highlights: (tracker.highlights || []).slice(-4).reverse(),
+    firstWeek: kind === "weekly" && endedDay === 7 ? createFirstWeekLegacy() : null,
     focusId: null
   };
   return report;
@@ -3233,14 +3391,126 @@ function renderTavernEventPanel() {
   elements.tavernEventPanel.querySelector("[data-open-tavern-story]")?.addEventListener("click", openTavernLifeEvent);
 }
 
+function getTavernConversationCopy(adventurer, topic) {
+  const founder = Boolean(adventurer.founder);
+  const companion = state.adventurers.find((hero) => !hero.founder);
+  const tableDecision = getResolvedTavernStory("firstWeekTable")?.choiceId;
+  const promiseDecision = getResolvedTavernStory("firstWeekPromise")?.choiceId;
+  const founderThoughts = {
+    1: "Yesterday this was an ordinary tavern. Today Mara is calling me its first adventurer. I am trying to look as though that was always the plan.",
+    2: tableDecision === "setHeroTable"
+      ? "Seeing a place kept for us by the hearth makes the word guild feel a little more real."
+      : tableDecision === "askWhatMatters"
+        ? "Thank you for listening. A guild should know its people before it starts collecting legends."
+        : tableDecision === "earnTheSeat"
+          ? "Mara works harder than any of us. I suppose helping with the chairs was a fair first test."
+          : "The road is quiet tonight. I keep wondering what it will feel like when this room is full of adventurers.",
+    3: state.recruitment.candidates.length
+      ? "The applicants keep glancing at me as if I know what a proper guild looks like. Please do not tell them I started two days ago."
+      : state.recruitment.order
+        ? "Someone is travelling here because of our notice. I hope we can give them more than a badge and a dangerous road."
+        : "Greenbank has started calling this place a guild. We should probably recruit someone before the name gets ahead of us.",
+    4: companion
+      ? `${companion.name} changes the room. It is good not to be the only person carrying all of Mara's expectations.`
+      : "There is still only one bedroll beside the guild chest. We can protect more people once there are more of us.",
+    5: state.chapter.completedLocalMissions.length
+      ? `We have answered ${state.chapter.completedLocalMissions.length} local request${state.chapter.completedLocalMissions.length === 1 ? "" : "s"}. People are beginning to knock without apologising for needing help.`
+      : "The board is filling up. Greenbank does not need grand heroes yet. It needs someone willing to show up.",
+    6: promiseDecision
+      ? "I meant what I said about Greenbank. The road will test that promise eventually, so I wanted us to make it while the fire was warm."
+      : "Before this week ends, I want to know what comes first when the guild and the people outside it both need us.",
+    7: "One week ago this was just somewhere travellers stopped. Now it is somewhere people come back to. I think that difference matters."
+  };
+  const joinedDay = Math.min(...(adventurer.lifeLog || []).map((entry) => Number(entry.day) || state.day), state.day);
+  const companionThought = state.day - joinedDay <= 1
+    ? `I am still learning which chair is safe, where Mara hides the good tea, and whether ${state.adventurers.find((hero) => hero.founder)?.name || "your first hero"} ever stops looking towards the road.`
+    : `I am starting to recognise the regulars. They have stopped calling me "the new adventurer", which feels like progress.`;
+
+  if (topic === "dream") {
+    return `My dream? ${adventurer.dream}. I know it sounds distant from this little tavern, but every grand story must begin somewhere.`;
+  }
+  if (topic === "guild") {
+    if (founder && promiseDecision === "peopleFirst") {
+      return "I want this to be the guild that answers when Greenbank calls, even when the purse would prefer a different road.";
+    }
+    if (founder && promiseDecision === "trustTheHero") {
+      return "I want a guild that trusts the people in the field. Rules matter, but judgement is what brings everyone home.";
+    }
+    if (founder && promiseDecision === "guildFirst") {
+      return "I want us to build something strong enough to survive bad seasons. A broken guild cannot protect anyone.";
+    }
+    return founder
+      ? "I want this place to remember that heroes are people before they are names on a quest report."
+      : `My path here began simply: ${adventurer.origin}. I would like Guildstead to become somewhere that choice feels worthwhile.`;
+  }
+  if (adventurer.status === "injured") {
+    return "I have had better days, but the hearth is warm and Mara keeps pretending the extra bowl of stew was an accident.";
+  }
+  if (founder) {
+    return state.day <= 7
+      ? founderThoughts[state.day] || founderThoughts[7]
+      : "The roads keep changing, but this hearth still feels like the place our stories begin and end.";
+  }
+  return companionThought;
+}
+
+function renderTavernConversation(adventurer) {
+  const topic = tavernConversation?.topic || "today";
+  const topicLabels = {
+    today: ["Ask About Today", "Hear what is on their mind right now."],
+    dream: ["Ask About Their Dream", `Learn what ${adventurer.name} hopes this life will become.`],
+    guild: ["Ask About The Guild", "Hear what kind of place they want to help build."]
+  };
+  elements.tavernLifeEyebrow.textContent = `${adventurer.founder ? "Founding hero" : "Tavern conversation"} | Day ${state.day}`;
+  elements.tavernLifeTitle.textContent = `A Quiet Word With ${adventurer.name}`;
+  elements.tavernLifeText.textContent = getTavernConversationCopy(adventurer, topic);
+  elements.tavernLifeArt.innerHTML = `
+    <span class="tavern-life-vignette" aria-hidden="true"></span>
+    <span class="tavern-life-caption">Off duty</span>
+    <span class="tavern-life-cast" aria-hidden="true"><span class="tavern-life-hero story-hero-0">${renderSprite(adventurer, "context-sprite")}</span></span>
+  `;
+  elements.tavernLifeChoices.classList.add("conversation-options");
+  elements.tavernLifeChoices.innerHTML = `
+    ${Object.entries(topicLabels).map(([id, labels]) => `
+      <button class="conversation-topic ${topic === id ? "active" : ""}" data-conversation-topic="${id}" type="button">
+        <span><strong>${labels[0]}</strong><small>${labels[1]}</small></span>
+      </button>
+    `).join("")}
+    <button class="conversation-profile" data-conversation-profile="${adventurer.id}" type="button">
+      <span><strong>View ${adventurer.name}'s Profile</strong><small>Review abilities, quirks, relationships and life history.</small></span>
+    </button>
+  `;
+  elements.tavernLifeChoices.querySelectorAll("[data-conversation-topic]").forEach((button) => {
+    button.addEventListener("click", () => {
+      tavernConversation.topic = button.dataset.conversationTopic;
+      render();
+    });
+  });
+  elements.tavernLifeChoices.querySelector("[data-conversation-profile]")?.addEventListener("click", () => {
+    selectedAdventurerId = adventurer.id;
+    activeView = "adventurers";
+    tavernLifeDialogOpen = false;
+    tavernConversation = null;
+    render();
+  });
+}
+
 function renderTavernLifeDialog() {
   const story = getTavernLifeStory(state.tavernLife.active);
-  const visible = Boolean(story && tavernLifeDialogOpen);
+  const conversationHero = tavernConversation ? getAdventurer(tavernConversation.adventurerId) : null;
+  const visible = Boolean((story || conversationHero) && tavernLifeDialogOpen);
   elements.tavernLifeDialog.classList.toggle("hidden", !visible);
   if (!visible) {
     return;
   }
 
+  elements.closeTavernLife.textContent = conversationHero ? "Back To Tavern" : "Decide Later";
+  if (conversationHero) {
+    renderTavernConversation(conversationHero);
+    return;
+  }
+
+  elements.tavernLifeChoices.classList.remove("conversation-options");
   elements.tavernLifeEyebrow.textContent = `${story.template.eyebrow} | Day ${state.tavernLife.active.day}`;
   elements.tavernLifeTitle.textContent = story.template.title;
   elements.tavernLifeText.textContent = formatTavernLifeText(story.template.description, story.participants);
@@ -3272,6 +3542,19 @@ function openTavernLifeEvent() {
   }
   currentPopupEventId = null;
   currentChapterMomentId = null;
+  tavernConversation = null;
+  tavernLifeDialogOpen = true;
+  activeView = "guildhall";
+  render();
+}
+
+function openTavernConversation(adventurerId) {
+  const adventurer = getAdventurer(adventurerId);
+  if (!adventurer) {
+    return;
+  }
+  currentPopupEventId = null;
+  tavernConversation = { adventurerId, topic: "today" };
   tavernLifeDialogOpen = true;
   activeView = "guildhall";
   render();
@@ -3279,6 +3562,7 @@ function openTavernLifeEvent() {
 
 function closeTavernLifeEvent() {
   tavernLifeDialogOpen = false;
+  tavernConversation = null;
   render();
 }
 
@@ -3580,6 +3864,7 @@ function renderRecruitmentPanel() {
               <strong class="candidate-class">${classes[candidate.classId].label}</strong>
               <div class="candidate-potential"><span>Potential</span>${renderPotential(candidate.potential)}</div>
               <div class="candidate-quirks"><span class="positive">+ ${quirkCatalog[candidate.quirks.positive].name}</span><span class="negative">- ${quirkCatalog[candidate.quirks.negative].name}</span></div>
+              <p class="candidate-interview"><span>Why I adventure</span>${candidate.dream}</p>
               <button class="primary-button" data-hire-candidate="${candidate.id}" type="button" ${rosterFull ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `Recruit ${candidate.name}`}</button>
             </article>
           `).join("")}
@@ -3594,7 +3879,7 @@ function renderRecruitmentPanel() {
 
   elements.recruitmentPanel.innerHTML = `
     <section class="recruitment-service">
-      <div><p class="eyebrow">Tavern recruitment</p><h3>Post A Paid Notice</h3><p>Mara will find three applicants in one or two days. The ${recruitmentCost}G fee covers notices, food, and travel.</p></div>
+      <div><p class="eyebrow">Tavern recruitment</p><h3>Post A Paid Notice</h3><p>Mara will find three applicants ${state.day <= 7 && recruitment.hires === 0 ? "by tomorrow" : "in one or two days"}. The ${recruitmentCost}G fee covers notices, food, and travel.</p></div>
       <button class="primary-button" data-post-recruitment type="button" ${rosterFull || state.gold < recruitmentCost ? "disabled" : ""}>${rosterFull ? "Dormitory Needed" : `${recruitmentCost}G`}</button>
     </section>
   `;
@@ -4902,7 +5187,8 @@ function postRecruitmentNotice() {
   if (!spendGuildAction("a recruitment notice")) {
     return;
   }
-  const travelDays = 1 + Math.floor(Math.random() * 2);
+  const firstWeekNotice = state.day <= 7 && state.recruitment.hires === 0;
+  const travelDays = firstWeekNotice ? 1 : 1 + Math.floor(Math.random() * 2);
   state.gold -= recruitmentCost;
   state.recruitment.order = {
     postedDay: state.day,
@@ -4962,6 +5248,7 @@ function hireRecruitmentCandidate(candidateId) {
   if (!candidate) {
     return;
   }
+  const firstHire = state.recruitment.hires === 0;
   candidate.status = "idle";
   addLifeEvent(candidate, "Was chosen by the Guildmaster to join Guildstead.");
   state.adventurers.push(candidate);
@@ -4970,9 +5257,15 @@ function hireRecruitmentCandidate(candidateId) {
   selectedAdventurerId = candidate.id;
   addLog(`${candidate.name} the ${classes[candidate.classId].label} is chosen from Mara's tavern shortlist.`);
   recordChronicleEvent({ type: "recruit", heroId: candidate.id, highlight: `${candidate.name} joined Guildstead as a ${classes[candidate.classId].label}.` });
+  if (firstHire) {
+    const founder = state.adventurers.find((adventurer) => adventurer.founder);
+    if (founder) {
+      adjustRelationship(founder.id, candidate.id, 1, `${founder.name} welcomed ${candidate.name} to their first place by the tavern hearth.`);
+    }
+  }
   if (state.chapter.stage === "recruitment") {
     state.chapter.stage = "buildBoard";
-    showChapterMoment("questBoard");
+    showChapterMoment(firstHire ? "firstRecruit" : "questBoard");
   }
   render();
   showToast("Adventurer recruited", `${candidate.name} has joined the roster.`, "success");
@@ -6357,6 +6650,10 @@ function expireGreenbankRequests() {
 }
 
 function addAmbientGreenbankNews() {
+  const authoredFirstWeekNews = state.founderCreated ? firstWeekNews[state.day] : null;
+  if (authoredFirstWeekNews) {
+    return addNews(authoredFirstWeekNews.headline, authoredFirstWeekNews.body, state.day === 6 ? "warning" : "guild");
+  }
   const threat = state.greenbank.threat;
   const confidence = state.greenbank.confidence;
   const headlines = threat >= 70
@@ -6590,10 +6887,11 @@ function advanceDays(amount) {
 
 function renderChapterProgress() {
   const objective = getChapterObjective();
+  const firstWeek = state.founderCreated && state.day <= 7 && !state.chapter.charterEarned;
   elements.chapterObjective.innerHTML = `
-    <span class="chapter-number" aria-hidden="true">1</span>
+    <span class="chapter-number ${firstWeek ? "first-week-day" : ""}" aria-hidden="true">${firstWeek ? state.day : "1"}</span>
     <div class="chapter-objective-copy">
-      <span>Chapter One: Goblin Trouble</span>
+      <span>${firstWeek ? `First Week | Day ${state.day} of 7` : "Chapter One: Goblin Trouble"}</span>
       <strong>${objective.title}</strong>
       <small>${objective.detail}</small>
     </div>
@@ -6645,7 +6943,13 @@ function renderChapterDialog() {
     return;
   }
   const heroName = state.adventurers.find((adventurer) => adventurer.founder)?.name || "Guildmaster";
-  const formatCopy = (value = "") => value.replaceAll("{hero}", heroName);
+  const firstRecruit = state.adventurers.find((adventurer) => !adventurer.founder);
+  const recruitName = firstRecruit?.name || "your new adventurer";
+  const recruitClass = classes[firstRecruit?.classId]?.label || "Adventurer";
+  const formatCopy = (value = "") => value
+    .replaceAll("{hero}", heroName)
+    .replaceAll("{recruit}", recruitName)
+    .replaceAll("{recruitClass}", recruitClass);
   const kind = moment.kind || "milestone";
   elements.chapterDialogPanel.className = `event-panel chapter-panel guild-story-panel kind-${kind}`;
   elements.chapterDialogArt.className = `event-art chapter-art guild-story-art portrait-${moment.portrait || "mara"}`;
@@ -6653,7 +6957,7 @@ function renderChapterDialog() {
   elements.chapterDialogSpeaker.textContent = moment.speaker || "Mara";
   elements.chapterDialogRole.textContent = moment.role || "Guild Steward";
   elements.chapterDialogEyebrow.textContent = moment.eyebrow;
-  elements.chapterDialogTitle.textContent = moment.title;
+  elements.chapterDialogTitle.textContent = formatCopy(moment.title);
   const copy = moment.copy || [moment.text || ""];
   elements.chapterDialogText.innerHTML = copy.map((paragraph) => `<p>${formatCopy(paragraph)}</p>`).join("");
   elements.chapterDialogCallout.classList.toggle("hidden", !moment.callout);
@@ -6664,7 +6968,7 @@ function renderChapterDialog() {
   elements.chapterDialogSteps.innerHTML = (moment.steps || []).map((step) => `
     <li><span>${step.mark}</span><div><strong>${formatCopy(step.title)}</strong><small>${formatCopy(step.detail)}</small></div></li>
   `).join("");
-  elements.chapterDialogButton.textContent = moment.button;
+  elements.chapterDialogButton.textContent = formatCopy(moment.button);
 }
 
 function closeChapterMoment() {

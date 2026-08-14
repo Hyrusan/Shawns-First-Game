@@ -86,7 +86,7 @@ test("the living tavern uses a bundled painted backdrop", () => {
   const backdrop = path.join(__dirname, "..", "assets", "tavern-interior-v1.webp");
 
   assert.match(styles, /url\("assets\/tavern-interior-v1\.webp"\)/);
-  assert.match(index, /styles\.css\?v=38/);
+  assert.match(index, /styles\.css\?v=39/);
   assert.match(styles, /\.context-patron \.context-sprite[\s\S]*?image-rendering: auto/);
   assert.match(styles, /\.context-patron::before/);
   assert.ok(fs.existsSync(backdrop));
@@ -97,7 +97,7 @@ test("compact interface text keeps a readable mobile floor", () => {
   const styles = fs.readFileSync(path.join(__dirname, "..", "styles.css"), "utf8");
   const index = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-  assert.match(index, /game\.js\?v=38/);
+  assert.match(index, /game\.js\?v=39/);
   assert.match(styles, /@layer[\s\S]*readability/);
   assert.match(styles, /--type-caption: 0\.7rem/);
   assert.match(styles, /\.quest-party-copy small,[\s\S]*font-size: var\(--type-caption\)/);
@@ -649,23 +649,35 @@ test("new games begin with one founder and tavern notices produce a shortlist af
     state.day = state.recruitment.order.readyDay;
     processRecruitmentArrivals();
     const shortlistSize = state.recruitment.candidates.length;
+    renderRecruitmentPanel();
+    const candidateMarkup = elements.recruitmentPanel.innerHTML;
     const chosenId = state.recruitment.candidates[0].id;
+    const chosenName = state.recruitment.candidates[0].name;
     hireRecruitmentCandidate(chosenId);
+    renderChapterDialog();
     ({ founderCount, founderId, recruitmentIntroduced, travelDays, goldAfterNotice, shortlistSize,
        rosterCount: state.adventurers.length, chosenJoined: state.adventurers.some((hero) => hero.id === chosenId),
-       stage: state.chapter.stage, candidatesRemaining: state.recruitment.candidates.length });
+       stage: state.chapter.stage, candidatesRemaining: state.recruitment.candidates.length,
+       candidateMarkup, chosenName, moment: currentChapterMomentId,
+       welcomeTitle: elements.chapterDialogTitle.textContent, welcomeButton: elements.chapterDialogButton.textContent,
+       startingBond: getRelationship(founderId, chosenId).score });
   `);
 
   assert.equal(result.founderCount, 1);
   assert.ok(result.founderId);
   assert.equal(result.recruitmentIntroduced, true);
-  assert.ok([1, 2].includes(result.travelDays));
+  assert.equal(result.travelDays, 1);
   assert.equal(result.goldAfterNotice, 35);
   assert.equal(result.shortlistSize, 3);
   assert.equal(result.rosterCount, 2);
   assert.equal(result.chosenJoined, true);
   assert.equal(result.stage, "buildBoard");
   assert.equal(result.candidatesRemaining, 0);
+  assert.match(result.candidateMarkup, /Why I adventure/);
+  assert.equal(result.moment, "firstRecruit");
+  assert.match(result.welcomeTitle, new RegExp(result.chosenName));
+  assert.match(result.welcomeButton, new RegExp(result.chosenName));
+  assert.equal(result.startingBond, 1);
 });
 
 test("quest cards provide inline party selection with clear availability states", () => {
@@ -1226,6 +1238,7 @@ test("the first eligible day gives the founder a clickable personal request", ()
     state.founderCreated = true;
     state.screen = "game";
     advanceDays(1);
+    const authoredNews = state.greenbank.news.find((item) => item.day === 2 && item.headline.includes("tavern has a hero"));
     const activeTemplateBeforeChoice = state.tavernLife.active?.templateId;
     const activeDayBeforeChoice = state.tavernLife.active?.day;
     const confidenceBeforeChoice = state.greenbank.confidence;
@@ -1241,7 +1254,7 @@ test("the first eligible day gives the founder a clickable personal request", ()
        lastEventDay: state.tavernLife.lastEventDay, realmEvents: state.eventMissions.length,
        objective, tavernScene, choiceMarkup, resolved: state.tavernLife.resolved[0],
        founderXp: founder.xp, confidenceChange: state.greenbank.confidence - confidenceBeforeChoice,
-       gold: state.gold });
+       gold: state.gold, authoredNews });
   `);
 
   assert.equal(result.day, 2);
@@ -1260,6 +1273,7 @@ test("the first eligible day gives the founder a clickable personal request", ()
   assert.equal(result.founderXp, 4);
   assert.equal(result.confidenceChange, 1);
   assert.ok(result.gold >= 70);
+  assert.match(result.authoredNews.body, /three different versions/);
 });
 
 test("the first week progresses from a shared meal to a second founder request", () => {
@@ -1296,6 +1310,90 @@ test("the first week progresses from a shared meal to a second founder request",
   assert.equal(result.threatChange, -1);
   assert.equal(result.confidenceChange, 3);
   assert.deepEqual([...result.resolvedTemplates].slice(0, 3), ["firstWeekPromise", "sharedMeal", "firstWeekTable"]);
+});
+
+test("off-duty heroes hold first-week conversations before opening their profile", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "ranger", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.screen = "game";
+    state.day = 5;
+    state.chapter.stage = "localRequests";
+    state.chapter.completedLocalMissions = ["greenbankCart"];
+    interactWithTavernHero(founder.id);
+    const todayTitle = elements.tavernLifeTitle.textContent;
+    const todayCopy = elements.tavernLifeText.textContent;
+    const choices = elements.tavernLifeChoices.innerHTML;
+    tavernConversation.topic = "dream";
+    renderTavernLifeDialog();
+    const dreamCopy = elements.tavernLifeText.textContent;
+    closeTavernLifeEvent();
+    ({ todayTitle, todayCopy, choices, dreamCopy, open: tavernLifeDialogOpen,
+       conversation: tavernConversation, activeView });
+  `);
+
+  assert.match(result.todayTitle, /Quiet Word With Jenny/);
+  assert.match(result.todayCopy, /answered 1 local request/);
+  assert.match(result.choices, /Ask About Their Dream/);
+  assert.match(result.choices, /View Jenny's Profile/);
+  assert.match(result.dreamCopy, /My dream\?/);
+  assert.equal(result.open, false);
+  assert.equal(result.conversation, null);
+  assert.equal(result.activeView, "guildhall");
+});
+
+test("the founder's first request leaves a visible keepsake in the tavern", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    state.adventurers = [founder];
+    state.founderCreated = true;
+    state.tavernLife.resolved = [{
+      id: "table-choice",
+      templateId: "firstWeekTable",
+      participantIds: [founder.id],
+      choiceId: "setHeroTable",
+      outcome: "A table was kept.",
+      day: 2
+    }];
+    const keepsake = getFirstWeekTavernKeepsake();
+    const scene = renderLivingTavern(getContextSceneMeta("guildhall"));
+    ({ keepsake, scene });
+  `);
+
+  assert.equal(result.keepsake.id, "hearth-table");
+  assert.match(result.scene, /keepsake-hearth-table/);
+  assert.match(result.scene, /Heroes' Hearth Table/);
+  assert.match(result.scene, /first-week-keepsake/);
+});
+
+test("the first Chronicle closes the week with the guild's remembered choices", () => {
+  const context = createGameContext();
+  const result = run(context, `
+    const founder = makeAdventurer("Jenny", "warden", true, "female");
+    const recruit = makeAdventurer("Corin", "ranger", false, "male");
+    state.adventurers = [founder, recruit];
+    state.founderCreated = true;
+    state.day = 8;
+    state.tavernLife.resolved = [
+      { templateId: "firstWeekPromise", participantIds: [founder.id], choiceId: "peopleFirst", day: 6 },
+      { templateId: "firstWeekTable", participantIds: [founder.id], choiceId: "setHeroTable", day: 2 }
+    ];
+    const tracker = createChronicleTracker(1, state);
+    const report = createChronicleReport("weekly", tracker, 7);
+    const markup = renderChronicleReport(report);
+    ({ firstWeek: report.firstWeek, markup });
+  `);
+
+  assert.equal(result.firstWeek.founderName, "Jenny");
+  assert.equal(result.firstWeek.companionName, "Corin");
+  assert.equal(result.firstWeek.table.title, "The Heroes' Hearth");
+  assert.equal(result.firstWeek.promise.title, "Greenbank Comes First");
+  assert.match(result.markup, /An Ordinary Tavern Becomes A Guild/);
+  assert.match(result.markup, /Greenbank Comes First/);
+  assert.match(result.markup, /Let people say Guildstead came when Greenbank called/);
 });
 
 test("version 13 saves gain relationship and Tavern Life defaults without losing heroes", () => {
@@ -1347,6 +1445,9 @@ test("the Tavern Life interface ships its painted scene and responsive controls"
   assert.match(styles, /\.tavern-life-art[\s\S]*url\("assets\/tavern-interior-v1\.webp"\)/);
   assert.match(styles, /\.relationship-list/);
   assert.match(styles, /@media \(max-width: 560px\)[\s\S]*\.tavern-life-choices button/);
+  assert.match(styles, /\.conversation-options/);
+  assert.match(styles, /\.first-week-keepsake/);
+  assert.match(styles, /\.first-week-legacy/);
 });
 
 test("Guild Rank increases the daily action allowance while quest dispatch remains free", () => {

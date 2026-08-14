@@ -19,7 +19,8 @@ Begin with the humble Wayfarer's Rest, create a founding hero, and turn a roadsi
 - Persistent adventurer profiles and two complementary sprite atlases
 - Positive and negative quirks with real quest effects
 - Choice-driven Tavern Life events that shape gold, experience, traits, and character history
-- Guided first-week tavern routine with clickable heroes and personal requests
+- Authored first week with clickable hero conversations, personal requests, daily Greenbank stories, and a first-recruit welcome
+- Visible tavern keepsakes and a choice-aware founding Chronicle that remember how the player shaped Guildstead
 - Persistent friendships and rivalries with visible expedition chemistry bonuses
 - Rank-scaled Guildmaster Actions that make each in-game day a set of meaningful choices
 - End Day resolution with room orders, unused-action administration, and a fresh daily allowance
